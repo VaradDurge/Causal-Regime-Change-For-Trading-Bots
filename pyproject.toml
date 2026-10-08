@@ -1,0 +1,38 @@
+[project]
+name = "crta"
+version = "0.1.0"
+description = "Causal regime-conditioned trading research: sticky HMM, PPO twins, faithfulness checks."
+readme = "README.md"
+authors = [
+    { name = "VaraadDurgaay", email = "varaddurge@gmail.com" }
+]
+requires-python = ">=3.11"
+dependencies = [
+    "ccxt>=4.5.82",
+    "gymnasium>=1.3.0",
+    "hmmlearn>=0.3.3",
+    "matplotlib>=3.11.2",
+    "numpy>=2.4.6",
+    "pandas>=3.0.6",
+    "plotly>=7.1.0",
+    "pyarrow>=25.0.1",
+    "scikit-learn>=1.9.1",
+    "scipy>=1.17.1",
+    "stable-baselines3>=2.9.0",
+    "streamlit>=1.64.0",
+]
+
+[project.scripts]
+crta = "crta:main"
+
+[build-system]
+requires = ["uv_build>=0.11.28,<0.12.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
