@@ -1,108 +1,130 @@
 # Reading List — Regime-Aware, Causally-Verified RL Trading Agent
 
-Organized by the three pillars of the project: regime detection, explanation faithfulness (general ML), and explainability in finance specifically.
+This reading list has been updated to include peer-reviewed IEEE/Springer literature directly relevant to regime-aware trading, reinforcement learning for portfolio optimization, XAI, and causal inference in financial decision-making.
 
 ---
 
 ## 1. Regime Detection & Regime-Aware Trading Models
 
-**Explainable Regime-Aware Investing**
-Amine Boukardagha, Columbia University (2026)
-https://arxiv.org/abs/2603.04441
-The "causal Wasserstein HMM" paper — rolling Gaussian HMM with regime-identity tracking via 2-Wasserstein distance, built to fix label-switching while staying interpretable. This is your most direct methodological reference for the regime-detection layer.
+**HMM-Based Market Regime Detection with RL for Portfolio Management**  
+IEEE IDS 2025  
+https://www.cloud-conf.net/datasec/2025/proceedings/pdfs/IDS2025-3SVVEmiJ6JbFRviTl4Otnv/966100a067/966100a067.pdf  
+Integrates Hidden Markov Models with reinforcement learning to build regime-aware trading strategies. Demonstrates improved Sharpe ratio and risk-adjusted performance relative to conventional RL approaches.
 
-**Adaptive and Regime-Aware RL for Portfolio Optimization**
-arXiv:2509.14385 (2025)
-https://arxiv.org/abs/2509.14385
-Regime-conditioned RL portfolio agent using macro-informed Gaussian Mixture Model transitions. Good baseline/comparison point — shows the "plain" version of what you're upgrading past.
+**RegimeFolio: A Regime-Aware ML System for Sectoral Portfolio Optimization**  
+IEEE Xplore  
+https://ieeexplore.ieee.org/abstract/document/11215751  
+Presents a regime-aware ML framework for sectoral portfolio optimization under non-stationary market conditions. This is one of the most relevant works for framing the core research gap.
 
-**RegimeFolio: A Regime-Aware ML System for Sectoral Portfolio Optimization in Dynamic Markets**
-arXiv:2510.14986 (2025)
-https://arxiv.org/abs/2510.14986
-Explicitly critiques prior regime-aware DRL work as "regime agnostic" or "opaque" — this is the paper that most directly names the exact gap your project targets. Good to cite when framing your motivation.
+**Regime Change Detection Using Directional Change Indicators in Financial Markets**  
+IEEE Xplore  
+https://ieeexplore.ieee.org/document/8363125  
+Explores data-driven methods for identifying structural breaks and regime shifts in financial markets, which is directly relevant to adaptive trading models.
 
-**Behaviorally Informed Deep Reinforcement Learning for Portfolio Optimization with Loss Aversion and Overconfidence (BBAPT)**
-Scientific Reports (Nature), 2026
-https://www.nature.com/articles/s41598-026-35902-x
-Uses TimesNet as a forecasting-guided regime selector combined with behavioral bias modeling. Useful for seeing how others structure a "regime → policy switch" pipeline.
+**Explainable Machine Learning for Regime-Based Asset Allocation**  
+IEEE Xplore  
+https://ieeexplore.ieee.org/document/9378332  
+Uses explainable ML and regime classification to support asset allocation decisions, combining interpretability with market-state analysis.
 
-**Clustering Market Regimes using the Wasserstein Distance**
-arXiv:2110.11848 (2021)
-https://arxiv.org/abs/2110.11848
-Foundational paper on using Wasserstein distance (instead of plain HMMs) for regime clustering — useful background before reading the 2026 causal Wasserstein HMM paper above.
-
-**Non-parametric Online Market Regime Detection and Regime Clustering for Multidimensional and Path-Dependent Data Structures**
-arXiv:2306.15835 (2023)
-https://arxiv.org/abs/2306.15835
-Discusses limitations of Wasserstein-based clustering (computational cost, loss of temporal ordering) — good for your limitations/future-work section.
-
-**Geometric Observables for Financial Regime Detection**
-arXiv:2605.17117 (2026)
-https://arxiv.org/abs/2605.17117
-Very recent, more exotic (differential-geometry-based) regime detection. Not essential, but shows how active this sub-field currently is — good for a "related work is still evolving" framing line.
+**A Causal Inference Method for Stock Trend Forecasting (CISTF)**  
+IEEE Xplore  
+https://ieeexplore.ieee.org/document/11033554  
+Introduces a causal inference framework for stock trend forecasting, highlighting the need for causal reasoning in financial time-series analysis.
 
 ---
 
-## 2. Explanation Faithfulness (General ML — foundational evidence)
+## 2. Reinforcement Learning for Portfolio Optimization and Trading
 
-**Sanity Checks for Saliency Maps**
-Adebayo, Gilmer, Muelly, Goodfellow, Hardt, Kim — NeurIPS 2018
-https://arxiv.org/abs/1810.03292
-The landmark paper. Shows several popular explanation methods produce near-identical outputs whether the model is trained or randomized — i.e., proof that plausible-looking explanations can be completely disconnected from the model. This is your core citation for "explanations can lie."
+**Portfolio Optimization using Deep Reinforcement Learning**  
+IEEE Xplore  
+https://ieeexplore.ieee.org/document/10744403  
+Presents a deep Q-network-based approach to dynamic capital allocation and portfolio optimization.
 
-**Is Ignorance Bliss? The Role of Post Hoc Explanation Faithfulness and Alignment in Model Trust in Laypeople and Domain Experts**
-arXiv:2312.05690 (2023)
-https://arxiv.org/abs/2312.05690
-Directly distinguishes "faithfulness" (is it true) from "alignment" (does it sound right to a human) — the exact distinction your whole verification layer is built on.
+**Deep Reinforcement Learning for Real-Time Portfolio Optimization**  
+IEEE Xplore  
+https://ieeexplore.ieee.org/document/11294821  
+Discusses real-time adaptive portfolio rebalancing using PPO and DDPG in equity markets.
 
-**An Empirical Study on Explanations in Out-of-Domain Settings**
-arXiv:2203.00056 (2022)
-https://arxiv.org/abs/2203.00056
-Shows post-hoc explanation faithfulness metrics can be misleading outside the training distribution — relevant since markets constantly shift "out of domain" (that's what a regime shift is).
+**Reinforcement Learning Application in Portfolio Optimization: A Review and Research Perspective**  
+IEEE Xplore  
+https://ieeexplore.ieee.org/document/10620129  
+Provides a review of reinforcement learning and deep reinforcement learning for financial decision-making and portfolio optimization.
 
-**BEExAI: Benchmark to Evaluate Explainable AI**
-arXiv:2407.19897 (2024)
-https://arxiv.org/abs/2407.19897
-A general benchmark for scoring explanation quality — useful if you want an off-the-shelf way to quantify your faithfulness results rather than building all metrics from scratch.
+**Reinforcement Learning-Based Dynamic Portfolio Optimization Under Adversarial Perturbations**  
+IEEE Xplore  
+https://ieeexplore.ieee.org/document/11291673  
+Introduces robust RL strategies to improve portfolio optimization under hostile or perturbed market conditions.
 
-**A Comprehensive Guide to Explainable AI: From Classical Models to LLMs**
-arXiv:2412.00800 (2024)
-https://arxiv.org/abs/2412.00800
-Good general reference with a clean formal definition of "faithfulness score" via feature perturbation — useful for writing your methodology section precisely.
+**Research on Portfolio Optimization Based on Deep Reinforcement Learning**  
+IEEE Xplore  
+https://ieeexplore.ieee.org/document/10125509  
+Frames portfolio trading as a Markov decision process and applies DRL for asset-weight management and diversification.
 
----
+**Research on the Implementation and Effectiveness Evaluation of Reinforcement Learning in A-Share Markets**  
+Springer  
+https://link.springer.com/article/10.1007/s44163-025-00547-8  
+Applies RL algorithms to A-share trading, respecting actual market trading rules and evaluating effectiveness in a realistic setting.
 
-## 3. Explainability in Finance Specifically
+**Reinforcement Learning for Single-Stock Portfolio Optimization**  
+Springer  
+https://link.springer.com/article/10.1007/s44196-025-01105-x  
+Proposes an adaptive RL portfolio management framework for single-stock optimization using DDPG-style policy learning.
 
-**A Comprehensive Review on Financial Explainable AI**
-Artificial Intelligence Review (Springer), 2025
-https://link.springer.com/article/10.1007/s10462-024-11077-7
-Survey of how SHAP/LIME-style post-hoc methods are actually used across finance (credit scoring, fraud, portfolio construction). Confirms finance leans on the same explanation methods shown to fail sanity checks in Section 2 — your key "connects the two literatures" citation.
-
-**Trade-offs in Financial AI: Explainability in a Trilemma with Accuracy and Compliance**
-arXiv:2602.01368 (2026)
-https://arxiv.org/abs/2602.01368
-Very recent — explicitly flags that LLM/AI explanation layers in finance risk being "plausible but not faithful." Strong, current motivation citation.
-
-**How Can I Choose an Explainer? An Application-Grounded Evaluation of Post-Hoc Explanations**
-arXiv:2101.08758 (2021)
-https://arxiv.org/abs/2101.08758
-Empirical XAI evaluation specifically in financial fraud detection. Opens by noting the field lacks solid evaluation methodology — good citation for "this is still an open problem."
-
-**Explainable AI in Finance: Addressing the Needs of Diverse Stakeholders**
-CFA Institute Research and Policy Center, 2025
-https://rpc.cfainstitute.org/sites/default/files/docs/research-reports/wilson_explainableaiinfinance_online.pdf
-Practitioner-oriented (not peer-reviewed academic), but useful for framing the regulatory angle (MiFID II-style compliance pressure) in your intro.
+**Systematic Review of Reinforcement Learning for Automated Equity Portfolio Management**  
+Springer  
+https://link.springer.com/article/10.1007/s10791-026-10336-1  
+A comprehensive review of reinforcement learning approaches in automated equity portfolio management.
 
 ---
 
-## 4. Tooling / Infrastructure (not papers, but load-bearing resources)
+## 3. Explainable AI and Explanation Faithfulness
 
-**FinRL / FinRL-Meta / AI4Finance Foundation**
-https://github.com/AI4Finance-Foundation
-Open-source RL-for-finance framework, data loaders, and yearly contests run alongside ACM ICAIF. This is your recommended base to build on rather than starting from scratch — check their GitHub for the current year's contest and starter code before you begin.
+**Effectiveness of Explainable Artificial Intelligence (XAI) Techniques in Machine Learning**  
+IEEE Xplore  
+https://ieeexplore.ieee.org/document/11017606  
+Evaluates the effectiveness of XAI methods and their ability to provide faithful and interpretable explanations.
+
+**Solving the Enigma: Enhancing Faithfulness and Comprehensibility in Explainable AI**  
+ScienceDirect / Elsevier  
+https://www.sciencedirect.com/science/article/pii/S266665102500004X  
+Examines the tension between explanation plausibility and actual model faithfulness, a problem highly relevant to financial decision support.
+
+**XAI: On Explainability and the Obligation to Explain**  
+Springer  
+https://link.springer.com/article/10.1007/s44206-025-00215-5  
+Discusses why explainability is not merely optional in AI, especially in regulated and high-stakes domains such as finance.
+
+**A Comprehensive Review on Financial Explainable AI**  
+Artificial Intelligence Review (Springer), 2025  
+https://link.springer.com/article/10.1007/s10462-024-11077-7  
+A major survey of how SHAP/LIME-style post-hoc explanations are used in finance, and how their limitations affect real-world decision-making.
+
+---
+
+## 4. Causal Inference in Finance and Dynamic Decision-Making
+
+**ML-Based Causal Inference for Decision-Making in Dynamic Environments**  
+IEEE Xplore  
+https://ieeexplore.ieee.org/document/11390025  
+Introduces temporal machine learning frameworks for causal inference in dynamic systems, with relevance to market regime transitions and adaptive trading.
+
+**CISTF: A Causal Inference Method for Stock Trend Forecasting**  
+IEEE Xplore  
+https://ieeexplore.ieee.org/document/11033554  
+Provides a causal framework for identifying dependencies in financial data and forecasting stock trends using causal structure.
+
+---
+
+## 5. Why these references matter for this project
+
+These papers collectively support three central themes of the project:
+
+1. Regime detection and market-state modeling are essential because financial markets are non-stationary and regime-dependent.  
+2. RL and DRL offer powerful adaptive trading mechanisms, but they need to be paired with interpretability and verification.  
+3. XAI and causal reasoning are necessary to ensure the model is not only profitable, but also faithful, trustworthy, and operationally defensible under changing market conditions.
 
 ---
 
 ### Suggested reading order
-1. RegimeFolio (motivates the gap) → 2. Sanity Checks for Saliency Maps (proves the failure mode exists) → 3. Explainable Regime-Aware Investing (your regime-model reference) → 4. Trade-offs in Financial AI (ties it back to finance) → then skim the rest as needed while writing.
+1. RegimeFolio → 2. HMM-Based Market Regime Detection with RL for Portfolio Management → 3. Research on Portfolio Optimization Based on Deep Reinforcement Learning → 4. A Comprehensive Review on Financial Explainable AI → 5. Solving the Enigma: Enhancing Faithfulness and Comprehensibility in Explainable AI → 6. CISTF: A Causal Inference Method for Stock Trend Forecasting
+
