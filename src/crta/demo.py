@@ -4,16 +4,17 @@ from __future__ import annotations
 
 import json
 import time
-from datetime import timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import numpy as np
 import pandas as pd
 import streamlit as st
 
 from crta.agent import predict_action
-from crta.data import FEATURE_COLS, HMM_COLS, RAW_PATH, ROOT, fetch_closed, model_frame
-from crta.eval import by_regime, crash_index
+from crta.data import FEATURE_COLS, HMM_COLS, RAW_PATH, ROOT, features, fetch_last_price, fetch_window, refresh_ohlcv
+from crta.eval import by_regime, crash_index, strategy_returns
 from crta.plug import call, list_bots, load_act, score, step_bar, trade_side
 from crta.plots import (
     CRISIS,
@@ -27,6 +28,7 @@ from crta.plots import (
     RULE,
     callout,
     equity_figure,
+    paper_race_figure,
     price_figure,
     trade_marks,
     save_figures,
@@ -36,6 +38,8 @@ from crta.regime import REGIMES, label_span
 from crta.verify import ABLATION_MIN_DELTA, CF_MIN_DELTA, audit_bar, one_hot, probe_action, with_crisis_prob
 
 RUN = ROOT / "outputs" / "run"
+IST = ZoneInfo("Asia/Kolkata")
+TF_NAME = {"15m": "15-minute", "1h": "1-hour", "4h": "4-hour"}
 
 st.set_page_config(page_title="Regime Audit", layout="wide", initial_sidebar_state="collapsed")
 st.markdown(
@@ -224,12 +228,35 @@ def _models(mtime: float):
     return loaded
 
 
+@st.cache_resource
+def _blind_latest(mtime: float):
+    from stable_baselines3 import PPO
+
+    paths = sorted(RUN.glob("fold*_blind.zip"))
+    if not paths:
+        return None
+    return PPO.load(str(paths[-1]), device="cpu")
+
+
 def _ensure():
     if not (RUN / "bars.parquet").exists():
         from crta.pipeline import build
 
         with st.spinner("Fitting the probe on cached or synthetic bars…"):
             build("probe")
+
+
+def _refresh_market() -> None:
+    """Bring the 4h cache up to the latest closed Binance candle. A failure keeps the saved file."""
+    if st.session_state.get("market_checked"):
+        return
+    try:
+        with st.spinner("Refreshing the Binance 4h tape…"):
+            refresh_ohlcv()
+        st.session_state.market_status = "live"
+    except Exception:
+        st.session_state.market_status = "stale" if RAW_PATH.exists() else "down"
+    st.session_state.market_checked = True
 
 
 def _policy(row, summary, models):
@@ -534,6 +561,207 @@ def _held_slider(parent, key: str, label: str, lo: float, hi: float, step: float
     )
 
 
+def _fmt_ist(value, seconds: bool = False) -> str:
+    stamp = pd.Timestamp(value)
+    if stamp.tzinfo is None:
+        stamp = stamp.tz_localize("UTC")
+    else:
+        stamp = stamp.tz_convert("UTC")
+    stamp = stamp.tz_convert(IST)
+    pattern = "%d %b %Y · %H:%M:%S IST" if seconds else "%d %b %Y · %H:%M IST"
+    return stamp.strftime(pattern)
+
+
+def _now_ist() -> str:
+    return datetime.now(IST).strftime("%d %b %Y · %H:%M:%S IST")
+
+
+def _fmt_axis(value):
+    stamp = pd.Timestamp(value)
+    if stamp.tzinfo is None:
+        stamp = stamp.tz_localize("UTC")
+    else:
+        stamp = stamp.tz_convert("UTC")
+    return stamp.tz_convert(IST)
+
+
+def _as_ist_frame(frame: pd.DataFrame) -> pd.DataFrame:
+    out = frame.copy()
+    out["timestamp"] = pd.to_datetime(out["timestamp"], utc=True).dt.tz_convert(IST)
+    return out
+
+
+def _label_window(raw: pd.DataFrame) -> pd.DataFrame:
+    framed = features(raw).dropna(subset=list(FEATURE_COLS)).reset_index(drop=True)
+    framed["timestamp"] = pd.to_datetime(framed["timestamp"], utc=True)
+    if len(framed) < 40:
+        raise RuntimeError("Not enough closed candles yet.")
+    burn = min(80, max(20, len(framed) // 5))
+    names, probs = label_span(framed[list(HMM_COLS)].to_numpy(), burn, len(framed), prev=None)
+    framed = framed.iloc[burn:].reset_index(drop=True)
+    for i, name in enumerate(REGIMES):
+        framed[name] = probs[:, i]
+    framed["regime"] = names
+    return framed
+
+
+def _empty_book() -> dict:
+    return {"position": 0.0, "wealth": 1.0, "rows": [], "cursor": 0}
+
+
+def _roll_books(frame, cond_model, blind_model) -> dict:
+    """Settle every candle whose next close is already known. Both bots share that tape."""
+    end = len(frame)
+    while end > 0 and not _can_step(frame, end - 1):
+        end -= 1
+    books = {"conditioned": _empty_book(), "blind": _empty_book(), "cursor": 0}
+    if cond_model is None or blind_model is None:
+        books["cursor"] = end
+        return books
+    for i in range(end):
+        _fill_books(frame, i, books, cond_model, blind_model)
+    books["cursor"] = end
+    return books
+
+
+def _fill_books(frame, index: int, books: dict, cond_model, blind_model) -> None:
+    row = frame.iloc[int(index)]
+    feats = row[list(FEATURE_COLS)].to_numpy(dtype=float)
+    regime = row[list(REGIMES)].to_numpy(dtype=float)
+    nxt = float(row["next_ret"])
+    for name, model, see_regime in (
+        ("conditioned", cond_model, True),
+        ("blind", blind_model, False),
+    ):
+        book = books[name]
+        bet = float(predict_action(model, feats, regime, float(book["position"]), see_regime))
+        ret = float(strategy_returns([bet], [nxt], start_position=float(book["position"]))[0])
+        wealth = float(book["wealth"]) * float(np.exp(ret))
+        book["rows"].append(
+            {
+                "timestamp": row["timestamp"],
+                "bet": bet,
+                "side": trade_side(bet),
+                "wealth": wealth,
+                "fed": [float(x) for x in regime],
+            }
+        )
+        book["position"] = bet
+        book["wealth"] = wealth
+    books["cursor"] = int(index) + 1
+
+
+def _prime_live(timeframe: str, cond_model, blind_model) -> None:
+    try:
+        raw, stale = fetch_window(timeframe)
+        framed = _label_window(raw)
+    except Exception:
+        st.session_state.paper_frame = None
+        st.session_state.live_books = None
+        st.session_state.live_tf = timeframe
+        if timeframe == "4h" and RAW_PATH.exists():
+            st.session_state.paper_live_error = "Binance did not answer. The tape is the saved file."
+        else:
+            st.session_state.paper_live_error = (
+                "Binance is unreachable and there is no saved file for this timeframe."
+            )
+        return
+    st.session_state.paper_frame = framed
+    st.session_state.live_tf = timeframe
+    st.session_state.live_caught_up = True
+    st.session_state.paper_live_error = (
+        "Binance did not answer. The tape is the saved file." if stale else ""
+    )
+    if cond_model is None or blind_model is None:
+        st.session_state.live_books = None
+        st.session_state.paper_live_error = "The conditioned and blind agents are not both on disk."
+        return
+    st.session_state.live_books = _roll_books(framed, cond_model, blind_model)
+    st.session_state.paper = _fresh_paper(int(st.session_state.live_books["cursor"]))
+
+
+def _extend_live(frame, timeframe: str):
+    """Append newly closed candles. The new labels are fit only on the rows before them."""
+    try:
+        raw, stale = fetch_window(timeframe)
+    except Exception:
+        return frame, "Binance is unreachable and there is no saved file for this timeframe."
+    framed = features(raw).dropna(subset=list(FEATURE_COLS)).reset_index(drop=True)
+    framed["timestamp"] = pd.to_datetime(framed["timestamp"], utc=True)
+    last = pd.Timestamp(frame["timestamp"].iloc[-1])
+    if last.tzinfo is None:
+        last = last.tz_localize("UTC")
+    fresh = framed.index[framed["timestamp"] > last]
+    note = "Binance did not answer. The tape is the saved file." if stale else ""
+    if len(fresh) == 0:
+        return frame, note
+    start = int(fresh[0])
+    prev = str(frame["regime"].iloc[-1]) if "regime" in frame.columns and len(frame) else None
+    names, probs = label_span(framed[list(HMM_COLS)].to_numpy(), start, len(framed), prev=prev)
+    extra = framed.iloc[start:].copy()
+    for i, name in enumerate(REGIMES):
+        extra[name] = probs[:, i]
+    extra["regime"] = names
+    merged = pd.concat([frame, extra], ignore_index=True)
+    return merged, note
+
+
+def _settle_open(frame, books: dict, cond_model, blind_model) -> None:
+    while _can_step(frame, int(books["cursor"])):
+        _fill_books(frame, int(books["cursor"]), books, cond_model, blind_model)
+
+
+def _pair_preview(row, books, cond_model, blind_model):
+    custom = st.session_state.get("sim_custom") and all(
+        f"sim-f-{name}" in st.session_state for name in FEATURE_COLS
+    )
+    if custom:
+        feats = np.array([float(st.session_state[f"sim-f-{name}"]) for name in FEATURE_COLS])
+        regime = _mix([float(st.session_state[f"sim-r-{name}"]) for name in REGIMES])
+    else:
+        feats = row[list(FEATURE_COLS)].to_numpy(dtype=float)
+        regime = row[list(REGIMES)].to_numpy(dtype=float)
+    bet_c = float(predict_action(cond_model, feats, regime, float(books["conditioned"]["position"]), True))
+    bet_b = float(predict_action(blind_model, feats, regime, float(books["blind"]["position"]), False))
+    return bet_c, bet_b, regime
+
+
+def _race_card(timeframe: str, books: dict, spot, closed_at: str, bet_c, bet_b, regime) -> str:
+    def cell(title: str, book: dict, bet: float) -> str:
+        wealth = float(book["wealth"])
+        move = wealth - 1.0
+        return (
+            f"<div><p class='kicker'>{title}</p>"
+            f"<p class='pos small'>{wealth:.3f}</p>"
+            f"<p class='note'>{move:+.1%} · {len(book['rows'])} fills · open {bet:+.2f} {trade_side(bet)}</p></div>"
+        )
+
+    price = f"{float(spot):,.2f}" if spot is not None else "—"
+    mix = _mix_html(regime) or '<i style="width:100%;background:#8a8175">no regime</i>'
+    name = TF_NAME.get(timeframe, timeframe)
+    return (
+        f'<div class="card"><p class="kicker">{_now_ist()}</p>'
+        f'<p class="pos small">{price}</p>'
+        f'<p class="note">Binance last price. Waiting for the next {name} close. '
+        f"Latest closed candle {closed_at}. Nothing is sent to an exchange.</p>"
+        f'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:0.8rem">'
+        f"{cell('Conditioned', books['conditioned'], bet_c)}"
+        f"{cell('Blind', books['blind'], bet_b)}"
+        f"</div>"
+        f'<p class="kicker" style="margin-top:0.8rem">Regime the conditioned bot sees</p>'
+        f'<div class="mix">{mix}</div>'
+        f'<p class="note">Paper wealth starts at 1. The blind bot trades the same candles and never sees this mix. '
+        f"Move the sliders to change only the conditioned bot's open bet.</p></div>"
+    )
+
+
+def _can_step(frame, cursor: int) -> bool:
+    """A bar can be settled only once the next candle has closed."""
+    if cursor < 0 or cursor >= len(frame):
+        return False
+    return bool(pd.notna(frame["next_ret"].iloc[int(cursor)]))
+
+
 def _price_at(tape, stamp) -> float:
     ts = pd.to_datetime(tape["timestamp"], utc=True)
     when = pd.Timestamp(stamp)
@@ -546,27 +774,24 @@ def _price_at(tape, stamp) -> float:
 
 
 def _append_live(frame) -> str:
-    """Add bars whose next close is already known. One fit, on the rows before those bars."""
-    if not RAW_PATH.exists():
-        return "No saved Binance file, so live prices are off. Replay still works."
+    """Add closed 4h bars after the tape. The fit uses only the rows before those bars."""
+    stale = False
     try:
-        closed = fetch_closed()
-    except Exception as exc:
-        return str(exc)
-    if closed.empty:
-        return ""
+        refresh_ohlcv()
+    except Exception:
+        stale = True
+    if not RAW_PATH.exists():
+        return "Binance is unreachable and there is no saved file."
     raw = pd.read_parquet(RAW_PATH)
     raw["timestamp"] = pd.to_datetime(raw["timestamp"], utc=True)
-    merged = pd.concat([raw, closed], ignore_index=True)
-    merged = merged.drop_duplicates("timestamp").sort_values("timestamp")
-    framed = model_frame(merged)
+    framed = features(raw).dropna(subset=list(FEATURE_COLS)).reset_index(drop=True)
     framed["timestamp"] = pd.to_datetime(framed["timestamp"], utc=True)
     last = pd.Timestamp(frame["timestamp"].iloc[-1])
     if last.tzinfo is None:
         last = last.tz_localize("UTC")
     fresh = framed.index[framed["timestamp"] > last]
     if len(fresh) == 0:
-        return ""
+        return "Binance did not answer. The tape is the saved file." if stale else ""
     start = int(fresh[0])
     prev = str(frame["regime"].iloc[-1]) if "regime" in frame.columns else None
     try:
@@ -580,7 +805,7 @@ def _append_live(frame) -> str:
     if "fold" in frame.columns:
         extra["fold"] = int(frame["fold"].iloc[-1])
     st.session_state.paper_frame = pd.concat([frame, extra], ignore_index=True)
-    return ""
+    return "Binance did not answer. The tape is the saved file." if stale else ""
 
 
 def _mix_html(regime) -> str:
@@ -611,7 +836,43 @@ def _pills(audit) -> str:
     return "".join(chunks)
 
 
-def _sim_card(when: str, verb: str, bet: float, regime, audit, wealth: float, fills: int, custom: bool) -> str:
+def _live_price_line(price: float | None) -> str:
+    if price is None:
+        return ""
+    return f"Last price {price:,.2f}. "
+
+
+def _draw_live_price(fig, when, price: float) -> None:
+    fig.add_hline(y=float(price), line_width=1, line_dash="dot", line_color=OK, row=1, col=1)
+    y0, y1 = fig.layout.yaxis.range
+    if y0 is not None and y1 is not None:
+        pad = (y1 - y0) * 0.04 or 1.0
+        fig.update_yaxes(range=[min(y0, float(price) - pad), max(y1, float(price) + pad)], row=1, col=1)
+    fig.add_annotation(
+        x=when,
+        y=float(price),
+        text=f"  {price:,.0f} now",
+        showarrow=False,
+        xanchor="left",
+        yanchor="middle",
+        font=dict(family="IBM Plex Mono, ui-monospace, monospace", size=12, color=INK),
+        row=1,
+        col=1,
+    )
+
+
+def _sim_card(
+    when: str,
+    verb: str,
+    bet: float,
+    regime,
+    audit,
+    wealth: float,
+    fills: int,
+    custom: bool,
+    last_price: float | None = None,
+    pending: bool = False,
+) -> str:
     lead = REGIMES[int(np.argmax(regime))] if float(np.max(regime)) > 0 else None
     tone = REGIME_COLOR[lead] if lead else INK
     source = "Your numbers" if custom else "This candle"
@@ -625,34 +886,61 @@ def _sim_card(when: str, verb: str, bet: float, regime, audit, wealth: float, fi
         f'<p class="kicker">Regime it was told</p>'
         f'<div class="mix">{mix}</div>'
         f"{_pills(audit)}"
-        f'<p class="note" style="margin-top:0.7rem">Paper wealth {wealth:.3f}. {fills} filled. Nothing is sent to an exchange.</p>'
+        f'<p class="note" style="margin-top:0.7rem">Paper wealth {wealth:.3f}. {fills} filled. '
+        f"{'Waiting for the next closed 4h candle. ' if pending else ''}"
+        f"{_live_price_line(last_price)}Nothing is sent to an exchange.</p>"
         f"</div>"
     )
 
 
 def _render_simulate(df, labels, models, plug, bot_options) -> None:
     """Chart, the decision card, then the regime the bot is told."""
-    clock = st.session_state.get("sim_clock", "Replay")
+    if "sim_clock" not in st.session_state:
+        st.session_state.sim_clock = "Live"
+    if "sim_tf" not in st.session_state:
+        st.session_state.sim_tf = "4h"
+    clock = st.session_state.sim_clock
     choice = st.session_state.bot
-    if st.session_state.get("sim_sig") != (clock, choice):
-        st.session_state.sim_sig = (clock, choice)
+    timeframe = st.session_state.sim_tf
+    sig = (clock, choice, timeframe if clock == "Live" else None)
+    if st.session_state.get("sim_sig") != sig:
+        st.session_state.sim_sig = sig
         st.session_state.sim_play = False
         st.session_state.sim_custom = False
         st.session_state.sim_reload = True
         st.session_state.paper_frame = None
+        st.session_state.live_books = None
+        st.session_state.live_tf = None
+        st.session_state.live_caught_up = False
         start = len(df) if clock == "Live" else _date_index(labels)
         st.session_state.paper = _fresh_paper(start)
-    if clock == "Live" and st.session_state.paper_frame is None:
-        st.session_state.paper_frame = df.copy()
+    cond_model = models[max(models)] if models else None
+    blind_paths = sorted(RUN.glob("fold*_blind.zip"))
+    blind_model = _blind_latest(blind_paths[-1].stat().st_mtime) if blind_paths else None
+    if clock == "Live" and (
+        st.session_state.get("paper_frame") is None or st.session_state.get("live_tf") != timeframe
+    ):
+        with st.spinner(f"Loading live Binance {TF_NAME[timeframe]} candles…"):
+            _prime_live(timeframe, cond_model, blind_model)
 
-    setup_l, setup_r = st.columns([1, 1.2])
+    setup_l, setup_m, setup_r = st.columns([1, 1.15, 1.15])
     setup_l.radio("Clock", ["Replay", "Live"], horizontal=True, key="sim_clock")
+    setup_m.radio("Candles", ["15m", "1h", "4h"], horizontal=True, key="sim_tf")
     setup_r.selectbox("Bot", bot_options, key="bot")
-    pace = timedelta(seconds=30) if clock == "Live" else timedelta(seconds=1) if st.session_state.get("sim_play") else None
+    if clock == "Live":
+        st.caption(
+            f"Now {_now_ist()}. Binance BTC/USDT, paper money only. "
+            "The weights were trained on 4-hour bars; 15m and 1h run those same weights on the faster candle. "
+            "Replay still walks the saved 4-hour research tape."
+        )
+    pace = timedelta(seconds=20) if clock == "Live" else timedelta(seconds=1) if st.session_state.get("sim_play") else None
 
     @st.fragment(run_every=pace)
     def _sim_desk():
         now = time.time()
+        if clock == "Live" and st.session_state.get("paper_frame") is None:
+            st.caption(st.session_state.get("paper_live_error") or "No live tape.")
+            return
         live_tape = df if clock == "Replay" else st.session_state.paper_frame
         acted = False
         if st.session_state.pop("sim_do_step", False):
@@ -669,10 +957,18 @@ def _render_simulate(df, labels, models, plug, bot_options) -> None:
         if clock == "Live":
             if now - float(st.session_state.get("paper_poll", 0.0)) >= 20:
                 st.session_state.paper_poll = now
-                st.session_state.paper_live_error = _append_live(st.session_state.paper_frame)
-                live_tape = st.session_state.paper_frame
-                while st.session_state.paper["cursor"] < len(live_tape):
-                    _advance_sim(live_tape, plug, models)
+                live_tape, note = _extend_live(st.session_state.paper_frame, timeframe)
+                st.session_state.paper_frame = live_tape
+                st.session_state.paper_live_error = note
+                try:
+                    st.session_state.live_price = fetch_last_price()
+                except Exception:
+                    if not st.session_state.paper_live_error:
+                        st.session_state.paper_live_error = "Binance did not answer with a last price."
+                books = st.session_state.get("live_books")
+                if books is not None and cond_model is not None and blind_model is not None:
+                    _settle_open(live_tape, books, cond_model, blind_model)
+                    st.session_state.paper["cursor"] = int(books["cursor"])
         elif (
             not acted
             and st.session_state.get("sim_play")
@@ -720,10 +1016,21 @@ def _render_simulate(df, labels, models, plug, bot_options) -> None:
             mark_at = None
             mark_y = None
             lead = None
+        books = st.session_state.get("live_books") if clock == "Live" else None
+        bet_c = bet_b = None
+        if books is not None and cond_model is not None and blind_model is not None:
+            row = live_tape.iloc[min(int(books["cursor"]), len(live_tape) - 1)]
+            bet_c, bet_b, regime = _pair_preview(row, books, cond_model, blind_model)
+            text = f"Conditioned {bet_c:+.2f}<br>Blind {bet_b:+.2f}"
+            mark_at = row["timestamp"]
+            mark_y = float(row["high"]) if "high" in row.index and pd.notna(row["high"]) else float(row["close"])
+            lead = REGIMES[int(np.argmax(regime))] if float(np.max(regime)) > 0 else None
+            paper["cursor"] = int(books["cursor"])
         head = min(int(paper["cursor"]), len(live_tape) - 1)
         start_i = max(0, head - 119)
         view = live_tape.iloc[start_i : head + 1]
-        opening = (view["timestamp"].iloc[0], view["timestamp"].iloc[-1])
+        draw = _as_ist_frame(view) if clock == "Live" else view
+        opening = (draw["timestamp"].iloc[0], draw["timestamp"].iloc[-1])
         chart_col, card_col = st.columns([1.55, 0.72], gap="large")
         with chart_col:
             legend = "".join(
@@ -731,31 +1038,73 @@ def _render_simulate(df, labels, models, plug, bot_options) -> None:
             )
             st.markdown(f'<div class="legend">{legend}</div>', unsafe_allow_html=True)
             kind = "candle" if {"open", "high", "low", "close"} <= set(view.columns) else "line"
+            axis_at = _fmt_axis(mark_at) if clock == "Live" and mark_at is not None else (pd.Timestamp(mark_at) if mark_at is not None else None)
             fig = price_figure(
-                view,
+                draw,
                 "",
-                mark=pd.Timestamp(mark_at) if mark_at is not None else None,
+                mark=axis_at,
                 height=520,
                 ribbon=0.16,
                 kind=kind,
                 xrange=opening,
             )
-            trade_marks(fig, view, paper["rows"])
+            marks = books["conditioned"]["rows"][-24:] if books is not None else paper["rows"]
+            if clock == "Live":
+                marks = [{**item, "timestamp": _fmt_axis(item["timestamp"])} for item in marks]
+            trade_marks(fig, draw, marks)
+            spot = st.session_state.get("live_price") if clock == "Live" else None
+            if spot is not None:
+                _draw_live_price(fig, draw["timestamp"].iloc[-1], float(spot))
             if text is not None and mark_at is not None:
                 color = REGIME_COLOR[lead] if lead else INK
                 y0, y1 = fig.layout.yaxis.range
                 span = (y1 - y0) or 1.0
                 fig.update_yaxes(range=[y0, y1 + span * 0.18], row=1, col=1)
-                callout(fig, pd.Timestamp(mark_at), float(mark_y), text, color)
+                callout(fig, axis_at, float(mark_y), text, color)
             fig.update_layout(uirevision=f"sim-{head}", showlegend=False, title_text="", margin=dict(t=12, l=48, r=12, b=28))
             st.plotly_chart(fig, width="stretch", config=PAN, key="sim-price")
+            if books is not None and books["conditioned"]["rows"]:
+                st.plotly_chart(paper_race_figure(books), width="stretch", config=PAN, key="sim-race")
+            live_note = " Times are IST. The dotted line is the Binance price now." if spot is not None else ""
             st.markdown(
                 '<p class="note">Drag to pan. Scroll to zoom. Double-click resets. '
-                "Triangles are fills already made. The box is this candle.</p>",
+                f"Triangles are the conditioned bot's recent paper fills. The box is this candle.{live_note}</p>",
                 unsafe_allow_html=True,
             )
         with card_col:
-            if audit is not None:
+            live_wait = clock == "Live" and (
+                audit is None or not _can_step(live_tape, int(paper["cursor"]))
+            )
+            if books is not None and bet_c is not None:
+                closed_at = _fmt_ist(live_tape["timestamp"].iloc[-1])
+                st.markdown(
+                    _race_card(timeframe, books, spot, closed_at, bet_c, bet_b, regime),
+                    unsafe_allow_html=True,
+                )
+            elif live_wait:
+                closed_at = pd.Timestamp(live_tape["timestamp"].iloc[-1]).strftime("%d %b %Y · %H:%M UTC")
+                price_html = (
+                    f'<p class="pos">{float(spot):,.2f}</p>'
+                    if spot is not None
+                    else '<p class="note">Last price unavailable.</p>'
+                )
+                held = ""
+                if paper["rows"]:
+                    last = paper["rows"][-1]
+                    held = (
+                        f" Last fill {last['side']} {float(last['bet']):+.2f}"
+                        f" at {pd.Timestamp(last['timestamp']).strftime('%d %b %H:%M UTC')}."
+                    )
+                st.markdown(
+                    '<div class="card"><p class="kicker">Live BTC/USDT</p>'
+                    f"{price_html}"
+                    f'<p class="note">Waiting for the next closed 4h candle. '
+                    f"Latest closed bar {closed_at}.{held} "
+                    "The next bet is made when that candle closes. "
+                    "Nothing is sent to an exchange.</p></div>",
+                    unsafe_allow_html=True,
+                )
+            elif audit is not None:
                 st.markdown(
                     _sim_card(
                         when,
@@ -766,13 +1115,15 @@ def _render_simulate(df, labels, models, plug, bot_options) -> None:
                         float(paper["wealth"]),
                         len(paper["rows"]),
                         bool(st.session_state.get("sim_custom")),
+                        float(spot) if spot is not None else None,
+                        pending=clock == "Live" and not _can_step(live_tape, int(paper["cursor"])),
                     ),
                     unsafe_allow_html=True,
                 )
             else:
                 st.markdown(
-                    '<div class="card"><p class="kicker">Live</p>'
-                    '<p class="note">Waiting for the next closed 4h candle.</p></div>',
+                    '<div class="card"><p class="kicker">Replay</p>'
+                    '<p class="note">The tape has reached the last saved candle.</p></div>',
                     unsafe_allow_html=True,
                 )
             at_end = clock == "Live" or int(paper["cursor"]) >= len(live_tape)
@@ -793,15 +1144,19 @@ def _render_simulate(df, labels, models, plug, bot_options) -> None:
                 st.session_state.sim_custom = False
                 st.session_state.sim_reload = True
                 st.session_state.paper_frame = None
+                st.session_state.live_books = None
+                st.session_state.live_tf = None
+                st.session_state.live_caught_up = False
                 fresh_at = len(df) if clock == "Live" else _date_index(labels)
                 st.session_state.paper = _fresh_paper(fresh_at)
                 st.rerun()
         shown = live_tape.iloc[head]
         _sync_shown(shown, paper)
         st.markdown(
-            '<div class="band"><p class="kicker">Tell the bot the regime</p>'
+            '<div class="band"><p class="kicker">Tell the conditioned bot the regime</p>'
             "<p class=\"note\">These four moods are what this project adds. "
-            "Move one to replace this candle. They are rescaled so they sum to 1.</p></div>",
+            "Move one and only the conditioned bot's open bet changes. The blind bot never sees them. "
+            "They are rescaled so they sum to 1.</p></div>",
             unsafe_allow_html=True,
         )
         regime_cols = st.columns(4)
@@ -837,6 +1192,7 @@ def _render_simulate(df, labels, models, plug, bot_options) -> None:
 
 
 _ensure()
+_refresh_market()
 mtime = (RUN / "bars.parquet").stat().st_mtime
 df, summary = _read(mtime)
 models = _models(mtime) if summary["model"] == "trained PPO" else {}
@@ -866,14 +1222,31 @@ else:
     badge = summary["model"]
     pass_rate = summary["pass_rate"]
     sharpe_name = "conditioned"
-source = "Binance BTC/USDT · 4h" if summary["source"] == "binance" else "Synthetic series · not Binance history"
+market_status = st.session_state.get("market_status")
+if market_status == "stale":
+    source = "Saved Binance file · tape is stale"
+elif market_status == "down" and summary["source"] != "binance":
+    source = "Synthetic series · Binance unreachable"
+elif market_status == "down":
+    source = "Binance unreachable · saved run only"
+elif summary["source"] == "binance":
+    source = "Binance BTC/USDT · 4h"
+else:
+    source = "Synthetic series · not Binance history"
 if "view" not in st.session_state:
     st.session_state.view = "audit"
 view = st.session_state.view
 plug = None if choice == "Saved run" else load_act(bot_paths[choice])
 if view == "simulate":
-    title = "Watch the bot<br>on this candle"
-    deck = "The card is the decision. The box sits on that candle. The regime controls are underneath."
+    title = "Conditioned against blind<br>on this candle"
+    deck = (
+        f"Paper money on live Binance candles. Clock {_now_ist()}. "
+        "The conditioned bot sees the regime. The blind bot does not. Nothing is sent to an exchange."
+    )
+    if market_status == "stale":
+        deck += " Binance did not answer, so this tape is the saved file."
+    elif market_status == "down":
+        deck += " Binance is unreachable and there is no saved file." if summary["source"] != "binance" else " Binance is unreachable."
 else:
     title = "Does the regime<br>move the position?"
     deck = f"{source}. Out-of-fold bars only. {DISCLAIMER}"

@@ -1,0 +1,118 @@
+{
+  "model": "trained PPO",
+  "source": "binance",
+  "symbol": "BTC/USDT",
+  "timeframe": "4h",
+  "pass_rate": 0.0009623797025371828,
+  "n_bars": 11430,
+  "timesteps": 8192,
+  "train_passes": 10,
+  "seed": 42,
+  "metrics": {
+    "conditioned": {
+      "sharpe": {
+        "point": -0.1601523017067771,
+        "low": -0.9763915172774634,
+        "high": 0.6306942217075078
+      },
+      "sortino": {
+        "point": -0.22439781667135533,
+        "low": -1.335986268612043,
+        "high": 0.9089305618423779
+      },
+      "max_drawdown": -0.7703981816285767,
+      "total_return": -0.2932879800175322
+    },
+    "buy_hold": {
+      "sharpe": {
+        "point": 0.35216934980242126,
+        "low": -0.5085454219861323,
+        "high": 1.2418917841237282
+      },
+      "sortino": {
+        "point": 0.496597078533573,
+        "low": -0.705272772609452,
+        "high": 1.81112202106431
+      },
+      "max_drawdown": -0.7704339319608701,
+      "total_return": 1.5621620618576997
+    },
+    "blind": {
+      "sharpe": {
+        "point": -1.1236586651592642,
+        "low": -1.9592161082941417,
+        "high": -0.26830541324237395
+      },
+      "sortino": {
+        "point": -1.5066701336288997,
+        "low": -2.5545730145685397,
+        "high": -0.36827753832090143
+      },
+      "max_drawdown": -0.9440650744129827,
+      "total_return": -0.9296124980027222
+    }
+  },
+  "by_regime": {
+    "bull": {
+      "n": 0,
+      "conditioned": {
+        "sharpe": null,
+        "mean_return": null
+      },
+      "buy_hold": {
+        "sharpe": null,
+        "mean_return": null
+      },
+      "blind": {
+        "sharpe": null,
+        "mean_return": null
+      }
+    },
+    "bear": {
+      "n": 852,
+      "conditioned": {
+        "sharpe": -0.18979665024865391,
+        "mean_return": -4.452900471194111e-05
+      },
+      "buy_hold": {
+        "sharpe": -1.937669587948765,
+        "mean_return": -0.0005758606813408833
+      },
+      "blind": {
+        "sharpe": -3.195012685935559,
+        "mean_return": -0.0008340032278829114
+      }
+    },
+    "calm": {
+      "n": 10364,
+      "conditioned": {
+        "sharpe": -0.17142635510078139,
+        "mean_return": -3.113240745204141e-05
+      },
+      "buy_hold": {
+        "sharpe": 0.7054321671034871,
+        "mean_return": 0.00015696837527365203
+      },
+      "blind": {
+        "sharpe": -1.0056542745310881,
+        "mean_return": -0.00019718585777125423
+      }
+    },
+    "crisis": {
+      "n": 214,
+      "conditioned": {
+        "sharpe": 0.19414027427713962,
+        "mean_return": 6.291102815148368e-05
+      },
+      "buy_hold": {
+        "sharpe": -2.2253227509572153,
+        "mean_return": -0.0009127826325481881
+      },
+      "blind": {
+        "sharpe": 1.2239350181309638,
+        "mean_return": 0.00046946457977374215
+      }
+    }
+  },
+  "spotlight": "2022-06-18T16:00:00+00:00"
+}

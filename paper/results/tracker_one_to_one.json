@@ -1,0 +1,32 @@
+{
+  "switches": 38,
+  "switches_per_year": 6.789035731767009,
+  "mean_run_bars": 314.3076923076923,
+  "median_run_bars": 210.0,
+  "per_regime": {
+    "bull": {
+      "share": 0.050742372328275415,
+      "mean_ret_bps": 11.919549640198648,
+      "mean_vol_pct": 1.138496632275262,
+      "mean_trend_pct": 1.1934897527123798
+    },
+    "bear": {
+      "share": 0.06567139827051721,
+      "mean_ret_bps": -3.812385504524207,
+      "mean_vol_pct": 1.4261872041329964,
+      "mean_trend_pct": -0.4528987866278465
+    },
+    "calm": {
+      "share": 0.5706477402512645,
+      "mean_ret_bps": 0.8726977190146358,
+      "mean_vol_pct": 0.9470053091783068,
+      "mean_trend_pct": 0.12396420305424415
+    },
+    "crisis": {
+      "share": 0.3129384891499429,
+      "mean_ret_bps": -1.3762580176759518,
+      "mean_vol_pct": 1.152570454015349,
+      "mean_trend_pct": -0.1309570514666486
+    }
+  }
+}

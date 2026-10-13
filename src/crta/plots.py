@@ -271,6 +271,34 @@ def trade_marks(fig: go.Figure, tape: pd.DataFrame, rows: list) -> None:
         )
 
 
+def paper_race_figure(books: dict, height: int = 260) -> go.Figure:
+    """Paper wealth of the conditioned bot and the blind bot on the same candles."""
+    fig = go.Figure()
+    series = (
+        ("conditioned", INK, "Regime-conditioned"),
+        ("blind", BEAR, "Regime-blind"),
+    )
+    for key, color, name in series:
+        rows = (books.get(key) or {}).get("rows") or []
+        if not rows:
+            continue
+        ts = pd.to_datetime([row["timestamp"] for row in rows], utc=True).tz_convert("Asia/Kolkata")
+        fig.add_trace(
+            go.Scatter(
+                x=ts,
+                y=[row["wealth"] for row in rows],
+                name=name,
+                line=dict(color=color, width=2.0),
+                hovertemplate="%{x|%d %b %H:%M} IST<br>" + name + " %{y:.3f}<extra></extra>",
+            )
+        )
+    fig.add_hline(y=1.0, line_width=1, line_dash="dot", line_color=RULE)
+    fig = _style_plotly(fig, "Paper wealth", height)
+    fig.update_layout(margin=dict(t=56, l=48, r=12, b=28), showlegend=True)
+    fig.update_yaxes(title_text="× start", tickformat=".3f")
+    return fig
+
+
 def equity_figure(df: pd.DataFrame, model: str, mark=None, height: int = 360) -> go.Figure:
     ts = pd.to_datetime(df["timestamp"], utc=True)
     if model == "probe":

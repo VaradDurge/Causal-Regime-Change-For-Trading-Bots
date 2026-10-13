@@ -21,25 +21,18 @@ def project_root() -> Path:
 
 ROOT = project_root()
 RAW_PATH = ROOT / "data" / "raw" / "btc_usdt_4h.parquet"
+OHLCV_COLS = ["timestamp", "open", "high", "low", "close", "volume"]
 
 
-def fetch_ohlcv(
-    symbol: str = "BTC/USDT",
-    timeframe: str = "4h",
-    since: str = "2021-01-01",
-    cache: Path = RAW_PATH,
-) -> pd.DataFrame:
-    if cache.exists():
-        df = pd.read_parquet(cache)
-        df["timestamp"] = pd.to_datetime(df["timestamp"], utc=True)
-        return df
-
+def _binance():
     import ccxt
 
-    exchange = ccxt.binance({"enableRateLimit": True})
-    since_ms = exchange.parse8601(f"{since}T00:00:00Z")
+    return ccxt.binance({"enableRateLimit": True})
+
+
+def _page_ohlcv(exchange, symbol: str, timeframe: str, since_ms: int) -> list[list]:
     rows: list[list] = []
-    last_ts = -1
+    last_ts = since_ms - 1
     while True:
         batch = exchange.fetch_ohlcv(symbol, timeframe, since=since_ms, limit=1000)
         if not batch or batch[-1][0] <= last_ts:
@@ -49,28 +42,176 @@ def fetch_ohlcv(
         since_ms = last_ts + 1
         if len(batch) < 1000:
             break
-    df = pd.DataFrame(rows, columns=["timestamp", "open", "high", "low", "close", "volume"])
+    return rows
+
+
+def _closed_only(rows: list[list], now_ms: int, width_ms: int) -> list[list]:
+    return [row for row in rows if int(row[0]) + width_ms <= now_ms]
+
+
+def _ohlcv_frame(rows: list[list]) -> pd.DataFrame:
+    df = pd.DataFrame(rows, columns=OHLCV_COLS)
+    if df.empty:
+        return df
     df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms", utc=True)
-    df = df.drop_duplicates("timestamp").sort_values("timestamp").reset_index(drop=True)
+    return df.drop_duplicates("timestamp").sort_values("timestamp").reset_index(drop=True)
+
+
+def _read_cache(cache: Path) -> pd.DataFrame:
+    df = pd.read_parquet(cache)
+    df["timestamp"] = pd.to_datetime(df["timestamp"], utc=True)
+    return df.sort_values("timestamp").reset_index(drop=True)
+
+
+def merge_closed(existing: pd.DataFrame, incoming: pd.DataFrame) -> pd.DataFrame:
+    """Keep saved rows, replace any overlap, and append later closed bars."""
+    existing = existing.copy()
+    existing["timestamp"] = pd.to_datetime(existing["timestamp"], utc=True)
+    if incoming.empty:
+        return existing.sort_values("timestamp").reset_index(drop=True)
+    incoming = incoming.copy()
+    incoming["timestamp"] = pd.to_datetime(incoming["timestamp"], utc=True)
+    first = incoming["timestamp"].min()
+    kept = existing.loc[existing["timestamp"] < first]
+    out = pd.concat([kept, incoming], ignore_index=True)
+    return out.drop_duplicates("timestamp").sort_values("timestamp").reset_index(drop=True)
+
+
+def _write_cache(df: pd.DataFrame, cache: Path) -> None:
     cache.parent.mkdir(parents=True, exist_ok=True)
-    df.to_parquet(cache, index=False)
+    tmp = cache.with_suffix(cache.suffix + ".tmp")
+    df.to_parquet(tmp, index=False)
+    tmp.replace(cache)
+
+
+def fetch_ohlcv(
+    symbol: str = "BTC/USDT",
+    timeframe: str = "4h",
+    since: str = "2021-01-01",
+    cache: Path = RAW_PATH,
+) -> pd.DataFrame:
+    """Return the saved file when it exists. A missing file is fetched once from 2021."""
+    if cache.exists():
+        return _read_cache(cache)
+
+    exchange = _binance()
+    since_ms = exchange.parse8601(f"{since}T00:00:00Z")
+    width = int(exchange.parse_timeframe(timeframe) * 1000)
+    rows = _closed_only(_page_ohlcv(exchange, symbol, timeframe, since_ms), int(exchange.milliseconds()), width)
+    df = _ohlcv_frame(rows)
+    if df.empty:
+        raise RuntimeError("Binance returned no closed candles")
+    _write_cache(df, cache)
     return df
+
+
+def refresh_ohlcv(
+    symbol: str = "BTC/USDT",
+    timeframe: str = "4h",
+    since: str = "2021-01-01",
+    cache: Path = RAW_PATH,
+) -> pd.DataFrame:
+    """Append closed candles after the last saved bar. A failed fetch leaves the file untouched."""
+    if not cache.exists():
+        return fetch_ohlcv(symbol, timeframe, since, cache)
+
+    existing = _read_cache(cache)
+    exchange = _binance()
+    if existing.empty:
+        since_ms = exchange.parse8601(f"{since}T00:00:00Z")
+        width = int(exchange.parse_timeframe(timeframe) * 1000)
+        rows = _closed_only(_page_ohlcv(exchange, symbol, timeframe, since_ms), int(exchange.milliseconds()), width)
+        df = _ohlcv_frame(rows)
+        if df.empty:
+            raise RuntimeError("Binance returned no closed candles")
+        _write_cache(df, cache)
+        return df
+
+    width = int(exchange.parse_timeframe(timeframe) * 1000)
+    since_ms = int(existing["timestamp"].iloc[-1].timestamp() * 1000)
+    rows = _closed_only(_page_ohlcv(exchange, symbol, timeframe, since_ms), int(exchange.milliseconds()), width)
+    incoming = _ohlcv_frame(rows)
+    merged = merge_closed(existing, incoming)
+    if not incoming.empty:
+        _write_cache(merged, cache)
+    return merged
 
 
 def fetch_closed(symbol: str = "BTC/USDT", timeframe: str = "4h", limit: int = 3) -> pd.DataFrame:
     """Latest Binance candles whose close has already happened. The forming bar is dropped."""
-    import ccxt
-
-    exchange = ccxt.binance({"enableRateLimit": True})
+    exchange = _binance()
     rows = exchange.fetch_ohlcv(symbol, timeframe, limit=limit)
     width = int(exchange.parse_timeframe(timeframe) * 1000)
+    closed = _closed_only(rows, int(exchange.milliseconds()), width)
+    return _ohlcv_frame(closed)
+
+
+LIVE_BARS = {"15m": 1000, "1h": 1000, "4h": 500}
+
+
+def cache_for(timeframe: str) -> Path:
+    """4h stays on the training cache. Faster candles keep their own files."""
+    if timeframe == "4h":
+        return RAW_PATH
+    if timeframe not in LIVE_BARS:
+        raise ValueError(f"unsupported timeframe {timeframe}")
+    return ROOT / "data" / "raw" / f"btc_usdt_{timeframe}.parquet"
+
+
+def _refresh_window(timeframe: str, bars: int, cache: Path) -> pd.DataFrame:
+    exchange = _binance()
+    width = int(exchange.parse_timeframe(timeframe) * 1000)
     now = int(exchange.milliseconds())
-    closed = [row for row in rows if row[0] + width <= now]
-    df = pd.DataFrame(closed, columns=["timestamp", "open", "high", "low", "close", "volume"])
-    if df.empty:
-        return df
-    df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms", utc=True)
-    return df
+    if timeframe == "4h":
+        if cache.exists():
+            return refresh_ohlcv(timeframe=timeframe, cache=cache)
+        return fetch_ohlcv(timeframe=timeframe, cache=cache)
+    if cache.exists():
+        existing = _read_cache(cache)
+        since_ms = int(existing["timestamp"].iloc[-1].timestamp() * 1000)
+    else:
+        existing = None
+        since_ms = now - int(bars * width)
+    rows = _closed_only(_page_ohlcv(exchange, "BTC/USDT", timeframe, since_ms), now, width)
+    incoming = _ohlcv_frame(rows)
+    merged = incoming if existing is None else merge_closed(existing, incoming)
+    if merged.empty:
+        raise RuntimeError("Binance returned no closed candles")
+    if len(merged) > bars * 2:
+        merged = merged.tail(bars * 2).reset_index(drop=True)
+    if existing is None or not incoming.empty:
+        _write_cache(merged, cache)
+    return merged
+
+
+def fetch_window(timeframe: str = "4h", bars: int | None = None) -> tuple[pd.DataFrame, bool]:
+    """Recent closed candles for the live desk. A failed fetch returns the saved file and marks it stale."""
+    if timeframe not in LIVE_BARS:
+        raise ValueError(f"unsupported timeframe {timeframe}")
+    bars = int(bars or LIVE_BARS[timeframe])
+    cache = cache_for(timeframe)
+    try:
+        merged = _refresh_window(timeframe, bars, cache)
+        stale = False
+    except Exception:
+        if not cache.exists():
+            raise
+        merged = _read_cache(cache)
+        stale = True
+    if merged.empty:
+        raise RuntimeError("No closed candles")
+    return merged.tail(bars).reset_index(drop=True), stale
+
+
+def fetch_last_price(symbol: str = "BTC/USDT") -> float:
+    """Current Binance last price. This is the market now, not a closed 4h candle."""
+    ticker = _binance().fetch_ticker(symbol)
+    price = ticker.get("last")
+    if price is None:
+        price = ticker.get("close")
+    if price is None:
+        raise RuntimeError("Binance ticker had no last price")
+    return float(price)
 
 
 def synthetic_ohlcv(seed: int = 7) -> pd.DataFrame:
