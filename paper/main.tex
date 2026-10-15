@@ -707,6 +707,65 @@ ETH 1 h & \ci{0.5}{-13.1}{16.7} & 0.51 & 23.9 & 1.6 & 100.0 & 1.2\\
 
 The live audit repeats the holdout verdict (Table~\ref{tab:livegap}). Ablation moves the 4-h conditioned agent on 83.7\% of live decisions and the ETH 1-h agent on 23.9\%, but the native BTC 15-min, BTC 1-h and ETH 15-min agents on at most 0.4\%. Their regime input is no longer load-bearing, because a policy that holds $+1$ whatever it sees cannot respond to it. Sensitivity passes on every native decision for the same reason, since a flat curve passes. The counterfactual check passes on at most 1.6\% of decisions on any tape, and at most 1.2\% pass all three. The native twins thus remove the scale mismatch of the transferred agents but not the faithfulness problem. On most tapes they replace a load-bearing but unfaithful regime input with one that is not used at all.
 
+\subsection{Five seeds, after a validation grid}
+\label{sec:v2grid}
+The single-seed native recipe is the control for a one-factor grid. Each cell trains both twins for 500{,}000 steps on the validation split only (window 2{,}000, reward scale 100, two threads, seed 42), on BTC and ETH at 1\,h and 15\,min. The factors, one at a time, are the reward (raw, excess over buy-and-hold, differential Sharpe), the window sampler (uniform, regime-balanced, return-balanced), the entropy coefficient (0.01 or 0.02), a per-episode perturbation of the regime probabilities (0, 0.05, 0.1), and the tracker (v1 or v2). Returns are not a selection input. A tape would pass only if both twins had position standard deviation above 0.05, both spent less than 80\% of bars at $|a|>0.95$, and ablation moved the conditioned agent on at least 10\% of bars. The score of a cell is the mean, over the four tapes, of the summed relative shortfalls from those three bars.
+
+No cell passed. Every validation twin still spent more than 90\% of bars at $|a|>0.95$. The baseline had the lowest mean shortfall, 0.985. The next cell, perturbation probability 0.1, was 1.33, and excess-over-buy-and-hold was the worst at 2.65: on BTC 1\,h both of those twins finished with position standard deviation 0. Differential Sharpe did raise the standard deviation, often above 0.9, but the mass stayed on the rails and the BTC 15-min blind twin was constant. Return-balanced sampling produced an ablation rate of 73\% on BTC 1\,h, with standard deviations 0.56 and 0.84, and an extreme-share of 0.98 and 1.00. No factor reduced the baseline shortfall, so the pre-registered stack of helpful factors was empty and no combination was trained. \texttt{configs/final.yaml} is the native recipe. The agents below are not regularized.
+
+The same frozen file was then trained five times, seeds 42 through 46, on bars before 22~Sep 2025 16:00~UTC. Holdout and live were scored once each and were not used to change the file. Table~\ref{tab:v2seeds} gives the mean and the standard deviation across seeds. Figure~\ref{fig:v2wealth} draws each seed faintly and the mean in a heavier line.
+
+\begin{table*}[t]
+\caption{Five-seed native twins after the frozen recipe. Entries are the mean across seeds 42--46, with the standard deviation of those five numbers in parentheses. Return is net of turnover. ``Beats'' is the share of seeds whose conditioned log-return sum exceeds the blind twin. Ablation is the legacy pass rate. The agents are not regularized.}
+\label{tab:v2seeds}
+\centering
+\footnotesize
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{@{}ll l rr rr r r@{}}
+\toprule
+ & & & \multicolumn{2}{c}{conditioned} & \multicolumn{2}{c}{blind} & & \\
+\cmidrule(lr){4-5}\cmidrule(lr){6-7}
+Tape & Window & & return (\%) & pos.\ s.d. & return (\%) & pos.\ s.d. & beats & ablation (\%)\\
+\midrule
+BTC 1\,h & holdout & & 2.8 (38.2) & 0.55 (0.36) & $-$26.1 (12.8) & 0.44 (0.45) & 0.80 & 7.3 (13.6)\\
+BTC 1\,h & live & & 0.0 (5.6) & 0.30 (0.44) & 1.8 (4.8) & 0.44 (0.45) & 0.40 & 7.5 (14.6)\\
+BTC 15\,min & holdout & & $-$27.1 (4.9) & 0.09 (0.19) & $-$25.7 (2.8) & 0.15 (0.33) & 0.20 & 0.1 (0.3)\\
+BTC 15\,min & live & & $-$1.5 (4.8) & 0.17 (0.37) & $-$2.1 (3.1) & 0.00 (0.00) & 0.20 & 0.1 (0.2)\\
+ETH 1\,h & holdout & & $-$12.8 (56.4) & 0.74 (0.22) & $-$19.0 (39.6) & 0.02 (0.04) & 0.20 & 25.6 (20.0)\\
+ETH 1\,h & live & & 0.4 (9.3) & 0.53 (0.14) & $-$5.5 (8.3) & 0.02 (0.05) & 0.80 & 29.5 (30.2)\\
+ETH 15\,min & holdout & & $-$38.4 (8.8) & 0.36 (0.29) & $-$7.7 (44.5) & 0.37 (0.37) & 0.40 & 0.5 (0.5)\\
+ETH 15\,min & live & & $-$5.4 (3.2) & 0.33 (0.43) & 0.6 (8.9) & 0.32 (0.44) & 0.40 & 0.2 (0.2)\\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+Buy-and-hold lost 23.3\% and 23.7\% on the BTC holdout tapes and 34.1\% and 34.7\% on the ETH holdout tapes, with no seed variation because the position is fixed. On BTC 1\,h holdout the conditioned mean return is ahead of both the blind twin and buy-and-hold, and the conditioned log-return sum is larger on four of the five seeds. The mean Sharpe is still $-0.06$ (0.86), against $-0.72$ (0.44) for the blind twin, and the conditioned return moves by 38 percentage points from seed to seed. On ETH 1\,h holdout the conditioned mean return is also ahead of the blind twin and of buy-and-hold, but it is ahead on only one seed: the mean is one large path, not a repeated win. On ETH 15\,min holdout the blind mean is far ahead ($-7.7\%$ against $-38.4\%$). Live, the conditioned agent is ahead of the blind twin on a majority of seeds only for ETH 1\,h (four seeds; mean return $+0.4\%$ against $-5.5\%$, and against $-8.5\%$ for buy-and-hold). On BTC 1\,h live the blind mean is ahead ($+1.8\%$ against $0.0\%$).
+
+The position standard deviation is not a collapse on every row of Table~\ref{tab:v2seeds}, and it is also not a policy that uses the interior of $[-1,1]$. The share of bars with $|a|>0.95$ is between 0.97 and 1.00 for every twin and every window. The ETH 1\,h blind twin is flat (standard deviation 0.02 on both windows). The BTC 15-min live blind twin is flat on all five seeds. Where the mean standard deviation is large, the standard deviation of that number across seeds is large too: one seed trades and another sits on a rail. The median absolute ablation effect is 0 on every tape except ETH 1\,h live, where the mean of the five medians is 0.27 and their standard deviation is 0.60. Ablation pass rates of 26\% and 30\% on ETH 1\,h are real and still leave the median bar unmoved. Figure~\ref{fig:v2faith} compares the legacy verifier with the in-distribution verifier. The second rate is at or below the first. Neither is large. The bull regime was testable on these tapes (no bar was marked untestable). The agents were not trained with the faithfulness penalty, so the check is an independent audit.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/v2/wealth_holdout.pdf}
+\caption{Holdout wealth for the five frozen seeds. Faint lines are seeds. The heavy line is the mean. Blue is the conditioned twin and pink is the blind twin. The horizontal line is a wealth of 1.}
+\label{fig:v2wealth}
+\end{figure*}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/v2/wealth_live.pdf}
+\caption{Live-window wealth for the same five seeds. The scale is the three weeks after 22~Sep 2026, not the holdout year. Faint lines are seeds and the heavy line is the mean.}
+\label{fig:v2wealthlive}
+\end{figure*}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/v2/faithfulness_verifiers.pdf}
+\caption{Mean faithfulness rate across the five seeds. Blue is the legacy one-hot verifier. Orange is verifier v2, which uses training-set probability vectors and rejects a flat sensitivity curve. The axis runs to 1. The bars do not.}
+\label{fig:v2faith}
+\end{figure}
+
+On the 1\,h tapes the v2 tracker, which was not selected, does change the dwell labels. After burn-in on BTC, v1 issues no bull bar and the dwell label is calm on the whole series. v2 issues bull on 3.7\% of post-burn bars and about 0.35 switches per year; bear and crisis dwell runs are still absent, while the argmax of $p_t$ is bull, bear, calm and crisis on 11.6\%, 11.3\%, 69.7\% and 7.4\% of those bars. On ETH 1\,h, v1 and v2 both leave about 5.4\% bull and 94.7\% bear. The mean matched $W_2^2$ on BTC 1\,h falls from $4.8\times 10^{-5}$ to $2.7\times 10^{-5}$. The forward filter and the online dwell are available, and the trading table above uses v1 because that is what the validation score selected. Agreement between $\argmax p_t$ and the dwell label on the scored windows is 0.82 (BTC 1\,h), 0.74 (BTC 15\,min), 0.52 (ETH 1\,h) and 0.71 (ETH 15\,min).
+
 %======================================================================
 \section{Limitations and Future Work}
 %======================================================================
@@ -722,10 +781,14 @@ The live audit repeats the holdout verdict (Table~\ref{tab:livegap}). Ablation m
 
 \emph{Scope.} The thresholds $\delta_{\text{ab}}$ and $\delta_{\text{cf}}$ and the defensive ordering $\rho$ are design choices. Transaction costs are a flat 10\,bp, and the agents were built directly on Stable-Baselines3. Ndoutoumou \emph{et al.} instead place the regime signal inside the FinRL stack~\cite{ndoutoumou2025hmm}.
 
+The five-seed section above is the follow-up to the single seed. Tracker v2, the in-distribution counterfactuals, and the differential-Sharpe reward exist and were scored on the validation split. They were not selected. The 4\,h study in the earlier sections is still the v1 tracker and the one-hot verifier.
+
 %======================================================================
 \section{Conclusion}
 %======================================================================
 We built a regime-conditioned RL trading agent with a Wasserstein identity tracker and a suite that intervenes on the regime input of every decision. On five years of BTC/USDT four-hour data, the tracker produced labels whose meaning stayed stable across 292 causal refits, which moment sorting did not. The conditioned agent used those labels: removing them changed its position on most bars, and it reduced exposure in bear and crisis segments, where its blind twin did not. Yet it almost never responded to injected regimes in the direction their names imply, because template starvation left the injected states outside its training data. With the same agent and data, an earlier labelling gave a faithfulness rate of 33.5\%; with the new one the rate is 0.1\%. A live paper-trading console and a three-week study on 15-min, 1-h and 4-h Binance candles carried the comparison past the research data. For the faster candles we trained twins on each timeframe's own BTC/USDT and ETH/USDT history. Random-window episodes avoided the buy-and-hold collapse of the single-episode recipe in validation, but not after retraining. On the holdout year five of the eight twins stayed at or near a fixed position, and only the 1-h ETH conditioned agent used its regime input, going short in crisis and finishing ahead of its twin by a margin that was not significant. Live, the blind twin finished ahead on all three BTC timeframes and on 15-min ETH, and no gap between the twins was significant. Where the regime input was load-bearing it was again not faithful, and where a twin collapsed it was not used at all. Regime-aware agents should report a faithfulness verdict next to their returns and recompute it whenever an upstream component changes; the suite here is cheap enough to do so routinely.
+
+A validation grid that was not allowed to look at returns, holdout, or the live window did not find a recipe that keeps both twins off the rails and still uses the regime input. The native recipe remained the least bad of the one-factor cells, and five seeds of that recipe do not reverse the single-seed story. The conditioned twin beats its blind twin on a majority of seeds in two of the eight tape-and-window cells (BTC 1\,h holdout, ETH 1\,h live) and loses the majority in the other six. Mean Sharpes are negative on the holdout for both twins. The share of time at $|a|>0.95$ stays above 97\%. That is the result.
 
 \bibliographystyle{IEEEtran}
 \bibliography{references}

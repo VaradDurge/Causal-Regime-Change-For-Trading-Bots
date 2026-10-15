@@ -1,0 +1,17 @@
+asset,timeframe,segment,side,position_std,extreme_share,collapsed
+BTC,1h,holdout,conditioned,0.550 +/- 0.357,0.988 +/- 0.015,False
+BTC,1h,holdout,blind,0.442 +/- 0.452,0.984 +/- 0.023,False
+BTC,1h,live,conditioned,0.303 +/- 0.444,0.995 +/- 0.006,False
+BTC,1h,live,blind,0.441 +/- 0.450,0.985 +/- 0.026,False
+BTC,15m,holdout,conditioned,0.092 +/- 0.191,0.996 +/- 0.008,False
+BTC,15m,holdout,blind,0.153 +/- 0.334,1.000 +/- 0.000,False
+BTC,15m,live,conditioned,0.171 +/- 0.370,0.996 +/- 0.006,False
+BTC,15m,live,blind,0.000 +/- 0.000,1.000 +/- 0.000,True
+ETH,1h,holdout,conditioned,0.737 +/- 0.216,0.971 +/- 0.028,False
+ETH,1h,holdout,blind,0.020 +/- 0.044,0.997 +/- 0.007,True
+ETH,1h,live,conditioned,0.532 +/- 0.135,0.982 +/- 0.018,False
+ETH,1h,live,blind,0.023 +/- 0.052,0.993 +/- 0.016,True
+ETH,15m,holdout,conditioned,0.361 +/- 0.294,0.997 +/- 0.003,False
+ETH,15m,holdout,blind,0.370 +/- 0.373,0.997 +/- 0.006,False
+ETH,15m,live,conditioned,0.331 +/- 0.428,0.999 +/- 0.002,False
+ETH,15m,live,blind,0.322 +/- 0.441,0.997 +/- 0.005,False

@@ -148,8 +148,6 @@ def per_regime_table() -> pd.DataFrame | None:
 
 def faithfulness_chart(path_stem: Path) -> bool:
     rows = []
-    grid = _load(V2 / "validation_grid.csv")
-    # Prefer the frozen final seeds. Fall back to the validation grid's seed-42 audits.
     found = False
     for asset, timeframe in TAPES:
         parent = V2 / "final" / f"{asset.lower()}_{timeframe}"
@@ -200,7 +198,10 @@ def faithfulness_chart(path_stem: Path) -> bool:
     axes[0].set_ylabel("Faithfulness rate")
     axes[-1].legend(loc="upper right")
     regularized = bool(frame["regularized"].any())
-    fig.suptitle("In-distribution verifier" + (" (regularized agent)" if regularized else ""), fontsize=8)
+    title = "Faithfulness rate: legacy verifier and verifier v2"
+    if regularized:
+        title += " (regularized agent)"
+    fig.suptitle(title, fontsize=8)
     fig.tight_layout()
     fig.savefig(path_stem.with_suffix(".pdf"))
     fig.savefig(path_stem.with_suffix(".png"), dpi=200)
