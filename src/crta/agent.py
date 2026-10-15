@@ -20,7 +20,29 @@ from crta.regime import REGIMES
 
 TIMESTEPS = 8192
 EXTREME = 0.95
+DISCRETE_LEVELS = np.array([-1.0, -0.5, 0.0, 0.5, 1.0], dtype=np.float64)
 _FLIP_CACHE: dict = {}
+
+
+def execute_action(action_mode: str, action) -> float:
+    """Map a policy output to the position the environment stores.
+
+    ``gaussian_clip`` is the historical path: clip the Gaussian sample to [-1, 1].
+    """
+    if action_mode == "gaussian_clip":
+        return float(np.clip(np.asarray(action, dtype=float).reshape(-1)[0], -1.0, 1.0))
+    if action_mode == "tanh_env":
+        raw = float(np.asarray(action, dtype=float).reshape(-1)[0])
+        return float(np.tanh(raw))
+    if action_mode == "discrete5":
+        index = int(np.asarray(action).reshape(-1)[0])
+        return float(DISCRETE_LEVELS[index])
+    raise ValueError(f"unknown action_mode {action_mode}")
+
+
+def action_mode_of(model) -> str:
+    meta = getattr(model, "crta_meta", None) or {}
+    return str(meta.get("action_mode", "gaussian_clip"))
 
 
 def observation(feats, probs, position: float, include_regime: bool) -> np.ndarray:
@@ -209,6 +231,7 @@ class TradeEnv(gym.Env):
         prob_floor: float = 0.0,
         tracker: str = "v1",
         tracker_kwargs: dict | None = None,
+        action_mode: str = "gaussian_clip",
     ):
         self.frame = frame.reset_index(drop=True)
         self.include_regime = include_regime
@@ -232,10 +255,19 @@ class TradeEnv(gym.Env):
         self.prob_floor = float(prob_floor)
         self.tracker = tracker
         self.tracker_kwargs = dict(tracker_kwargs or {})
+        self.action_mode = str(action_mode)
         self._end = len(self.frame)
         n = len(FEATURE_COLS) + 1 + (len(REGIMES) if include_regime else 0)
         self.observation_space = spaces.Box(-np.inf, np.inf, shape=(n,), dtype=np.float32)
-        self.action_space = spaces.Box(-1.0, 1.0, shape=(1,), dtype=np.float32)
+        if self.action_mode == "gaussian_clip":
+            self.action_space = spaces.Box(-1.0, 1.0, shape=(1,), dtype=np.float32)
+        elif self.action_mode == "tanh_env":
+            # Wide enough that Stable-Baselines3's clip does not bind before tanh.
+            self.action_space = spaces.Box(-1.0e3, 1.0e3, shape=(1,), dtype=np.float32)
+        elif self.action_mode == "discrete5":
+            self.action_space = spaces.Discrete(5)
+        else:
+            raise ValueError(f"unknown action_mode {action_mode}")
         self._i = 0
         self.position = 0.0
         self._use_flip = False
@@ -337,7 +369,7 @@ class TradeEnv(gym.Env):
         return float(coef * min(float(np.std(chunk)), 0.5))
 
     def step(self, action):
-        target = float(np.clip(np.asarray(action, dtype=float).reshape(-1)[0], -1.0, 1.0))
+        target = execute_action(self.action_mode, action)
         nxt = float(self._next[self._i])
         turnover = TURNOVER_COST * abs(target - self.position)
         if self.reward_mode == "raw":
@@ -467,6 +499,7 @@ def train_ppo(
     prob_floor: float = 0.0,
     tracker: str = "v1",
     tracker_kwargs: dict | None = None,
+    action_mode: str = "gaussian_clip",
 ):
     import os
 
@@ -491,6 +524,7 @@ def train_ppo(
         prob_floor=prob_floor,
         tracker=tracker,
         tracker_kwargs=tracker_kwargs,
+        action_mode=action_mode,
     )
     regularize = bool(faithfulness_regularizer) and include_regime
     cls = None
@@ -531,6 +565,7 @@ def train_ppo(
         "ent_coef_start": None if ent_coef_start is None else float(ent_coef_start),
         "regime_perturb_prob": float(regime_perturb_prob),
         "sign_flip_prob": float(sign_flip_prob),
+        "action_mode": str(action_mode),
     }
     return model
 
@@ -592,24 +627,61 @@ def predict_action(
         probs = smooth_probs(probs, temperature, floor)
     obs = observation(feats, probs, position, include_regime)
     action, _ = model.predict(obs, deterministic=True)
-    return float(np.clip(np.asarray(action, dtype=float).reshape(-1)[0], -1.0, 1.0))
+    mode = action_mode_of(model)
+    if mode == "gaussian_clip":
+        return float(np.clip(np.asarray(action, dtype=float).reshape(-1)[0], -1.0, 1.0))
+    return execute_action(mode, action)
+
+
+def audit_positions(model, obs: np.ndarray) -> np.ndarray:
+    """Positions the verifier audits.
+
+    Gaussian clip and tanh use the deterministic executed position.
+    Discrete uses the expected level under the categorical distribution,
+    not a sampled action.
+    """
+    obs = np.asarray(obs, dtype=np.float32)
+    if obs.ndim == 1:
+        obs = obs.reshape(1, -1)
+    mode = action_mode_of(model)
+    if mode == "discrete5":
+        import torch as th
+
+        tensor, _vectorized = model.policy.obs_to_tensor(obs)
+        with th.no_grad():
+            dist = model.policy.get_distribution(tensor)
+            probs = dist.distribution.probs
+            levels = th.as_tensor(DISCRETE_LEVELS, dtype=probs.dtype, device=probs.device)
+            out = (probs * levels).sum(dim=-1)
+        return out.detach().cpu().numpy().astype(float).reshape(-1)
+    action, _ = model.predict(obs, deterministic=True)
+    values = np.asarray(action, dtype=float).reshape(-1)
+    if mode == "tanh_env":
+        return np.tanh(values)
+    return np.clip(values, -1.0, 1.0)
 
 
 def rollout(model, frame, include_regime: bool, start_position: float = 0.0) -> np.ndarray:
     meta = getattr(model, "crta_meta", {}) or {}
+    mode = action_mode_of(model)
     env = TradeEnv(
         frame,
         include_regime,
         prob_temperature=float(meta.get("prob_temperature", 1.0)),
         prob_floor=float(meta.get("prob_floor", 0.0)),
+        action_mode=mode,
     )
     obs, _ = env.reset(options={"position": start_position})
     actions = []
     while True:
         action, _ = model.predict(obs, deterministic=True)
-        value = float(np.clip(np.asarray(action, dtype=float).reshape(-1)[0], -1.0, 1.0))
-        actions.append(value)
-        obs, _, terminated, _, _ = env.step(np.array([value], dtype=np.float32))
+        if mode == "gaussian_clip":
+            value = float(np.clip(np.asarray(action, dtype=float).reshape(-1)[0], -1.0, 1.0))
+            actions.append(value)
+            obs, _, terminated, _, _ = env.step(np.array([value], dtype=np.float32))
+        else:
+            obs, _, terminated, _, _ = env.step(action)
+            actions.append(float(env.position))
         if terminated:
             break
     return np.asarray(actions, dtype=float)

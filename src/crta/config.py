@@ -106,6 +106,7 @@ class ExperimentConfig:
     asset: str = "BTC"
     timeframe: str = "1h"
     stage: str = "validate"
+    action_mode: str = "gaussian_clip"
 
     @classmethod
     def from_dict(cls, raw: dict) -> "ExperimentConfig":

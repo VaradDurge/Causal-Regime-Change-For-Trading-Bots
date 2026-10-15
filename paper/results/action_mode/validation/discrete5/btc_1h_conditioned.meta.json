@@ -1,0 +1,23 @@
+{
+  "reward_mode": "raw",
+  "reward_scale": 100.0,
+  "prob_temperature": 1.0,
+  "prob_floor": 0.0,
+  "tracker": "v1",
+  "faithfulness_regularizer": false,
+  "window_sampling": "uniform",
+  "ent_coef": 0.01,
+  "ent_coef_start": null,
+  "regime_perturb_prob": 0.0,
+  "sign_flip_prob": 0.0,
+  "action_mode": "discrete5",
+  "stage": "validate",
+  "seed": 42,
+  "asset": "BTC",
+  "timeframe": "1h",
+  "twin": "conditioned",
+  "train_before_utc": "2024-09-22T16:00:00+00:00",
+  "train_last_bar_utc": "2024-09-22T15:00:00+00:00",
+  "n_train": 32609,
+  "timesteps": 500000
+}

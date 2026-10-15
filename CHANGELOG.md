@@ -91,3 +91,11 @@ Moment-sorted is a third labelling on the same v1 refits (`lock_states` on unsca
 Sharpe and Sortino intervals use a circular block bootstrap with block length `ceil(sqrt(n))` and 1000 resamples (seed 42). `src/crta/eval.py` uses 1000 i.i.d. resamples. The 2000-resample circular bootstrap in the repo is the native-twin gap, not the four-hour table. Each PPO call in the rerun passes `threads=1`. `train_ppo`'s default is unchanged. The budget stays `max(8192, 10 * n_train)`, raw reward, scale 1, entropy 0, no window.
 
 Canonical tables: `paper/results/tables_4h/`. Copy: `results/tables/`. Table I is settings and folds (paper `tab:hyper` and `tab:folds`). Table III is label statistics after burn-in (paper `tab:labels`). Table IV is out-of-fold performance (paper `tab:perf`). Table V is per-regime (paper `tab:regime`). `paper/main.tex` was not edited.
+
+## 12. Action mode
+
+The saturation rule called clipping the cause (8 of 8 tapes), so `action_mode` was added. The default is `gaussian_clip`, the previous Gaussian policy with the executed action clipped to [-1, 1]. Omitting the flag keeps that path. `tanh_env` lets the environment execute `tanh(u)`. `discrete5` is `Discrete(5)` on `{-1, -0.5, 0, 0.5, 1}`. The verifier audits the expected level under that categorical distribution, not a sampled action.
+
+The screen used the validation split only. `gaussian_clip` reused the seed-42 validation weights. `tanh_env` and `discrete5` were trained at seed 42 with the same native recipe. A mode had to pass on all four tapes: both twins with position standard deviation above 0.05, an `|a| > 0.95` share below 0.80, and a conditioned ablation rate of at least 10%. The pre-registered tie-break was the highest minimum ablation across the four tapes, then the minimum twin position standard deviation, then `tanh_env`, `discrete5`, `gaussian_clip`. Returns were not an input.
+
+No mode passed. `gaussian_clip` and `tanh_env` missed the extreme-share bar on every tape. `discrete5` passed BTC 15m, ETH 1h, and ETH 15m, and failed BTC 1h because the conditioned twin was constant. The frozen file is `results/action_mode_choice.txt` and it says `none`. Holdout and live were not scored.

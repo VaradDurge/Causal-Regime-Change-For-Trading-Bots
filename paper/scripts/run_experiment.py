@@ -238,8 +238,13 @@ def _audit(model, frame, before, banks, cfg: ExperimentConfig) -> dict:
             # because the caller already needs the intervened probabilities untouched
             # except for the model's own smoothing. Apply that smoothing inside.
             obs = batch_observation(feats[idx], batch[sl], before[idx], True, temperature, floor)
-            action, _ = model.predict(obs, deterministic=True)
-            out[sl] = np.clip(np.asarray(action, dtype=float).reshape(-1), -1.0, 1.0)
+            if cfg.action_mode == "gaussian_clip":
+                action, _ = model.predict(obs, deterministic=True)
+                out[sl] = np.clip(np.asarray(action, dtype=float).reshape(-1), -1.0, 1.0)
+            else:
+                from crta.agent import audit_positions
+
+                out[sl] = audit_positions(model, obs)
         return out
 
     legacy = audit_many(predict, probs)
@@ -360,6 +365,7 @@ def _train_kwargs(cfg: ExperimentConfig, seed: int, quick: bool, timeframe: str)
         prob_floor=float(cfg.prob_floor),
         tracker=cfg.tracker,
         tracker_kwargs=_tracker_kwargs(cfg, timeframe, quick),
+        action_mode=cfg.action_mode,
     )
 
 

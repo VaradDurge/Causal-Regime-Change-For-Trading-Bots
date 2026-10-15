@@ -1,0 +1,27 @@
+{
+  "mode": "none",
+  "passed": [],
+  "rejected": [
+    {
+      "mode": "gaussian_clip",
+      "n_tapes": 4,
+      "passed": false,
+      "min_ablation": 0.007676940639269407,
+      "min_position_std": 0.06011326233599274
+    },
+    {
+      "mode": "tanh_env",
+      "n_tapes": 4,
+      "passed": false,
+      "min_ablation": 0.0,
+      "min_position_std": 2.0444792689912394e-05
+    },
+    {
+      "mode": "discrete5",
+      "n_tapes": 4,
+      "passed": false,
+      "min_ablation": 0.0,
+      "min_position_std": 0.0
+    }
+  ]
+}
