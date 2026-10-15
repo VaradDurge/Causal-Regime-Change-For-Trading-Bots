@@ -1,0 +1,153 @@
+{
+  "seeds": [
+    42
+  ],
+  "n_seeds": 1,
+  "segments": {
+    "validation": {
+      "conditioned": {
+        "sharpe": {
+          "mean": -1.50572913928069,
+          "std": 0.0,
+          "n": 1
+        },
+        "sortino": {
+          "mean": -2.04441496583145,
+          "std": 0.0,
+          "n": 1
+        },
+        "total_return": {
+          "mean": -0.4975570868134248,
+          "std": 0.0,
+          "n": 1
+        },
+        "max_drawdown": {
+          "mean": -0.5778795118611786,
+          "std": 0.0,
+          "n": 1
+        },
+        "mean_position": {
+          "mean": -0.5500041475226107,
+          "std": 0.0,
+          "n": 1
+        },
+        "position_std": {
+          "mean": 0.8334927557448859,
+          "std": 0.0,
+          "n": 1
+        },
+        "extreme_share": {
+          "mean": 0.9962328767123287,
+          "std": 0.0,
+          "n": 1
+        },
+        "turnover": {
+          "mean": 0.022697035468196215,
+          "std": 0.0,
+          "n": 1
+        }
+      },
+      "blind": {
+        "sharpe": {
+          "mean": -0.013552662583921663,
+          "std": 0.0,
+          "n": 1
+        },
+        "sortino": {
+          "mean": -0.01900593768801302,
+          "std": 0.0,
+          "n": 1
+        },
+        "total_return": {
+          "mean": -0.0061310180155805805,
+          "std": 0.0,
+          "n": 1
+        },
+        "max_drawdown": {
+          "mean": -0.3601909109161018,
+          "std": 0.0,
+          "n": 1
+        },
+        "mean_position": {
+          "mean": 0.1562915195647168,
+          "std": 0.0,
+          "n": 1
+        },
+        "position_std": {
+          "mean": 0.981471356019561,
+          "std": 0.0,
+          "n": 1
+        },
+        "extreme_share": {
+          "mean": 0.9813926940639269,
+          "std": 0.0,
+          "n": 1
+        },
+        "turnover": {
+          "mean": 0.027590008842074163,
+          "std": 0.0,
+          "n": 1
+        }
+      },
+      "buy_hold": {
+        "sharpe": {
+          "mean": 1.2732364133633862,
+          "std": 0.0,
+          "n": 1
+        },
+        "sortino": {
+          "mean": 1.794986386700222,
+          "std": 0.0,
+          "n": 1
+        },
+        "total_return": {
+          "mean": 0.791896295474211,
+          "std": 0.0,
+          "n": 1
+        },
+        "max_drawdown": {
+          "mean": -0.3093611235818764,
+          "std": 0.0,
+          "n": 1
+        },
+        "mean_position": {
+          "mean": 1.0,
+          "std": 0.0,
+          "n": 1
+        },
+        "position_std": {
+          "mean": 0.0,
+          "std": 0.0,
+          "n": 1
+        },
+        "extreme_share": {
+          "mean": 1.0,
+          "std": 0.0,
+          "n": 1
+        },
+        "turnover": {
+          "mean": 0.00011415525114155251,
+          "std": 0.0,
+          "n": 1
+        }
+      },
+      "ablation_pass_rate": {
+        "mean": 0.011986301369863013,
+        "std": 0.0,
+        "n": 1
+      },
+      "faithfulness_rate": {
+        "mean": 0.0,
+        "std": 0.0,
+        "n": 1
+      },
+      "cond_beats_blind_share": 0.0,
+      "gap_log": {
+        "mean": -0.6821233612194577,
+        "std": 0.0,
+        "n": 1
+      },
+      "regularized": 0
+    }
+  }
+}

@@ -1,0 +1,74 @@
+[
+  {
+    "cell": "baseline",
+    "asset": "ALL",
+    "timeframe": "ALL",
+    "deficit": 0.9848030821917807,
+    "meets_all": false,
+    "n": 4
+  },
+  {
+    "cell": "perturb_01",
+    "asset": "ALL",
+    "timeframe": "ALL",
+    "deficit": 1.3314515553652966,
+    "meets_all": false,
+    "n": 4
+  },
+  {
+    "cell": "reward_diff_sharpe",
+    "asset": "ALL",
+    "timeframe": "ALL",
+    "deficit": 1.4071775114155252,
+    "meets_all": false,
+    "n": 4
+  },
+  {
+    "cell": "sample_return_balanced",
+    "asset": "ALL",
+    "timeframe": "ALL",
+    "deficit": 1.7909300498481906,
+    "meets_all": false,
+    "n": 4
+  },
+  {
+    "cell": "ent_002",
+    "asset": "ALL",
+    "timeframe": "ALL",
+    "deficit": 1.9123174652343427,
+    "meets_all": false,
+    "n": 4
+  },
+  {
+    "cell": "perturb_005",
+    "asset": "ALL",
+    "timeframe": "ALL",
+    "deficit": 1.914544288568152,
+    "meets_all": false,
+    "n": 4
+  },
+  {
+    "cell": "sample_regime_balanced",
+    "asset": "ALL",
+    "timeframe": "ALL",
+    "deficit": 2.116384681162481,
+    "meets_all": false,
+    "n": 4
+  },
+  {
+    "cell": "tracker_v2",
+    "asset": "ALL",
+    "timeframe": "ALL",
+    "deficit": 2.2384952910958904,
+    "meets_all": false,
+    "n": 4
+  },
+  {
+    "cell": "reward_excess_bh",
+    "asset": "ALL",
+    "timeframe": "ALL",
+    "deficit": 2.6464015600050894,
+    "meets_all": false,
+    "n": 4
+  }
+]

@@ -1,0 +1,317 @@
+{
+  "seed": 42,
+  "quick": 0,
+  "asset": "ETH",
+  "timeframe": "15m",
+  "stage": "validate",
+  "config": {
+    "reward_mode": "raw",
+    "reward_scale": 100.0,
+    "diff_sharpe_eta": 0.01,
+    "pos_extreme_penalty": 0.0,
+    "pos_variance_bonus": 0.0,
+    "variance_every": 256,
+    "ent_coef": 0.02,
+    "ent_coef_start": null,
+    "collapse_log_every": 10000,
+    "window": 2000,
+    "window_sampling": "uniform",
+    "regime_balance_beta": 3.0,
+    "sign_flip_prob": 0.0,
+    "regime_perturb_prob": 0.0,
+    "faithfulness_regularizer": 0,
+    "faithfulness_reg_coef": 0.1,
+    "prob_temperature": 1.0,
+    "prob_floor": 0.0,
+    "tracker": "v1",
+    "tracker_matching": "nearest",
+    "tracker_death_after": 20,
+    "tracker_cost_quantile": 0.95,
+    "verifier": "legacy",
+    "delta_ab": 0.15,
+    "delta_cf": 0.1,
+    "delta_sens": 0.05,
+    "cf_pick": "nearest",
+    "timesteps": 500000,
+    "threads": 2,
+    "seed": 42,
+    "protocol": "timeframe",
+    "asset": "ETH",
+    "timeframe": "15m",
+    "stage": "validate"
+  },
+  "tracker_kwargs": {
+    "burn": 4032,
+    "stride": 672,
+    "dwell": 480,
+    "seed": 42
+  },
+  "prob_peak": {
+    "mean_max_before": 0.9821663395285793,
+    "mean_max_after": 0.9821663395285793,
+    "prob_temperature": 1.0,
+    "prob_floor": 0.0
+  },
+  "train_bars": 130521,
+  "regularized": 0,
+  "collapse_log": {
+    "conditioned": [
+      {
+        "mean": 0.9975987213611602,
+        "std": 0.05773644619923056,
+        "extreme_share": 0.9979,
+        "n": 10000,
+        "timestep": 460000
+      },
+      {
+        "mean": 0.998607029247284,
+        "std": 0.039243118202541054,
+        "extreme_share": 0.9984,
+        "n": 10000,
+        "timestep": 470000
+      },
+      {
+        "mean": 0.9974644156455994,
+        "std": 0.05561214821171988,
+        "extreme_share": 0.9972,
+        "n": 10000,
+        "timestep": 480000
+      },
+      {
+        "mean": 0.9992399930953979,
+        "std": 0.030584811189610987,
+        "extreme_share": 0.9994,
+        "n": 10000,
+        "timestep": 490000
+      },
+      {
+        "mean": 0.998797902584076,
+        "std": 0.04216105446637448,
+        "extreme_share": 0.9992,
+        "n": 10000,
+        "timestep": 500000
+      }
+    ],
+    "blind": [
+      {
+        "mean": 0.761534734761715,
+        "std": 0.6457047538754653,
+        "extreme_share": 0.9954,
+        "n": 10000,
+        "timestep": 460000
+      },
+      {
+        "mean": 0.9213989231213927,
+        "std": 0.38590087151501545,
+        "extreme_share": 0.9968,
+        "n": 10000,
+        "timestep": 470000
+      },
+      {
+        "mean": -0.1510241833485663,
+        "std": 0.985844111184173,
+        "extreme_share": 0.992,
+        "n": 10000,
+        "timestep": 480000
+      },
+      {
+        "mean": -0.08131447185277939,
+        "std": 0.9951570145981505,
+        "extreme_share": 0.9956,
+        "n": 10000,
+        "timestep": 490000
+      },
+      {
+        "mean": 0.01193538789153099,
+        "std": 0.9990823068257287,
+        "extreme_share": 0.9976,
+        "n": 10000,
+        "timestep": 500000
+      }
+    ]
+  },
+  "segments": {
+    "validation": {
+      "n_bars": 35040,
+      "first_bar_utc": "2024-09-22T16:00:00+00:00",
+      "last_bar_utc": "2025-09-22T15:45:00+00:00",
+      "conditioned": {
+        "sharpe": 0.7419733735108218,
+        "sortino": 1.0383167003736928,
+        "total_return": 0.6857329131779746,
+        "max_drawdown": -0.646900352194494,
+        "mean_position": 0.9999429223744293,
+        "position_std": 0.010684193618903192,
+        "extreme_share": 1.0,
+        "turnover": 0.00014269406392694063,
+        "cost_paid": 0.005
+      },
+      "blind": {
+        "sharpe": -0.1519475243061996,
+        "sortino": -0.21256750516090506,
+        "total_return": -0.10142715631409938,
+        "max_drawdown": -0.7276217462202521,
+        "mean_position": 0.5161976001939851,
+        "position_std": 0.8564436544082593,
+        "extreme_share": 0.9999429223744293,
+        "turnover": 8.600338204810608e-05,
+        "cost_paid": 0.0030135585069656374
+      },
+      "buy_hold": {
+        "sharpe": 0.696761386131937,
+        "sortino": 0.9745007696053236,
+        "total_return": 0.6329900770100831,
+        "max_drawdown": -0.6579480553801884,
+        "mean_position": 1.0,
+        "position_std": 0.0,
+        "extreme_share": 1.0,
+        "turnover": 2.8538812785388127e-05,
+        "cost_paid": 0.001
+      },
+      "gap_cond_minus_blind": {
+        "gap_log": 0.6291479360406069,
+        "low": -0.5952325952947829,
+        "high": 1.8491505172794236,
+        "share_positive": 0.8335,
+        "block": 188,
+        "cond_beats_blind": 1
+      },
+      "cond_beats_blind": 1,
+      "regimes": {
+        "bull": {
+          "share": 0.31124429223744293,
+          "n": 10906,
+          "cond_position": 1.0,
+          "blind_position": 0.5419035393361452,
+          "cond_position_std": 0.0,
+          "blind_position_std": 0.8404406903850853,
+          "cond_return": 0.20833217284864536,
+          "blind_return": -0.170304207732898
+        },
+        "bear": {
+          "share": 0.0,
+          "n": 0,
+          "cond_position": null,
+          "blind_position": null,
+          "cond_position_std": null,
+          "blind_position_std": null,
+          "cond_return": null,
+          "blind_return": null
+        },
+        "calm": {
+          "share": 0.6132990867579908,
+          "n": 21490,
+          "cond_position": 1.0,
+          "blind_position": 0.4824569567240577,
+          "cond_position_std": 0.0,
+          "blind_position_std": 0.8759196794846893,
+          "cond_return": 0.24013597796417208,
+          "blind_return": 0.06969599225985035
+        },
+        "crisis": {
+          "share": 0.07545662100456621,
+          "n": 2644,
+          "cond_position": 0.9992435703479576,
+          "blind_position": 0.6844038996963836,
+          "cond_position_std": 0.038888135957721476,
+          "blind_position_std": 0.7287003168508762,
+          "cond_return": 0.12494974107150725,
+          "blind_return": 0.012451045290760687
+        }
+      },
+      "faithfulness": {
+        "legacy": {
+          "ablation": 0.0,
+          "counterfactual": 0.0,
+          "sensitivity": 1.0,
+          "all": 0.0,
+          "untestable_share": 0.0,
+          "median_ablation_delta": 0.0,
+          "n": 35040,
+          "per_regime": {
+            "bull": {
+              "n": 10906,
+              "ablation": 0.0,
+              "counterfactual": 0.0,
+              "sensitivity": 1.0,
+              "all": 0.0,
+              "untestable_share": 0.0
+            },
+            "bear": {
+              "n": 0,
+              "ablation": null,
+              "counterfactual": null,
+              "sensitivity": null,
+              "all": null,
+              "untestable_share": null
+            },
+            "calm": {
+              "n": 21490,
+              "ablation": 0.0,
+              "counterfactual": 0.0,
+              "sensitivity": 1.0,
+              "all": 0.0,
+              "untestable_share": 0.0
+            },
+            "crisis": {
+              "n": 2644,
+              "ablation": 0.0,
+              "counterfactual": 0.0,
+              "sensitivity": 1.0,
+              "all": 0.0,
+              "untestable_share": 0.0
+            }
+          }
+        },
+        "v2": {
+          "ablation": 0.0,
+          "counterfactual": 0.0,
+          "sensitivity": 2.8538812785388127e-05,
+          "all": 0.0,
+          "untestable_share": 0.0,
+          "median_ablation_delta": 0.0,
+          "n": 35040,
+          "per_regime": {
+            "bull": {
+              "n": 10906,
+              "ablation": 0.0,
+              "counterfactual": 0.0,
+              "sensitivity": 0.0,
+              "all": 0.0,
+              "untestable_share": 0.0
+            },
+            "bear": {
+              "n": 0,
+              "ablation": null,
+              "counterfactual": null,
+              "sensitivity": null,
+              "all": null,
+              "untestable_share": null
+            },
+            "calm": {
+              "n": 21490,
+              "ablation": 0.0,
+              "counterfactual": 0.0,
+              "sensitivity": 0.0,
+              "all": 0.0,
+              "untestable_share": 0.0
+            },
+            "crisis": {
+              "n": 2644,
+              "ablation": 0.0,
+              "counterfactual": 0.0,
+              "sensitivity": 0.00037821482602118004,
+              "all": 0.0,
+              "untestable_share": 0.0
+            }
+          }
+        },
+        "label_agreement": 0.6132990867579908,
+        "regularized": 0
+      },
+      "ablation_pass_rate": 0.0,
+      "faithfulness_rate": 0.0
+    }
+  },
+  "seconds": 451.1607520580292
+}

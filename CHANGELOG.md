@@ -72,6 +72,8 @@ The timeframe protocol is one walk-forward split (train before the cut, score af
 
 Fixed before holdout, in `src/crta/select.py`. On each validation tape both twins need position standard deviation above 0.05 and an `|a| > 0.95` share below 80%, and the conditioned ablation rate must be at least 10%. The deficit is the sum of relative shortfalls. Returns are ignored. A tie would be broken by lower deficit, not by return.
 
+The one-factor grid did not meet that criterion on any tape: every twin still spent more than 90% of validation bars at `|a| > 0.95`. The baseline had the lowest mean deficit (0.985). No other factor reduced it, so the pre-registered combination stack was empty and `configs/final.yaml` keeps the native recipe. Holdout and live use that frozen file and were not used to choose it.
+
 ## 10. Console
 
 Saved twins store `reward_mode`, `prob_temperature`, `prob_floor`, and `tracker` on the model and in a `.meta.json` sidecar. Loading a zip applies that smoothing. A `*_conditioned.zip` dropped in `bots/` with a sibling `*_blind.zip` is the live pair. Closed candles and the atomic cache rename are unchanged.

@@ -117,6 +117,12 @@ python paper/scripts/run_grid.py --workers 2
 python paper/scripts/run_grid.py --select
 ```
 
-The grid trains both twins for 500k steps on the validation split only (BTC and ETH, 1h and 15m, seed 42). Holdout and live are a later step, five seeds 42..46, and they use `configs/final.yaml` after it is frozen. `--quick` is a smoke test, not a reported number.
+The grid trains both twins for 500k steps on the validation split only (BTC and ETH, 1h and 15m, seed 42). `configs/final.yaml` is frozen from that grid before holdout. In this run the criterion was not met and the baseline had the lowest deficit, so the frozen file is the native recipe. Holdout and live then use five seeds, 42 through 46:
+
+```bash
+python paper/scripts/run_experiment.py --config configs/final.yaml --asset BTC --tf 1h --stage final --seeds 42,43,44,45,46 --out paper/results/v2/final/btc_1h
+```
+
+Repeat for BTC 15m, ETH 1h, and ETH 15m. `--quick` is a smoke test, not a reported number.
 
 The published timeframe JSON under `paper/results/tf/` is the baseline record in `paper/results/baseline/manifest.json`. New runs go to `paper/results/v2/` and do not overwrite those files.
