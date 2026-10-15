@@ -23,7 +23,9 @@ BOTS = ROOT / "bots"
 def list_bots() -> list[Path]:
     if not BOTS.exists():
         return []
-    return sorted(p for p in BOTS.glob("*.py") if not p.name.startswith("_"))
+    py = [p for p in BOTS.glob("*.py") if not p.name.startswith("_")]
+    zips = list(BOTS.glob("*.zip"))
+    return sorted(py + zips)
 
 
 def _clip(value) -> float:
@@ -34,9 +36,9 @@ def _clip(value) -> float:
 
 
 def _from_zip(path: Path):
-    from stable_baselines3 import PPO
+    from crta.agent import load_twin, smooth_probs
 
-    model = PPO.load(str(path), device="cpu")
+    model, meta = load_twin(path)
     dim = int(np.prod(model.observation_space.shape))
     full = len(FEATURE_COLS) + 1 + len(REGIMES)
     blind = len(FEATURE_COLS) + 1
@@ -47,17 +49,23 @@ def _from_zip(path: Path):
             "Wrap the model in bots/<name>.py act() and build its own vector there."
         )
     include = dim == full
+    temperature = float(meta.get("prob_temperature", 1.0))
+    floor = float(meta.get("prob_floor", 0.0))
 
-    def act(features, regime, position, model=model, include=include):
-        obs = observation(features, regime, position, include)
+    def act(features, regime, position, model=model, include=include, temperature=temperature, floor=floor):
+        fed = smooth_probs(regime, temperature, floor) if include else regime
+        obs = observation(features, fed, position, include)
         action, _ = model.predict(obs, deterministic=True)
         return _clip(action)
 
-    def batch(feats, regimes, positions, model=model, include=include):
+    act.meta = meta
+
+    def batch(feats, regimes, positions, model=model, include=include, temperature=temperature, floor=floor):
+        fed = smooth_probs(regimes, temperature, floor) if include else regimes
         obs = np.vstack(
             [
-                observation(feats[i], regimes[i], float(positions[i]), include)
-                for i in range(len(regimes))
+                observation(feats[i], fed[i], float(positions[i]), include)
+                for i in range(len(fed))
             ]
         )
         action, _ = model.predict(obs, deterministic=True)

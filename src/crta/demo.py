@@ -219,23 +219,24 @@ def _read(mtime: float):
 
 @st.cache_resource
 def _models(mtime: float):
-    from stable_baselines3 import PPO
+    from crta.agent import load_twin
 
     loaded = {}
     for path in sorted(RUN.glob("fold*_conditioned.zip")):
         fold = int(path.name.split("_")[0].replace("fold", ""))
-        loaded[fold] = PPO.load(str(path), device="cpu")
+        loaded[fold], _meta = load_twin(path)
     return loaded
 
 
 @st.cache_resource
 def _blind_latest(mtime: float):
-    from stable_baselines3 import PPO
+    from crta.agent import load_twin
 
     paths = sorted(RUN.glob("fold*_blind.zip"))
     if not paths:
         return None
-    return PPO.load(str(paths[-1]), device="cpu")
+    model, _meta = load_twin(paths[-1])
+    return model
 
 
 def _ensure():
@@ -914,9 +915,24 @@ def _render_simulate(df, labels, models, plug, bot_options) -> None:
         st.session_state.live_caught_up = False
         start = len(df) if clock == "Live" else _date_index(labels)
         st.session_state.paper = _fresh_paper(start)
+    from crta.agent import load_twin
+
     cond_model = models[max(models)] if models else None
     blind_paths = sorted(RUN.glob("fold*_blind.zip"))
     blind_model = _blind_latest(blind_paths[-1].stat().st_mtime) if blind_paths else None
+    twin_note = ""
+    picked = bot_paths.get(choice) if choice != "Saved run" else None
+    if picked is not None and picked.suffix == ".zip":
+        cond_model, meta = load_twin(picked)
+        sibling = picked.with_name(picked.name.replace("conditioned", "blind"))
+        if sibling.exists() and sibling != picked:
+            blind_model, _blind_meta = load_twin(sibling)
+        label = "regularized" if meta.get("faithfulness_regularizer") else "unregularized"
+        twin_note = (
+            f" Loaded twin metadata: reward {meta.get('reward_mode', 'raw')}, "
+            f"probability temperature {meta.get('prob_temperature', 1)}, "
+            f"tracker {meta.get('tracker', 'v1')}, {label}."
+        )
     if clock == "Live" and (
         st.session_state.get("paper_frame") is None or st.session_state.get("live_tf") != timeframe
     ):
@@ -932,6 +948,7 @@ def _render_simulate(df, labels, models, plug, bot_options) -> None:
             f"Now {_now_ist()}. Binance BTC/USDT, paper money only. "
             "The weights were trained on 4-hour bars; 15m and 1h run those same weights on the faster candle. "
             "Replay still walks the saved 4-hour research tape."
+            f"{twin_note}"
         )
     pace = timedelta(seconds=20) if clock == "Live" else timedelta(seconds=1) if st.session_state.get("sim_play") else None
 
