@@ -165,12 +165,25 @@ def timeframe_frame(cfg: ExperimentConfig, asset: str, timeframe: str) -> tuple[
                 framed[col] = lab[col].to_numpy()
             frame = framed
         else:
-            labels, probs = track_v2(framed[list(HMM_COLS)].to_numpy(dtype=float), **kwargs)
+            diag: dict = {}
+            labels, probs = track_v2(
+                framed[list(HMM_COLS)].to_numpy(dtype=float), diagnostics=diag, **kwargs
+            )
             frame = _stamp(framed, labels, probs)
             tmp = cache.with_suffix(".parquet.tmp")
             frame[["timestamp", *REGIMES, "regime"]].to_parquet(tmp, index=False)
             tmp.replace(cache)
             key_path.write_text(json.dumps(key))
+            if diag.get("component_mu"):
+                np.savez_compressed(
+                    cache.with_suffix(".diag.npz"),
+                    matched_costs=np.asarray(diag["matched_costs"], dtype=float),
+                    component_mu=np.stack(diag["component_mu"]),
+                    component_sd=np.stack(diag["component_sd"]),
+                    assign=np.stack(diag["assign"]),
+                    responsibility=np.stack(diag["responsibility"]),
+                    bars=np.asarray(diag.get("bars", []), dtype=int) if diag.get("bars") else np.arange(len(diag["matched_costs"])),
+                )
     ts = frame["timestamp"]
     usable = frame["next_ret"].notna()
     if cfg.stage == "validate":
