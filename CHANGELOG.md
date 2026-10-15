@@ -77,3 +77,17 @@ The one-factor grid did not meet that criterion on any tape: every twin still sp
 ## 10. Console
 
 Saved twins store `reward_mode`, `prob_temperature`, `prob_floor`, and `tracker` on the model and in a `.meta.json` sidecar. Loading a zip applies that smoothing. A `*_conditioned.zip` dropped in `bots/` with a sibling `*_blind.zip` is the live pair. Closed candles and the atomic cache rename are unchanged.
+
+## 11. Validation saturation and the five-seed four-hour rerun
+
+No zip in the tree carried metadata for a validation-split native twin (train rows before 2024-09-22 16:00 UTC). `paper/results/tf/val_ent005/` is the rejected entropy-0.05 run and was not used. The final-stage zips were not used. Seed 42 was retrained with the frozen native recipe and labelled `retrained_seed42_validation`.
+
+The saturation CSV is canonical at `results/saturation_diagnostic.csv` (the path named for the check). A copy is at `paper/results/saturation_diagnostic.csv`. The eight decision numbers are ordered BTC then ETH, 1h then 15m, conditioned then blind. `mean_abs_delta_position` is the mean of consecutive executed-position changes, with no fictional start at 0. The verdict file is `results/saturation_decision.txt`.
+
+The four-hour candle cache `data/raw/btc_usdt_4h.parquet` is gitignored and was not in the checkout. The rerun uses rows of `paper/results/live/btc_usdt_4h.parquet` at or before 2026-09-22 12:00 UTC and checks them against `paper/results/tracker.npz`. No candle was downloaded. That live file's 12:00 close does not reproduce the archived run's last `next_ret`, so that one close is restored from `paper/results/run/bars.parquet` before features are built. Every other out-of-fold close and next return already matched.
+
+Moment-sorted is a third labelling on the same v1 refits (`lock_states` on unscaled means). Templates still update under the Wasserstein assignment. It is not a separate per-fold HMM.
+
+Sharpe and Sortino intervals use a circular block bootstrap with block length `ceil(sqrt(n))` and 1000 resamples (seed 42). `src/crta/eval.py` uses 1000 i.i.d. resamples. The 2000-resample circular bootstrap in the repo is the native-twin gap, not the four-hour table. Each PPO call in the rerun passes `threads=1`. `train_ppo`'s default is unchanged. The budget stays `max(8192, 10 * n_train)`, raw reward, scale 1, entropy 0, no window.
+
+Canonical tables: `paper/results/tables_4h/`. Copy: `results/tables/`. Table I is settings and folds (paper `tab:hyper` and `tab:folds`). Table III is label statistics after burn-in (paper `tab:labels`). Table IV is out-of-fold performance (paper `tab:perf`). Table V is per-regime (paper `tab:regime`). `paper/main.tex` was not edited.

@@ -1,0 +1,19 @@
+component,setting
+data,"BTC/USDT 4h, rows of paper/results/live/btc_usdt_4h.parquet with timestamp <= 2026-09-22 12:00 UTC"
+n_raw_bars,12544
+n_model_bars,12510 after feature warm-up
+folds,"4 expanding folds, min train 1080"
+budget,"max(8192, 10 * n_train) steps per twin per fold"
+reward,"raw a*r - 0.001*|da|, scale 1"
+window,none
+entropy,0
+policy,"MLP 64-64, tanh, Gaussian, executed action clipped to [-1, 1]"
+ppo,"lr 3e-4, gamma 0.99, gae_lambda 0.95, n_steps 256, batch 64, n_epochs 10 (SB3 defaults)"
+seeds,"42,43,44,45,46 for both twins; tracker seed 42"
+threads,1 passed to train_ppo; the function default is unchanged
+tracker_v1,"burn 252, stride 42, eta 0.2, dwell 30"
+tracker_v2,"same calendar, matching nearest, death_after 20, cost_quantile 0.95, filtered probabilities, online dwell"
+moment_sorted,moment names on the same v1 refits; templates still update by W2
+verifier_legacy,"one-hot counterfactual, delta_ab 0.15, delta_cf 0.10, at most one uptick"
+verifier_v2,"nearest training probability vector, delta_sens 0.05, untestable regime does not fail the bar"
+bootstrap,"circular block, block length ceil(sqrt(n)), 1000 resamples, seed 42, 95% percentile"

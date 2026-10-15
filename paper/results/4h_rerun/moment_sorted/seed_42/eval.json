@@ -1,0 +1,785 @@
+{
+  "seed": 42,
+  "labelling": "moment_sorted",
+  "n_bars": 11430,
+  "threads": 1,
+  "bootstrap": {
+    "method": "circular_block",
+    "n_boot": 1000,
+    "seed": 42,
+    "block_rule": "ceil(sqrt(n))"
+  },
+  "timesteps_override": null,
+  "systems": {
+    "conditioned": {
+      "sharpe": {
+        "point": -1.91153424803653,
+        "low": -2.6773695393628563,
+        "high": -1.1154882249311193,
+        "block": 107,
+        "n_boot": 1000
+      },
+      "sortino": {
+        "point": -2.564688655636554,
+        "low": -3.524600219512993,
+        "high": -1.554170888598681,
+        "block": 107,
+        "n_boot": 1000
+      },
+      "max_drawdown": -0.989595033263881,
+      "total_return": -0.9874996155791373,
+      "position_std": 0.7444476736552633,
+      "extreme_share": 0.7370078740157481
+    },
+    "blind": {
+      "sharpe": {
+        "point": -1.034086343639371,
+        "low": -1.8677707755364823,
+        "high": -0.21502322454125347,
+        "block": 107,
+        "n_boot": 1000
+      },
+      "sortino": {
+        "point": -1.3928756689969932,
+        "low": -2.4535499707031883,
+        "high": -0.2969326581323907,
+        "block": 107,
+        "n_boot": 1000
+      },
+      "max_drawdown": -0.9425829608425021,
+      "total_return": -0.9131701621868458,
+      "position_std": 0.8384192379108765,
+      "extreme_share": 0.6544181977252843
+    },
+    "buy_hold": {
+      "sharpe": {
+        "point": 0.35216934980242126,
+        "low": -0.5749722921828107,
+        "high": 1.2860519426565384,
+        "block": 107,
+        "n_boot": 1000
+      },
+      "sortino": {
+        "point": 0.496597078533573,
+        "low": -0.7880693216343891,
+        "high": 1.8643384455125018,
+        "block": 107,
+        "n_boot": 1000
+      },
+      "max_drawdown": -0.7704339319608701,
+      "total_return": 1.5621620618576997,
+      "position_std": 0.0,
+      "extreme_share": 1.0
+    }
+  },
+  "folds": [
+    {
+      "fold": 0,
+      "n_train": 1080,
+      "n_test": 2857,
+      "timesteps": 10800,
+      "test_start": "2021-07-05T12:00:00+00:00",
+      "test_end": "2022-10-24T12:00:00+00:00",
+      "conditioned": {
+        "sharpe": {
+          "point": -2.8997867424470156,
+          "low": -4.16100180442677,
+          "high": -1.509352633092265,
+          "block": 54,
+          "n_boot": 1000
+        },
+        "sortino": {
+          "point": -3.7134517866204364,
+          "low": -5.17403167600899,
+          "high": -1.9690501440368928,
+          "block": 54,
+          "n_boot": 1000
+        },
+        "max_drawdown": -0.8150412728031299,
+        "total_return": -0.8066527978534442,
+        "position_std": 0.5774457632770597,
+        "extreme_share": 0.1494574728736437
+      },
+      "blind": {
+        "sharpe": {
+          "point": -1.8425049359943646,
+          "low": -3.20100190736366,
+          "high": -0.49137122968757063,
+          "block": 54,
+          "n_boot": 1000
+        },
+        "sortino": {
+          "point": -2.4320531918267276,
+          "low": -4.066872714102215,
+          "high": -0.678733230515751,
+          "block": 54,
+          "n_boot": 1000
+        },
+        "max_drawdown": -0.7665520995511877,
+        "total_return": -0.738295167677675,
+        "position_std": 0.545088735889696,
+        "extreme_share": 0.5005250262513126
+      },
+      "buy_hold": {
+        "sharpe": {
+          "point": -0.647119302073023,
+          "low": -2.291899316825489,
+          "high": 1.1889106159761262,
+          "block": 54,
+          "n_boot": 1000
+        },
+        "sortino": {
+          "point": -0.8967912981183744,
+          "low": -3.0509399630579876,
+          "high": 1.7135991262316315,
+          "block": 54,
+          "n_boot": 1000
+        },
+        "max_drawdown": -0.7362009052416411,
+        "total_return": -0.42464276125339606,
+        "position_std": 0.0,
+        "extreme_share": 1.0
+      }
+    },
+    {
+      "fold": 1,
+      "n_train": 3937,
+      "n_test": 2857,
+      "timesteps": 39370,
+      "test_start": "2022-10-24T16:00:00+00:00",
+      "test_end": "2024-02-12T16:00:00+00:00",
+      "conditioned": {
+        "sharpe": {
+          "point": -1.2289825210030236,
+          "low": -3.0971932380331637,
+          "high": 0.5335490160480718,
+          "block": 54,
+          "n_boot": 1000
+        },
+        "sortino": {
+          "point": -1.6772464492012555,
+          "low": -3.9670629581760144,
+          "high": 0.7870555792391586,
+          "block": 54,
+          "n_boot": 1000
+        },
+        "max_drawdown": -0.5294355955332323,
+        "total_return": -0.49545215970933,
+        "position_std": 0.494681241790784,
+        "extreme_share": 0.9800490024501225
+      },
+      "blind": {
+        "sharpe": {
+          "point": -3.165294238515443,
+          "low": -4.5214580745780735,
+          "high": -1.709793837117647,
+          "block": 54,
+          "n_boot": 1000
+        },
+        "sortino": {
+          "point": -4.00265248124679,
+          "low": -5.4224874721794505,
+          "high": -2.3034314206006856,
+          "block": 54,
+          "n_boot": 1000
+        },
+        "max_drawdown": -0.7460967126219775,
+        "total_return": -0.7313406997245118,
+        "position_std": 0.5676826747548087,
+        "extreme_share": 0.21876093804690233
+      },
+      "buy_hold": {
+        "sharpe": {
+          "point": 1.6948034129932703,
+          "low": -0.3501651385734339,
+          "high": 3.6480133050501147,
+          "block": 54,
+          "n_boot": 1000
+        },
+        "sortino": {
+          "point": 2.509737489166705,
+          "low": -0.4752217594625885,
+          "high": 5.780757380056544,
+          "block": 54,
+          "n_boot": 1000
+        },
+        "max_drawdown": -0.2668097018318347,
+        "total_return": 1.5806067549214902,
+        "position_std": 0.0,
+        "extreme_share": 1.0
+      }
+    },
+    {
+      "fold": 2,
+      "n_train": 6794,
+      "n_test": 2857,
+      "timesteps": 67940,
+      "test_start": "2024-02-12T20:00:00+00:00",
+      "test_end": "2025-06-02T20:00:00+00:00",
+      "conditioned": {
+        "sharpe": {
+          "point": -2.0606930716406437,
+          "low": -3.67456670684683,
+          "high": -0.5070360045022334,
+          "block": 54,
+          "n_boot": 1000
+        },
+        "sortino": {
+          "point": -2.7881832691224977,
+          "low": -4.762516640817498,
+          "high": -0.7110781495194872,
+          "block": 54,
+          "n_boot": 1000
+        },
+        "max_drawdown": -0.7604490003631226,
+        "total_return": -0.7344089481406446,
+        "position_std": 0.576106420985277,
+        "extreme_share": 0.8708435421771089
+      },
+      "blind": {
+        "sharpe": {
+          "point": 0.6702399063849643,
+          "low": -1.094543701524333,
+          "high": 2.315760657679877,
+          "block": 54,
+          "n_boot": 1000
+        },
+        "sortino": {
+          "point": 0.9422412614707155,
+          "low": -1.4689672335796446,
+          "high": 3.367253045365862,
+          "block": 54,
+          "n_boot": 1000
+        },
+        "max_drawdown": -0.368574235011339,
+        "total_return": 0.5550651174576897,
+        "position_std": 0.11740153811634961,
+        "extreme_share": 0.9422471123556178
+      },
+      "buy_hold": {
+        "sharpe": {
+          "point": 1.0975068639454855,
+          "low": -0.49954050794424976,
+          "high": 2.6333932827319777,
+          "block": 54,
+          "n_boot": 1000
+        },
+        "sortino": {
+          "point": 1.5593151586369685,
+          "low": -0.6862290521140355,
+          "high": 3.8654068812480236,
+          "block": 54,
+          "n_boot": 1000
+        },
+        "max_drawdown": -0.3064126773306417,
+        "total_return": 1.113136796142896,
+        "position_std": 0.0,
+        "extreme_share": 1.0
+      }
+    },
+    {
+      "fold": 3,
+      "n_train": 9651,
+      "n_test": 2859,
+      "timesteps": 96510,
+      "test_start": "2025-06-03T00:00:00+00:00",
+      "test_end": "2026-09-22T08:00:00+00:00",
+      "conditioned": {
+        "sharpe": {
+          "point": -1.4055938276346351,
+          "low": -2.7868414757599553,
+          "high": 0.1015523359906271,
+          "block": 54,
+          "n_boot": 1000
+        },
+        "sortino": {
+          "point": -1.9375037277261127,
+          "low": -3.6593104046773184,
+          "high": 0.14328806491666352,
+          "block": 54,
+          "n_boot": 1000
+        },
+        "max_drawdown": -0.596558179065911,
+        "total_return": -0.5175306971449432,
+        "position_std": 0.9451440917069142,
+        "extreme_share": 0.9475341028331584
+      },
+      "blind": {
+        "sharpe": {
+          "point": -0.4521729228735712,
+          "low": -2.189342196771426,
+          "high": 1.2602559941711857,
+          "block": 54,
+          "n_boot": 1000
+        },
+        "sortino": {
+          "point": -0.6196813580259565,
+          "low": -2.9121849272399833,
+          "high": 1.7979899222550406,
+          "block": 54,
+          "n_boot": 1000
+        },
+        "max_drawdown": -0.33948345569674465,
+        "total_return": -0.20584223052726458,
+        "position_std": 0.928784461124933,
+        "extreme_share": 0.9559286463798531
+      },
+      "buy_hold": {
+        "sharpe": {
+          "point": -0.3851118614260211,
+          "low": -2.3329609671631015,
+          "high": 1.4159612168642826,
+          "block": 54,
+          "n_boot": 1000
+        },
+        "sortino": {
+          "point": -0.5329429103088186,
+          "low": -3.046317422523719,
+          "high": 2.0774911355165755,
+          "block": 54,
+          "n_boot": 1000
+        },
+        "max_drawdown": -0.5344740218167798,
+        "total_return": -0.18338082641951714,
+        "position_std": 0.0,
+        "extreme_share": 1.0
+      }
+    }
+  ],
+  "verifiers": {
+    "legacy": {
+      "ablation": 0.28888888888888886,
+      "all": 0.09046369203849519,
+      "n": 11430
+    },
+    "v2": {
+      "ablation": 0.28888888888888886,
+      "all": 0.0726159230096238,
+      "n": 11430
+    }
+  },
+  "verifier_detail": {
+    "legacy": [
+      {
+        "ablation": 0.6688834441722086,
+        "counterfactual": 0.3640182009100455,
+        "sensitivity": 0.6338816940847042,
+        "all": 0.1641582079103955,
+        "untestable_share": 0.0,
+        "median_ablation_delta": 0.19062453508377075,
+        "n": 2857,
+        "per_regime": {
+          "bull": {
+            "n": 19,
+            "ablation": 0.631578947368421,
+            "counterfactual": 0.15789473684210525,
+            "sensitivity": 0.6842105263157895,
+            "all": 0.05263157894736842,
+            "untestable_share": 0.0
+          },
+          "bear": {
+            "n": 1065,
+            "ablation": 0.7370892018779343,
+            "counterfactual": 0.2619718309859155,
+            "sensitivity": 0.4507042253521127,
+            "all": 0.11549295774647887,
+            "untestable_share": 0.0
+          },
+          "calm": {
+            "n": 1352,
+            "ablation": 0.6294378698224852,
+            "counterfactual": 0.40236686390532544,
+            "sensitivity": 0.7566568047337278,
+            "all": 0.16937869822485208,
+            "untestable_share": 0.0
+          },
+          "crisis": {
+            "n": 421,
+            "ablation": 0.6247030878859857,
+            "counterfactual": 0.5083135391923991,
+            "sensitivity": 0.7007125890736342,
+            "all": 0.2755344418052256,
+            "untestable_share": 0.0
+          }
+        }
+      },
+      {
+        "ablation": 0.02905145257262863,
+        "counterfactual": 0.009450472523626182,
+        "sensitivity": 0.9614980749037452,
+        "all": 0.005950297514875744,
+        "untestable_share": 0.0,
+        "median_ablation_delta": 0.0,
+        "n": 2857,
+        "per_regime": {
+          "bull": {
+            "n": 162,
+            "ablation": 0.024691358024691357,
+            "counterfactual": 0.006172839506172839,
+            "sensitivity": 0.9753086419753086,
+            "all": 0.0,
+            "untestable_share": 0.0
+          },
+          "bear": {
+            "n": 211,
+            "ablation": 0.03317535545023697,
+            "counterfactual": 0.0,
+            "sensitivity": 0.943127962085308,
+            "all": 0.0,
+            "untestable_share": 0.0
+          },
+          "calm": {
+            "n": 2484,
+            "ablation": 0.028985507246376812,
+            "counterfactual": 0.010466988727858293,
+            "sensitivity": 0.962157809983897,
+            "all": 0.006843800322061192,
+            "untestable_share": 0.0
+          },
+          "crisis": {
+            "n": 0,
+            "ablation": null,
+            "counterfactual": null,
+            "sensitivity": null,
+            "all": null,
+            "untestable_share": null
+          }
+        }
+      },
+      {
+        "ablation": 0.3584179208960448,
+        "counterfactual": 0.232061603080154,
+        "sensitivity": 0.5890794539726987,
+        "all": 0.13895694784739238,
+        "untestable_share": 0.0,
+        "median_ablation_delta": 0.0,
+        "n": 2857,
+        "per_regime": {
+          "bull": {
+            "n": 377,
+            "ablation": 0.40848806366047746,
+            "counterfactual": 0.33156498673740054,
+            "sensitivity": 0.6896551724137931,
+            "all": 0.246684350132626,
+            "untestable_share": 0.0
+          },
+          "bear": {
+            "n": 1026,
+            "ablation": 0.3216374269005848,
+            "counterfactual": 0.14132553606237816,
+            "sensitivity": 0.5321637426900585,
+            "all": 0.09746588693957114,
+            "untestable_share": 0.0
+          },
+          "calm": {
+            "n": 1028,
+            "ablation": 0.377431906614786,
+            "counterfactual": 0.2480544747081712,
+            "sensitivity": 0.6303501945525292,
+            "all": 0.1605058365758755,
+            "untestable_share": 0.0
+          },
+          "crisis": {
+            "n": 426,
+            "ablation": 0.3568075117370892,
+            "counterfactual": 0.323943661971831,
+            "sensitivity": 0.5375586854460094,
+            "all": 0.09154929577464789,
+            "untestable_share": 0.0
+          }
+        }
+      },
+      {
+        "ablation": 0.09933543196922001,
+        "counterfactual": 0.10738020286813571,
+        "sensitivity": 0.956628191675411,
+        "all": 0.0528156698146205,
+        "untestable_share": 0.0,
+        "median_ablation_delta": 0.0,
+        "n": 2859,
+        "per_regime": {
+          "bull": {
+            "n": 43,
+            "ablation": 0.0,
+            "counterfactual": 0.09302325581395349,
+            "sensitivity": 1.0,
+            "all": 0.0,
+            "untestable_share": 0.0
+          },
+          "bear": {
+            "n": 1770,
+            "ablation": 0.09830508474576272,
+            "counterfactual": 0.07005649717514124,
+            "sensitivity": 0.9502824858757062,
+            "all": 0.04067796610169491,
+            "untestable_share": 0.0
+          },
+          "calm": {
+            "n": 127,
+            "ablation": 0.03937007874015748,
+            "counterfactual": 0.023622047244094488,
+            "sensitivity": 0.984251968503937,
+            "all": 0.023622047244094488,
+            "untestable_share": 0.0
+          },
+          "crisis": {
+            "n": 919,
+            "ablation": 0.11425462459194777,
+            "counterfactual": 0.191512513601741,
+            "sensitivity": 0.9630032644178455,
+            "all": 0.08269858541893363,
+            "untestable_share": 0.0
+          }
+        }
+      }
+    ],
+    "v2": [
+      {
+        "ablation": 0.6688834441722086,
+        "counterfactual": 0.19075953797689885,
+        "sensitivity": 0.5218760938046902,
+        "all": 0.12215610780539027,
+        "untestable_share": 0.0,
+        "median_ablation_delta": 0.19062453508377075,
+        "n": 2857,
+        "per_regime": {
+          "bull": {
+            "n": 19,
+            "ablation": 0.631578947368421,
+            "counterfactual": 0.05263157894736842,
+            "sensitivity": 0.631578947368421,
+            "all": 0.05263157894736842,
+            "untestable_share": 0.0
+          },
+          "bear": {
+            "n": 1065,
+            "ablation": 0.7370892018779343,
+            "counterfactual": 0.1568075117370892,
+            "sensitivity": 0.3455399061032864,
+            "all": 0.0892018779342723,
+            "untestable_share": 0.0
+          },
+          "calm": {
+            "n": 1352,
+            "ablation": 0.6294378698224852,
+            "counterfactual": 0.17085798816568049,
+            "sensitivity": 0.6449704142011834,
+            "all": 0.10502958579881656,
+            "untestable_share": 0.0
+          },
+          "crisis": {
+            "n": 421,
+            "ablation": 0.6247030878859857,
+            "counterfactual": 0.34679334916864607,
+            "sensitivity": 0.5676959619952494,
+            "all": 0.26365795724465557,
+            "untestable_share": 0.0
+          }
+        }
+      },
+      {
+        "ablation": 0.02905145257262863,
+        "counterfactual": 0.00840042002100105,
+        "sensitivity": 0.023101155057752887,
+        "all": 0.004900245012250612,
+        "untestable_share": 0.0,
+        "median_ablation_delta": 0.0,
+        "n": 2857,
+        "per_regime": {
+          "bull": {
+            "n": 162,
+            "ablation": 0.024691358024691357,
+            "counterfactual": 0.006172839506172839,
+            "sensitivity": 0.012345679012345678,
+            "all": 0.0,
+            "untestable_share": 0.0
+          },
+          "bear": {
+            "n": 211,
+            "ablation": 0.03317535545023697,
+            "counterfactual": 0.0,
+            "sensitivity": 0.018957345971563982,
+            "all": 0.0,
+            "untestable_share": 0.0
+          },
+          "calm": {
+            "n": 2484,
+            "ablation": 0.028985507246376812,
+            "counterfactual": 0.009259259259259259,
+            "sensitivity": 0.024154589371980676,
+            "all": 0.005636070853462158,
+            "untestable_share": 0.0
+          },
+          "crisis": {
+            "n": 0,
+            "ablation": null,
+            "counterfactual": null,
+            "sensitivity": null,
+            "all": null,
+            "untestable_share": null
+          }
+        }
+      },
+      {
+        "ablation": 0.3584179208960448,
+        "counterfactual": 0.17570878543927196,
+        "sensitivity": 0.2327616380819041,
+        "all": 0.11515575778788939,
+        "untestable_share": 0.0,
+        "median_ablation_delta": 0.0,
+        "n": 2857,
+        "per_regime": {
+          "bull": {
+            "n": 377,
+            "ablation": 0.40848806366047746,
+            "counterfactual": 0.2440318302387268,
+            "sensitivity": 0.3129973474801061,
+            "all": 0.19363395225464192,
+            "untestable_share": 0.0
+          },
+          "bear": {
+            "n": 1026,
+            "ablation": 0.3216374269005848,
+            "counterfactual": 0.10623781676413255,
+            "sensitivity": 0.1968810916179337,
+            "all": 0.07602339181286549,
+            "untestable_share": 0.0
+          },
+          "calm": {
+            "n": 1028,
+            "ablation": 0.377431906614786,
+            "counterfactual": 0.19552529182879377,
+            "sensitivity": 0.25583657587548636,
+            "all": 0.14007782101167315,
+            "untestable_share": 0.0
+          },
+          "crisis": {
+            "n": 426,
+            "ablation": 0.3568075117370892,
+            "counterfactual": 0.2347417840375587,
+            "sensitivity": 0.19248826291079812,
+            "all": 0.07981220657276995,
+            "untestable_share": 0.0
+          }
+        }
+      },
+      {
+        "ablation": 0.09933543196922001,
+        "counterfactual": 0.08289611752360965,
+        "sensitivity": 0.1024833857992305,
+        "all": 0.048268625393494226,
+        "untestable_share": 0.0,
+        "median_ablation_delta": 0.0,
+        "n": 2859,
+        "per_regime": {
+          "bull": {
+            "n": 43,
+            "ablation": 0.0,
+            "counterfactual": 0.0,
+            "sensitivity": 0.09302325581395349,
+            "all": 0.0,
+            "untestable_share": 0.0
+          },
+          "bear": {
+            "n": 1770,
+            "ablation": 0.09830508474576272,
+            "counterfactual": 0.05254237288135593,
+            "sensitivity": 0.07570621468926554,
+            "all": 0.03672316384180791,
+            "untestable_share": 0.0
+          },
+          "calm": {
+            "n": 127,
+            "ablation": 0.03937007874015748,
+            "counterfactual": 0.023622047244094488,
+            "sensitivity": 0.06299212598425197,
+            "all": 0.015748031496062992,
+            "untestable_share": 0.0
+          },
+          "crisis": {
+            "n": 919,
+            "ablation": 0.11425462459194777,
+            "counterfactual": 0.15342763873775844,
+            "sensitivity": 0.15995647442872687,
+            "all": 0.07725788900979326,
+            "untestable_share": 0.0
+          }
+        }
+      }
+    ]
+  },
+  "regimes": {
+    "bull": {
+      "n": 601,
+      "conditioned": {
+        "sharpe": -3.3868997739886524,
+        "mean_position": -0.39081460195353346,
+        "total_return": -0.4068606949385717
+      },
+      "blind": {
+        "sharpe": 0.7078509166194441,
+        "mean_position": 0.69856608267982,
+        "total_return": 0.11115220820196114
+      },
+      "buy_hold": {
+        "sharpe": 0.8563049803333159,
+        "mean_position": 1.0,
+        "total_return": 0.14954676242744558
+      }
+    },
+    "bear": {
+      "n": 4072,
+      "conditioned": {
+        "sharpe": -0.7477037197943048,
+        "mean_position": -0.5186878109888506,
+        "total_return": -0.4161216981893342
+      },
+      "blind": {
+        "sharpe": -0.8116059205733833,
+        "mean_position": 0.27101685982041995,
+        "total_return": -0.4646876923243184
+      },
+      "buy_hold": {
+        "sharpe": -1.1359156644207744,
+        "mean_position": 1.0,
+        "total_return": -0.6226247290335172
+      }
+    },
+    "calm": {
+      "n": 4991,
+      "conditioned": {
+        "sharpe": -2.4226383921138503,
+        "mean_position": -0.6199926965761922,
+        "total_return": -0.9154831779014485
+      },
+      "blind": {
+        "sharpe": -1.8977101463860486,
+        "mean_position": 0.211320571624436,
+        "total_return": -0.8555225480486989
+      },
+      "buy_hold": {
+        "sharpe": 1.5417306197579759,
+        "mean_position": 1.0,
+        "total_return": 5.3085932522365855
+      }
+    },
+    "crisis": {
+      "n": 1766,
+      "conditioned": {
+        "sharpe": -2.2019746705580285,
+        "mean_position": -0.13628798133049197,
+        "total_return": -0.5729279301597937
+      },
+      "blind": {
+        "sharpe": 0.02485316018919413,
+        "mean_position": 0.24720048087217664,
+        "total_return": 0.010387893475946264
+      },
+      "buy_hold": {
+        "sharpe": -0.14727297181478627,
+        "mean_position": 1.0,
+        "total_return": -0.0637884629732981
+      }
+    }
+  }
+}

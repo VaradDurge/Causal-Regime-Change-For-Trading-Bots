@@ -1,0 +1,13 @@
+Table mapping for this rerun
+=============================
+The current paper's tables, in order, are tab:folds, tab:hyper, tab:labels, tab:perf, tab:regime.
+The task groups settings and folds as Table I, label statistics as Table III,
+out-of-fold performance as Table IV, and per-regime results as Table V.
+table_I_settings.csv + table_I_folds.csv -> Table I (paper tab:hyper and tab:folds).
+table_III_labels.csv -> Table III (paper tab:labels), after burn-in.
+table_IV_performance.csv -> Table IV (paper tab:perf), mean and std across seeds 42-46.
+table_V_regime.csv -> Table V (paper tab:regime), mean and std across seeds.
+metrics_by_seed.csv is the per-seed source. Verifier rows repeat return metrics
+because the verifier does not change the executed position. Ablation and faithfulness
+are filled for the conditioned agent only.
+Canonical directory: paper/results/tables_4h/. Copy: results/tables/.

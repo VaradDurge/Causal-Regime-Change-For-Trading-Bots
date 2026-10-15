@@ -1,0 +1,110 @@
+{
+  "tracker_v1": {
+    "n": 12258,
+    "switches_per_year": 5.538423886441507,
+    "median_run_bars": 110.0,
+    "mean_matched_w2": 0.00018814381843312137,
+    "identity_jump": 0.0001393768894807971,
+    "identity_jump_per_regime": {
+      "bull": 0.00016343642283256498,
+      "bear": 0.00015451217919394458,
+      "calm": 0.0001918687053397432,
+      "crisis": 4.769025055693563e-05
+    },
+    "per_regime": {
+      "bull": {
+        "share": 0.0,
+        "mean_return": null,
+        "volatility": null
+      },
+      "bear": {
+        "share": 0.07717409038994942,
+        "mean_return": -0.000774849215300487,
+        "volatility": 0.014218672782867522
+      },
+      "calm": {
+        "share": 0.8847283406754772,
+        "mean_return": 0.00015000066853794656,
+        "volatility": 0.0097192886253026
+      },
+      "crisis": {
+        "share": 0.03809756893457334,
+        "mean_return": -0.0008067054801785223,
+        "volatility": 0.021758737569752957
+      }
+    }
+  },
+  "tracker_v2": {
+    "n": 12258,
+    "switches_per_year": 3.0372001957905037,
+    "median_run_bars": 189.0,
+    "mean_matched_w2": 0.00011964968496644232,
+    "identity_jump": 9.293513120801814e-05,
+    "identity_jump_per_regime": {
+      "bull": 5.073124325957432e-05,
+      "bear": 0.00015188543599940857,
+      "calm": 0.00012461998154992762,
+      "crisis": 4.4503864023162015e-05
+    },
+    "per_regime": {
+      "bull": {
+        "share": 0.009871104584760973,
+        "mean_return": 0.0003270728602017059,
+        "volatility": 0.010428839748300384
+      },
+      "bear": {
+        "share": 0.030429107521618533,
+        "mean_return": 5.444071185015548e-05,
+        "volatility": 0.017206203067084806
+      },
+      "calm": {
+        "share": 0.9255996084189917,
+        "mean_return": 5.407352819667703e-05,
+        "volatility": 0.009987422810198512
+      },
+      "crisis": {
+        "share": 0.03410017947462882,
+        "mean_return": -0.000374119663032565,
+        "volatility": 0.019188462873193077
+      }
+    }
+  },
+  "moment_sorted": {
+    "n": 12258,
+    "switches_per_year": 7.5036710719530095,
+    "median_run_bars": 210.0,
+    "mean_matched_w2": 0.0009134049431515697,
+    "identity_jump": 0.00029694307006441145,
+    "identity_jump_per_regime": {
+      "bull": 0.0004606300726787835,
+      "bear": 0.00020838638253042893,
+      "calm": 0.0001659067408796693,
+      "crisis": 0.00035284908416876405
+    },
+    "per_regime": {
+      "bull": {
+        "share": 0.07203458965573503,
+        "mean_return": -8.18866640973047e-05,
+        "volatility": 0.015399243234313027
+      },
+      "bear": {
+        "share": 0.34206232664382447,
+        "mean_return": -0.0003095751941519654,
+        "volatility": 0.009330974700326896
+      },
+      "calm": {
+        "share": 0.44183390438897047,
+        "mean_return": 0.0003688528337930137,
+        "volatility": 0.010384801688527796
+      },
+      "crisis": {
+        "share": 0.14406917931147006,
+        "mean_return": -6.247667099062935e-05,
+        "volatility": 0.011354181993000213
+      }
+    }
+  },
+  "n_model_bars": 12510,
+  "burn": 252,
+  "after_burn_bars": 12258
+}
