@@ -199,6 +199,7 @@ def track(
     eta: float = ETA,
     seed: int = 42,
     dwell: int = MIN_DWELL,
+    diagnostics: dict | None = None,
 ) -> tuple[list[str], np.ndarray]:
     """One causal pass. The burn-in is named by moments; every later window matches templates by W2."""
     X = np.asarray(X, dtype=float)
@@ -226,6 +227,18 @@ def track(
         window_labels, window_probs, proba = _window_labels(fitted, X[t:end], assign, labels[-1], dwell)
         labels.extend(window_labels)
         probs[t:end] = window_probs
+        if diagnostics is not None:
+            cost = pairwise_w2(mu, sd, template_mu, template_sd)
+            diagnostics.setdefault("matched_costs", []).append(
+                float(np.mean([cost[k, int(assign[k])] for k in range(len(assign))]))
+            )
+            diagnostics.setdefault("template_mu", []).append(np.array(template_mu, copy=True))
+            diagnostics.setdefault("template_sd", []).append(np.array(template_sd, copy=True))
+            diagnostics.setdefault("component_mu", []).append(np.array(mu, copy=True))
+            diagnostics.setdefault("component_sd", []).append(np.array(sd, copy=True))
+            diagnostics.setdefault("assign", []).append(np.array(assign, copy=True))
+            diagnostics.setdefault("responsibility", []).append(np.asarray(proba).sum(axis=0))
+            diagnostics.setdefault("bars", []).append(int(t))
         template_mu, template_sd = update_templates(template_mu, template_sd, mu, sd, proba, assign, eta)
         t = end
     return labels, probs
@@ -243,4 +256,320 @@ def label_span(X, start: int, end: int, prev: str | None = None, seed: int = 42)
     mu, sd = component_params(fitted)
     _template_mu, _template_sd, assign = _templates_from_lock(mu, sd)
     labels, probs, _proba = _window_labels(fitted, X[start:end], assign, prev)
+    return labels, probs
+
+
+def log_gauss_diag(X: np.ndarray, means: np.ndarray, covars: np.ndarray) -> np.ndarray:
+    """Diagonal-Gaussian log likelihood. X is (T, D), means and covars are (K, D)."""
+    var = np.maximum(np.asarray(covars, dtype=float), 1e-12)
+    xc = np.asarray(X, dtype=float)[:, None, :] - np.asarray(means, dtype=float)[None, :, :]
+    quad = np.sum((xc * xc) / var[None, :, :], axis=2)
+    logdet = np.sum(np.log(2.0 * np.pi * var), axis=1)
+    return -0.5 * (quad + logdet[None, :])
+
+
+def _covars_diag(model: RegimeModel) -> np.ndarray:
+    cov = np.asarray(model.hmm.covars_, dtype=float)
+    if cov.ndim == 3:
+        cov = np.diagonal(cov, axis1=-2, axis2=-1)
+    return cov
+
+
+def forward_filter(model: RegimeModel, X: np.ndarray) -> np.ndarray:
+    """Filtered posteriors p(z_t | x_1..x_t). Bar t does not see x after t.
+
+    Log-space forward recursion from the fitted start vector, transitions and
+    diagonal Gaussian emissions. Each step is renormalized; the scale cancels,
+    so the rows are the filtered posteriors.
+    """
+    from scipy.special import logsumexp
+
+    X = np.asarray(X, dtype=float)
+    xs = (X - model.mu) / model.sd
+    log_start = np.log(np.clip(np.asarray(model.hmm.startprob_, dtype=float), 1e-300, None))
+    log_trans = np.log(np.clip(np.asarray(model.hmm.transmat_, dtype=float), 1e-300, None))
+    log_emit = log_gauss_diag(xs, np.asarray(model.hmm.means_, dtype=float), _covars_diag(model))
+    log_post = np.empty_like(log_emit)
+    log_post[0] = log_start + log_emit[0]
+    log_post[0] -= logsumexp(log_post[0])
+    for t in range(1, len(xs)):
+        mixed = logsumexp(log_post[t - 1][:, None] + log_trans, axis=0)
+        log_post[t] = log_emit[t] + mixed
+        log_post[t] -= logsumexp(log_post[t])
+    return np.exp(log_post)
+
+
+def enforce_dwell_online(labels, min_dwell: int = MIN_DWELL, prev: str | None = None) -> list[str]:
+    """Switch only after `min_dwell` consecutive new labels. Past labels are never rewritten."""
+    out: list[str] = []
+    current = None if prev is None else str(prev)
+    candidate = None
+    run = 0
+    for lab in labels:
+        lab = str(lab)
+        if current is None:
+            current = lab
+            out.append(current)
+            continue
+        if lab == current:
+            candidate = None
+            run = 0
+            out.append(current)
+            continue
+        if lab == candidate:
+            run += 1
+        else:
+            candidate = lab
+            run = 1
+        if run >= min_dwell:
+            current = candidate
+            candidate = None
+            run = 0
+        out.append(current)
+    return out
+
+
+def pairwise_w2(mu, sd, template_mu, template_sd) -> np.ndarray:
+    mu = np.asarray(mu, dtype=float)
+    sd = np.asarray(sd, dtype=float)
+    template_mu = np.asarray(template_mu, dtype=float)
+    template_sd = np.asarray(template_sd, dtype=float)
+    delta_mu = mu[:, None, :] - template_mu[None, :, :]
+    delta_sd = sd[:, None, :] - template_sd[None, :, :]
+    return np.sum(delta_mu**2 + delta_sd**2, axis=2)
+
+
+def assign_matching(
+    mu,
+    sd,
+    template_mu,
+    template_sd,
+    matching: str = "nearest",
+    historical: list | None = None,
+    quantile: float = 0.95,
+    min_history: int = 8,
+) -> np.ndarray:
+    """Match components to templates.
+
+    ``nearest`` is the historical rule and may send two components to one template.
+    ``hungarian`` is one-to-one. ``hungarian_with_threshold`` drops a Hungarian pair
+    whose cost exceeds `quantile` of previously accepted costs and merges that
+    component into its nearest template. Until `min_history` costs exist there is
+    no quantile, so every Hungarian pair is kept.
+    """
+    cost = pairwise_w2(mu, sd, template_mu, template_sd)
+    if matching == "nearest":
+        assign = np.argmin(cost, axis=1).astype(int)
+        if historical is not None:
+            historical.extend(float(cost[k, assign[k]]) for k in range(len(assign)))
+        return assign
+    if matching not in ("hungarian", "hungarian_with_threshold"):
+        raise ValueError(f"unknown matching {matching}")
+    from scipy.optimize import linear_sum_assignment
+
+    rows, cols = linear_sum_assignment(cost)
+    assign = np.argmin(cost, axis=1).astype(int)
+    for row, col in zip(rows, cols):
+        assign[int(row)] = int(col)
+    if matching == "hungarian":
+        if historical is not None:
+            historical.extend(float(cost[int(r), int(c)]) for r, c in zip(rows, cols))
+        return assign
+    thresh = None
+    if historical is not None and len(historical) >= min_history:
+        thresh = float(np.quantile(np.asarray(historical, dtype=float), quantile))
+    accepted = []
+    for row, col in zip(rows, cols):
+        row, col = int(row), int(col)
+        if thresh is not None and cost[row, col] > thresh:
+            assign[row] = int(np.argmin(cost[row]))
+        else:
+            accepted.append(float(cost[row, col]))
+    if historical is not None:
+        historical.extend(accepted)
+    return assign
+
+
+def rebirth_source(mu, sd, template_mu, template_sd, dead: int) -> tuple[np.ndarray, np.ndarray, str, int]:
+    """Component farthest from the other templates, or the moment-sorted name if that distance is ~0."""
+    mu = np.asarray(mu, dtype=float)
+    sd = np.asarray(sd, dtype=float)
+    others = [j for j in range(len(template_mu)) if j != dead]
+    best_k, best_d = 0, -1.0
+    for k in range(len(mu)):
+        if others:
+            dmin = min(
+                w2_diag(mu[k], sd[k], template_mu[j], template_sd[j]) for j in others
+            )
+        else:
+            dmin = 0.0
+        if dmin > best_d:
+            best_d, best_k = dmin, k
+    if best_d < 1e-6:
+        mapping = lock_states(mu)
+        name = REGIMES[dead] if dead < len(REGIMES) else None
+        for comp, nm in mapping.items():
+            if nm == name:
+                return mu[int(comp)].copy(), sd[int(comp)].copy(), "moment", int(comp)
+    return mu[best_k].copy(), sd[best_k].copy(), "farthest", int(best_k)
+
+
+def apply_birth_death(
+    template_mu,
+    template_sd,
+    mu,
+    sd,
+    assign,
+    empty_run,
+    death_after: int,
+    events: list,
+    refit_index: int,
+    bar: int,
+    date: str | None = None,
+):
+    """Re-seed a template that has had no member for `death_after` refits. One pass, then the caller re-matches."""
+    template_mu = np.array(template_mu, dtype=float, copy=True)
+    template_sd = np.array(template_sd, dtype=float, copy=True)
+    empty_run = np.array(empty_run, dtype=int, copy=True)
+    assign = np.asarray(assign, dtype=int)
+    for g in range(len(template_mu)):
+        if np.any(assign == g):
+            empty_run[g] = 0
+        else:
+            empty_run[g] += 1
+    reborn = False
+    for g in range(len(template_mu)):
+        if empty_run[g] < death_after:
+            continue
+        src_mu, src_sd, how, comp = rebirth_source(mu, sd, template_mu, template_sd, g)
+        template_mu[g] = src_mu
+        template_sd[g] = src_sd
+        empty_run[g] = 0
+        reborn = True
+        events.append(
+            {
+                "kind": "death_birth",
+                "refit_index": int(refit_index),
+                "bar": int(bar),
+                "date": date,
+                "template": REGIMES[g] if g < len(REGIMES) else str(g),
+                "source": how,
+                "component": int(comp),
+            }
+        )
+    return template_mu, template_sd, empty_run, reborn
+
+
+def _window_labels_v2(model: RegimeModel, X: np.ndarray, assign: np.ndarray, prev: str | None, dwell: int):
+    proba = forward_filter(model, X)
+    names = [REGIMES[int(assign[int(np.argmax(proba[t]))])] for t in range(len(X))]
+    sticky = enforce_dwell_online(names, min_dwell=dwell, prev=prev)
+    return sticky, _aggregate(proba, assign), proba
+
+
+def track_v2(
+    X: np.ndarray,
+    burn: int = BURN,
+    stride: int = STRIDE,
+    eta: float = ETA,
+    seed: int = 42,
+    dwell: int = MIN_DWELL,
+    matching: str = "nearest",
+    death_after: int = 20,
+    cost_quantile: float = 0.95,
+    timestamps=None,
+    diagnostics: dict | None = None,
+) -> tuple[list[str], np.ndarray]:
+    """Causal tracker with template birth, optional Hungarian matching, and filtered posteriors.
+
+    A template update still uses only the fit on rows before the window and the
+    filtered responsibilities of that window. Closed windows are not rewritten.
+    """
+    X = np.asarray(X, dtype=float)
+    n = len(X)
+    if n < N_STATES * 5:
+        raise ValueError(f"need at least {N_STATES * 5} rows to track, got {n}")
+    burn = int(min(max(burn, N_STATES * 5), n))
+    stride = int(max(stride, 1))
+    labels: list[str] = []
+    probs = np.zeros((n, len(REGIMES)))
+    events: list = []
+    if diagnostics is not None:
+        diagnostics.setdefault("events", events)
+        diagnostics.setdefault("matched_costs", [])
+        diagnostics.setdefault("template_mu", [])
+        diagnostics.setdefault("template_sd", [])
+        diagnostics.setdefault("component_mu", [])
+        diagnostics.setdefault("component_sd", [])
+        diagnostics.setdefault("assign", [])
+        diagnostics.setdefault("responsibility", [])
+        events = diagnostics["events"]
+
+    fitted = _fit_hmm(X[:burn], seed)
+    mu, sd = component_params(fitted)
+    template_mu, template_sd, assign = _templates_from_lock(mu, sd)
+    window_labels, window_probs, _proba = _window_labels_v2(fitted, X[:burn], assign, None, dwell)
+    labels.extend(window_labels)
+    probs[:burn] = window_probs
+    historical: list[float] = []
+    empty_run = np.zeros(len(REGIMES), dtype=int)
+
+    t = burn
+    refit = 0
+    while t < n:
+        end = min(t + stride, n)
+        fitted = _fit_hmm(X[:t], seed)
+        mu, sd = component_params(fitted)
+        date = None
+        if timestamps is not None:
+            date = str(timestamps[min(t, len(timestamps) - 1)])
+        assign = assign_matching(mu, sd, template_mu, template_sd, matching)
+        template_mu, template_sd, empty_run, reborn = apply_birth_death(
+            template_mu, template_sd, mu, sd, assign, empty_run, death_after, events, refit, t, date
+        )
+        assign = assign_matching(
+            mu, sd, template_mu, template_sd, matching, historical, cost_quantile
+        )
+        window_labels, window_probs, proba = _window_labels_v2(fitted, X[t:end], assign, labels[-1], dwell)
+        labels.extend(window_labels)
+        probs[t:end] = window_probs
+        if diagnostics is not None:
+            cost = pairwise_w2(mu, sd, template_mu, template_sd)
+            diagnostics["matched_costs"].append(float(np.mean([cost[k, int(assign[k])] for k in range(len(assign))])))
+            diagnostics["template_mu"].append(np.array(template_mu, copy=True))
+            diagnostics["template_sd"].append(np.array(template_sd, copy=True))
+            diagnostics["component_mu"].append(np.array(mu, copy=True))
+            diagnostics["component_sd"].append(np.array(sd, copy=True))
+            diagnostics["assign"].append(np.array(assign, copy=True))
+            diagnostics["responsibility"].append(proba.sum(axis=0))
+            events.append(
+                {
+                    "kind": "refit",
+                    "refit_index": int(refit),
+                    "bar": int(t),
+                    "date": date,
+                    "fit_end": int(t),
+                    "window_end": int(end),
+                }
+            )
+        template_mu, template_sd = update_templates(
+            template_mu, template_sd, mu, sd, proba, assign, eta
+        )
+        t = end
+        refit += 1
+    return labels, probs
+
+
+def label_span_v2(X, start: int, end: int, prev: str | None = None, seed: int = 42, dwell: int = MIN_DWELL):
+    """Like ``label_span``, but the probabilities are the forward filter and the dwell is online."""
+    X = np.asarray(X, dtype=float)
+    start = int(start)
+    end = int(end)
+    if start < 0 or end > len(X) or start >= end:
+        raise IndexError(f"bad span {start}:{end} for {len(X)} rows")
+    fit_end = start if start >= N_STATES * 5 else min(len(X), N_STATES * 5)
+    fitted = _fit_hmm(X[:fit_end], seed)
+    mu, sd = component_params(fitted)
+    _template_mu, _template_sd, assign = _templates_from_lock(mu, sd)
+    labels, probs, _proba = _window_labels_v2(fitted, X[start:end], assign, prev, dwell)
     return labels, probs
