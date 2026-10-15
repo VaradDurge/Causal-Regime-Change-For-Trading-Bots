@@ -1,0 +1,38 @@
+# New options, not a frozen selection. Validation chooses configs/final.yaml.
+# Sign-flip stays off: it re-tracks the whole training series, and it is never
+# applied to only one twin. The faithfulness penalty stays off so the verifier
+# remains an independent audit.
+reward_mode: excess_bh
+reward_scale: 100.0
+diff_sharpe_eta: 0.01
+pos_extreme_penalty: 0.0
+pos_variance_bonus: 0.0
+variance_every: 256
+ent_coef: 0.02
+ent_coef_start: null
+collapse_log_every: 10000
+window: 2000
+window_sampling: regime_balanced
+regime_balance_beta: 3.0
+sign_flip_prob: 0.0
+regime_perturb_prob: 0.05
+faithfulness_regularizer: false
+faithfulness_reg_coef: 0.1
+prob_temperature: 1.0
+prob_floor: 0.0
+tracker: v2
+tracker_matching: nearest
+tracker_death_after: 20
+tracker_cost_quantile: 0.95
+verifier: v2
+delta_ab: 0.15
+delta_cf: 0.1
+delta_sens: 0.05
+cf_pick: nearest
+timesteps: 500000
+threads: 2
+seed: 42
+protocol: timeframe
+asset: BTC
+timeframe: 1h
+stage: validate
