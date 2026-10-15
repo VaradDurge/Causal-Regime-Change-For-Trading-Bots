@@ -1,0 +1,705 @@
+{
+  "source_commit": "af843a55f7dfc46711b650564ae1ea1bf075aeb6",
+  "note": "Published timeframe JSON reused after the fields were checked against the paper. The 500k twins were not retrained for this record. The synthetic probe was re-run.",
+  "smoke": {
+    "command": "python -m crta.pipeline --probe --synthetic",
+    "model": "probe",
+    "source": "synthetic",
+    "pass_rate": 0.9956583377636009,
+    "bars": 11286
+  },
+  "pytest_at_baseline_commit": {
+    "passed": 32
+  },
+  "holdout_twins_with_position_std_at_most_0.03": [
+    "BTC 15m conditioned 0.0258",
+    "ETH 15m blind 0.0000",
+    "ETH 1h blind 0.0000"
+  ],
+  "rows": [
+    {
+      "file": "paper/results/tf/btc_15m_val_validate.json",
+      "asset": "BTC",
+      "timeframe": "15m",
+      "stage": "validate",
+      "segment": "validation",
+      "recipe": {
+        "window": 2000,
+        "reward_scale": 100.0,
+        "ent_coef": 0.01,
+        "timesteps": 500000
+      },
+      "tracker": {
+        "burn": 4032,
+        "stride": 672,
+        "dwell": 480
+      },
+      "position_std": {
+        "conditioned": 0.45517485320926876,
+        "blind": 0.657830008675466
+      },
+      "mean_position": {
+        "conditioned": 0.8895068074489378,
+        "blind": 0.7521855053800205
+      },
+      "total_return": {
+        "conditioned": 0.8423496563865494,
+        "blind": -0.012296916415315162,
+        "buy_hold": 0.8033238086668248
+      },
+      "sharpe": {
+        "conditioned": {
+          "point": 1.3419446895956169,
+          "low": -0.6757876922148812,
+          "high": 3.327199327733993
+        },
+        "blind": {
+          "point": -0.02726317833179752,
+          "low": -2.021280328117943,
+          "high": 1.8869597751654759
+        }
+      },
+      "faithfulness": {
+        "ablation": 0.011386986301369863,
+        "counterfactual": 0.043978310502283104,
+        "sensitivity": 1.0,
+        "all": 0.009703196347031963,
+        "median_ablation_delta": 0.0
+      },
+      "gap_cond_minus_blind": {
+        "gap_log": 0.6234148932206746,
+        "low": -0.07649240078059483,
+        "high": 1.3905487905176919,
+        "share_positive": 0.9545,
+        "block": 188
+      }
+    },
+    {
+      "file": "paper/results/tf/btc_1h_val_validate.json",
+      "asset": "BTC",
+      "timeframe": "1h",
+      "stage": "validate",
+      "segment": "validation",
+      "recipe": {
+        "window": 2000,
+        "reward_scale": 100.0,
+        "ent_coef": 0.01,
+        "timesteps": 500000
+      },
+      "tracker": {
+        "burn": 1008,
+        "stride": 168,
+        "dwell": 120
+      },
+      "position_std": {
+        "conditioned": 0.3258119294888697,
+        "blind": 0.18658757175459914
+      },
+      "mean_position": {
+        "conditioned": 0.9291163082175025,
+        "blind": 0.9796301296729272
+      },
+      "total_return": {
+        "conditioned": 1.1202210765204716,
+        "blind": 0.7697407250684114,
+        "buy_hold": 0.791896295474211
+      },
+      "sharpe": {
+        "conditioned": {
+          "point": 1.6693555470209975,
+          "low": -0.2988145787188817,
+          "high": 3.5036472592145436
+        },
+        "blind": {
+          "point": 1.2582106183353223,
+          "low": -0.6834144689783028,
+          "high": 3.156501645865495
+        }
+      },
+      "faithfulness": {
+        "ablation": 0.26073059360730594,
+        "counterfactual": 0.0,
+        "sensitivity": 0.9583333333333334,
+        "all": 0.0,
+        "median_ablation_delta": 0.0
+      },
+      "gap_cond_minus_blind": {
+        "gap_log": 0.18068731178072064,
+        "low": -0.05343247992362759,
+        "high": 0.44507862072946264,
+        "share_positive": 0.925,
+        "block": 94
+      }
+    },
+    {
+      "file": "paper/results/tf/eth_15m_val_validate.json",
+      "asset": "ETH",
+      "timeframe": "15m",
+      "stage": "validate",
+      "segment": "validation",
+      "recipe": {
+        "window": 2000,
+        "reward_scale": 100.0,
+        "ent_coef": 0.01,
+        "timesteps": 500000
+      },
+      "tracker": {
+        "burn": 4032,
+        "stride": 672,
+        "dwell": 480
+      },
+      "position_std": {
+        "conditioned": 0.25122356336657486,
+        "blind": 0.06011326233599274
+      },
+      "mean_position": {
+        "conditioned": 0.9663694196104254,
+        "blind": 0.9969318782141513
+      },
+      "total_return": {
+        "conditioned": 0.704823772560154,
+        "blind": 0.27942714665377033,
+        "buy_hold": 0.6329900770100831
+      },
+      "sharpe": {
+        "conditioned": {
+          "point": 0.7610897276254708,
+          "low": -1.3105622219540032,
+          "high": 2.6590030340276836
+        },
+        "blind": {
+          "point": 0.3518047585250327,
+          "low": -1.6749499159544865,
+          "high": 2.371788873056421
+        }
+      },
+      "faithfulness": {
+        "ablation": 0.007676940639269407,
+        "counterfactual": 0.00022831050228310502,
+        "sensitivity": 0.9928938356164384,
+        "all": 5.7077625570776254e-05,
+        "median_ablation_delta": 0.0
+      },
+      "gap_cond_minus_blind": {
+        "gap_log": 0.2870493101131766,
+        "low": -0.17959431511306997,
+        "high": 0.8149916065671866,
+        "share_positive": 0.872,
+        "block": 188
+      }
+    },
+    {
+      "file": "paper/results/tf/eth_1h_val_validate.json",
+      "asset": "ETH",
+      "timeframe": "1h",
+      "stage": "validate",
+      "segment": "validation",
+      "recipe": {
+        "window": 2000,
+        "reward_scale": 100.0,
+        "ent_coef": 0.01,
+        "timesteps": 500000
+      },
+      "tracker": {
+        "burn": 1008,
+        "stride": 168,
+        "dwell": 120
+      },
+      "position_std": {
+        "conditioned": 0.725476949429376,
+        "blind": 0.5515609511806732
+      },
+      "mean_position": {
+        "conditioned": 0.6790064139474506,
+        "blind": 0.8302219597554711
+      },
+      "total_return": {
+        "conditioned": -0.004754799594785086,
+        "blind": -0.07074377006653032,
+        "buy_hold": 0.6181257775165292
+      },
+      "sharpe": {
+        "conditioned": {
+          "point": -0.006701357206277673,
+          "low": -1.9394541045731306,
+          "high": 1.884970703852893
+        },
+        "blind": {
+          "point": -0.10298509457732014,
+          "low": -1.965019963205837,
+          "high": 1.709111351246309
+        }
+      },
+      "faithfulness": {
+        "ablation": 0.07522831050228311,
+        "counterfactual": 0.019748858447488585,
+        "sensitivity": 1.0,
+        "all": 0.008333333333333333,
+        "median_ablation_delta": 0.0
+      },
+      "gap_cond_minus_blind": {
+        "gap_log": 0.06860462595238767,
+        "low": -0.6962689392958753,
+        "high": 0.821806506472004,
+        "share_positive": 0.582,
+        "block": 94
+      }
+    },
+    {
+      "file": "paper/results/tf/btc_15m_final.json",
+      "asset": "BTC",
+      "timeframe": "15m",
+      "stage": "final",
+      "segment": "holdout",
+      "recipe": {
+        "window": 2000,
+        "reward_scale": 100.0,
+        "ent_coef": 0.01,
+        "timesteps": 500000
+      },
+      "tracker": {
+        "burn": 4032,
+        "stride": 672,
+        "dwell": 480
+      },
+      "position_std": {
+        "conditioned": 0.025816867411691924,
+        "blind": 0.7504456982945618
+      },
+      "mean_position": {
+        "conditioned": 0.9968566279586183,
+        "blind": -0.660812271414027
+      },
+      "total_return": {
+        "conditioned": -0.3421414310873534,
+        "blind": -0.2968080436920627,
+        "buy_hold": -0.2367546686099664
+      },
+      "sharpe": {
+        "conditioned": {
+          "point": -0.9342396261538172,
+          "low": -2.911930506872853,
+          "high": 1.0812293760300227
+        },
+        "blind": {
+          "point": -0.7811189454633016,
+          "low": -2.750617854838973,
+          "high": 1.2029498281779332
+        }
+      },
+      "faithfulness": {
+        "ablation": 0.006592465753424657,
+        "counterfactual": 0.018921232876712327,
+        "sensitivity": 1.0,
+        "all": 0.006592465753424657,
+        "median_ablation_delta": 0.0
+      },
+      "gap_cond_minus_blind": {
+        "gap_log": -0.06663994024809206,
+        "low": -1.5661965555686728,
+        "high": 1.5025464164722349,
+        "share_positive": 0.451,
+        "block": 188
+      }
+    },
+    {
+      "file": "paper/results/tf/btc_15m_final.json",
+      "asset": "BTC",
+      "timeframe": "15m",
+      "stage": "final",
+      "segment": "live",
+      "recipe": {
+        "window": 2000,
+        "reward_scale": 100.0,
+        "ent_coef": 0.01,
+        "timesteps": 500000
+      },
+      "tracker": {
+        "burn": 4032,
+        "stride": 672,
+        "dwell": 480
+      },
+      "position_std": {
+        "conditioned": 0.023396691648045403,
+        "blind": 0.0
+      },
+      "mean_position": {
+        "conditioned": 0.9974064970745844,
+        "blind": -1.0
+      },
+      "total_return": {
+        "conditioned": -0.041326653922186596,
+        "blind": 0.03385644741567906,
+        "buy_hold": -0.03468029709344167
+      },
+      "sharpe": {
+        "conditioned": {
+          "point": -2.390918962529241,
+          "low": -10.428221711455242,
+          "high": 5.790807289318394
+        },
+        "blind": {
+          "point": 1.8819379092351582,
+          "low": -6.464167154660255,
+          "high": 9.86925033716043
+        }
+      },
+      "faithfulness": {
+        "ablation": 0.003510531594784353,
+        "counterfactual": 0.012036108324974924,
+        "sensitivity": 1.0,
+        "all": 0.003510531594784353,
+        "median_ablation_delta": 0.0
+      },
+      "gap_cond_minus_blind": {
+        "gap_log": -0.07550081559826301,
+        "low": -0.32797413878878373,
+        "high": 0.16488198182855815,
+        "share_positive": 0.273,
+        "block": 45
+      }
+    },
+    {
+      "file": "paper/results/tf/btc_1h_final.json",
+      "asset": "BTC",
+      "timeframe": "1h",
+      "stage": "final",
+      "segment": "holdout",
+      "recipe": {
+        "window": 2000,
+        "reward_scale": 100.0,
+        "ent_coef": 0.01,
+        "timesteps": 500000
+      },
+      "tracker": {
+        "burn": 1008,
+        "stride": 168,
+        "dwell": 120
+      },
+      "position_std": {
+        "conditioned": 0.284059280183339,
+        "blind": 0.8119015719485173
+      },
+      "mean_position": {
+        "conditioned": 0.9550989854919244,
+        "blind": 0.5781641652888393
+      },
+      "total_return": {
+        "conditioned": -0.29829967799100354,
+        "blind": -0.4765857959409451,
+        "buy_hold": -0.23326615730770828
+      },
+      "sharpe": {
+        "conditioned": {
+          "point": -0.8215344453953479,
+          "low": -2.9213333852917414,
+          "high": 1.0780833419183917
+        },
+        "blind": {
+          "point": -1.4834972859798403,
+          "low": -3.411375271161903,
+          "high": 0.3836870025683726
+        }
+      },
+      "faithfulness": {
+        "ablation": 0.015068493150684932,
+        "counterfactual": 0.010502283105022832,
+        "sensitivity": 1.0,
+        "all": 0.010273972602739725,
+        "median_ablation_delta": 0.0
+      },
+      "gap_cond_minus_blind": {
+        "gap_log": 0.293133293371667,
+        "low": -0.6023290145138358,
+        "high": 1.271322588788495,
+        "share_positive": 0.736,
+        "block": 94
+      }
+    },
+    {
+      "file": "paper/results/tf/btc_1h_final.json",
+      "asset": "BTC",
+      "timeframe": "1h",
+      "stage": "final",
+      "segment": "live",
+      "recipe": {
+        "window": 2000,
+        "reward_scale": 100.0,
+        "ent_coef": 0.01,
+        "timesteps": 500000
+      },
+      "tracker": {
+        "burn": 1008,
+        "stride": 168,
+        "dwell": 120
+      },
+      "position_std": {
+        "conditioned": 0.005100709276016382,
+        "blind": 0.9019386037500343
+      },
+      "mean_position": {
+        "conditioned": 0.9997274587811599,
+        "blind": 0.4261267230784149
+      },
+      "total_return": {
+        "conditioned": -0.03288403102479842,
+        "blind": 0.05685240838217731,
+        "buy_hold": -0.033333308786044236
+      },
+      "sharpe": {
+        "conditioned": {
+          "point": -1.870313936563778,
+          "low": -9.224091110166254,
+          "high": 6.474185551652215
+        },
+        "blind": {
+          "point": 3.108668304166361,
+          "low": -5.28877195914464,
+          "high": 11.492859879331075
+        }
+      },
+      "faithfulness": {
+        "ablation": 0.004024144869215292,
+        "counterfactual": 0.0,
+        "sensitivity": 1.0,
+        "all": 0.0,
+        "median_ablation_delta": 0.0
+      },
+      "gap_cond_minus_blind": {
+        "gap_log": -0.08873192874482581,
+        "low": -0.24826346079270775,
+        "high": 0.04517461060242616,
+        "share_positive": 0.104,
+        "block": 23
+      }
+    },
+    {
+      "file": "paper/results/tf/eth_15m_final.json",
+      "asset": "ETH",
+      "timeframe": "15m",
+      "stage": "final",
+      "segment": "holdout",
+      "recipe": {
+        "window": 2000,
+        "reward_scale": 100.0,
+        "ent_coef": 0.01,
+        "timesteps": 500000
+      },
+      "tracker": {
+        "burn": 4032,
+        "stride": 672,
+        "dwell": 480
+      },
+      "position_std": {
+        "conditioned": 0.2233542858757648,
+        "blind": 0.0
+      },
+      "mean_position": {
+        "conditioned": 0.9745861008980197,
+        "blind": -1.0
+      },
+      "total_return": {
+        "conditioned": -0.5099547471243348,
+        "blind": 0.5276081249972049,
+        "buy_hold": -0.3466897810135966
+      },
+      "sharpe": {
+        "conditioned": {
+          "point": -1.1420587191440421,
+          "low": -3.0998580390883723,
+          "high": 0.9077155177650497
+        },
+        "blind": {
+          "point": 0.6781149307663211,
+          "low": -1.3752473657182018,
+          "high": 2.6072618279335726
+        }
+      },
+      "faithfulness": {
+        "ablation": 0.003110730593607306,
+        "counterfactual": 0.0,
+        "sensitivity": 0.9989155251141553,
+        "all": 0.0,
+        "median_ablation_delta": 0.0
+      },
+      "gap_cond_minus_blind": {
+        "gap_log": -1.1369607344882253,
+        "low": -3.3463790583396853,
+        "high": 1.2420414673158027,
+        "share_positive": 0.1755,
+        "block": 188
+      }
+    },
+    {
+      "file": "paper/results/tf/eth_15m_final.json",
+      "asset": "ETH",
+      "timeframe": "15m",
+      "stage": "final",
+      "segment": "live",
+      "recipe": {
+        "window": 2000,
+        "reward_scale": 100.0,
+        "ent_coef": 0.01,
+        "timesteps": 500000
+      },
+      "tracker": {
+        "burn": 4032,
+        "stride": 672,
+        "dwell": 480
+      },
+      "position_std": {
+        "conditioned": 0.0,
+        "blind": 0.0
+      },
+      "mean_position": {
+        "conditioned": 1.0,
+        "blind": -1.0
+      },
+      "total_return": {
+        "conditioned": -0.08838924522645053,
+        "blind": 0.09476768833781901,
+        "buy_hold": -0.08838924522645053
+      },
+      "sharpe": {
+        "conditioned": {
+          "point": -4.205353382965793,
+          "low": -12.307551700028373,
+          "high": 3.592960434477639
+        },
+        "blind": {
+          "point": 4.114643359441182,
+          "low": -3.683282472077557,
+          "high": 12.297083842828453
+        }
+      },
+      "faithfulness": {
+        "ablation": 0.0025075225677031092,
+        "counterfactual": 0.0,
+        "sensitivity": 1.0,
+        "all": 0.0,
+        "median_ablation_delta": 0.0
+      },
+      "gap_cond_minus_blind": {
+        "gap_log": -0.18308436798183614,
+        "low": -0.5516698755638751,
+        "high": 0.1585454635311627,
+        "share_positive": 0.151,
+        "block": 45
+      }
+    },
+    {
+      "file": "paper/results/tf/eth_1h_final.json",
+      "asset": "ETH",
+      "timeframe": "1h",
+      "stage": "final",
+      "segment": "holdout",
+      "recipe": {
+        "window": 2000,
+        "reward_scale": 100.0,
+        "ent_coef": 0.01,
+        "timesteps": 500000
+      },
+      "tracker": {
+        "burn": 1008,
+        "stride": 168,
+        "dwell": 120
+      },
+      "position_std": {
+        "conditioned": 0.7985362505082811,
+        "blind": 0.0
+      },
+      "mean_position": {
+        "conditioned": 0.5930108052886784,
+        "blind": 1.0
+      },
+      "total_return": {
+        "conditioned": 0.6257686457901639,
+        "blind": -0.3412797876910266,
+        "buy_hold": -0.3412797876910266
+      },
+      "sharpe": {
+        "conditioned": {
+          "point": 0.80520557862343,
+          "low": -1.122507049768974,
+          "high": 2.739019127078043
+        },
+        "blind": {
+          "point": -0.6870690490316617,
+          "low": -2.7274347825496736,
+          "high": 1.2736828734948367
+        }
+      },
+      "faithfulness": {
+        "ablation": 0.2722602739726027,
+        "counterfactual": 0.06632420091324201,
+        "sensitivity": 1.0,
+        "all": 0.021689497716894976,
+        "median_ablation_delta": 0.0
+      },
+      "gap_cond_minus_blind": {
+        "gap_log": 0.903437115395616,
+        "low": -0.4275085556546275,
+        "high": 2.2861054828399636,
+        "share_positive": 0.9105,
+        "block": 94
+      }
+    },
+    {
+      "file": "paper/results/tf/eth_1h_final.json",
+      "asset": "ETH",
+      "timeframe": "1h",
+      "stage": "final",
+      "segment": "live",
+      "recipe": {
+        "window": 2000,
+        "reward_scale": 100.0,
+        "ent_coef": 0.01,
+        "timesteps": 500000
+      },
+      "tracker": {
+        "burn": 1008,
+        "stride": 168,
+        "dwell": 120
+      },
+      "position_std": {
+        "conditioned": 0.6058084216787387,
+        "blind": 0.0
+      },
+      "mean_position": {
+        "conditioned": 0.791589319825892,
+        "blind": 1.0
+      },
+      "total_return": {
+        "conditioned": -0.08091957874065447,
+        "blind": -0.08516112603155179,
+        "buy_hold": -0.08516112603155179
+      },
+      "sharpe": {
+        "conditioned": {
+          "point": -3.7779648217638084,
+          "low": -11.21473860300348,
+          "high": 4.513483357133016
+        },
+        "blind": {
+          "point": -3.9467988485808005,
+          "low": -11.642169165293412,
+          "high": 4.1872391353496745
+        }
+      },
+      "faithfulness": {
+        "ablation": 0.23943661971830985,
+        "counterfactual": 0.01609657947686117,
+        "sensitivity": 1.0,
+        "all": 0.012072434607645875,
+        "median_ablation_delta": 0.0
+      },
+      "gap_cond_minus_blind": {
+        "gap_log": 0.004625672312744893,
+        "low": -0.1306648768499207,
+        "high": 0.1667776421957469,
+        "share_positive": 0.505,
+        "block": 23
+      }
+    }
+  ]
+}

@@ -89,3 +89,34 @@ uv run pytest -q
 ```
 
 The leakage test checks that a truncated history produces the same features as the prefix of the full history. The verification tests check that a regime-following probe passes and that an ignoring policy and an inverted policy fail.
+
+## Code map
+
+The package is `src/crta`.
+
+- `data.py` builds causal features. Column `t` uses rows at or before `t` only. The candle cache is written to a temporary file and renamed over the old one. A candle still forming is dropped.
+- `regime.py` is the walk-forward 4-state Gaussian HMM. `track(X, burn, stride, eta, seed, dwell)` names the burn-in by moments and matches later refits by diagonal Wasserstein distance. 4h defaults are burn 252, stride 42, dwell 30. `track_v2` is off unless a config asks for it.
+- `agent.py` is the Gymnasium `TradeEnv` and the two PPO twins. `include_regime` is the only architectural difference: 10 inputs with the four probabilities, 6 without. `train_ppo` is the shared trainer.
+- `verify.py` is ablation, counterfactual, and sensitivity. `audit_bar` is the one-hot verifier. `audit_many_v2` is the in-distribution verifier.
+- `eval.py` is the walk-forward split and the return statistics. `pipeline.py` is the 4h probe and the trained run.
+- `paper/scripts/timeframe_study.py` trains the native BTC and ETH twins. Validation trains before 2024-09-22 16:00 UTC and scores until 2025-09-22. The final stage trains before 2025-09-22 16:00 UTC, then scores the holdout year and the live window from 2026-09-22 16:00 UTC. The native recipe is window 2000, reward scale 100, entropy 0.01, 500k steps, 2 threads.
+- `paper/scripts/run_experiment.py` is the multi-seed runner. `paper/scripts/run_grid.py` is the validation grid.
+- `demo.py` is the Streamlit console. It only steps on closed candles.
+
+`configs/default.yaml` is the native recipe with every new flag at the old behavior. `configs/v2.yaml` turns the new options on and is not a frozen selection. `configs/final.yaml` is written from the validation grid only.
+
+## Reproducing v2 results
+
+From the repository root, with the package installed:
+
+```bash
+python -m pytest -q
+python -m crta.pipeline --probe --synthetic
+python paper/scripts/run_experiment.py --quick --out /tmp/crta-quick
+python paper/scripts/run_grid.py --workers 2
+python paper/scripts/run_grid.py --select
+```
+
+The grid trains both twins for 500k steps on the validation split only (BTC and ETH, 1h and 15m, seed 42). Holdout and live are a later step, five seeds 42..46, and they use `configs/final.yaml` after it is frozen. `--quick` is a smoke test, not a reported number.
+
+The published timeframe JSON under `paper/results/tf/` is the baseline record in `paper/results/baseline/manifest.json`. New runs go to `paper/results/v2/` and do not overwrite those files.
