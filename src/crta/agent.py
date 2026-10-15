@@ -32,9 +32,13 @@ class TradeEnv(gym.Env):
 
     metadata = {"render_modes": []}
 
-    def __init__(self, frame, include_regime: bool):
+    def __init__(self, frame, include_regime: bool, window: int | None = None, reward_scale: float = 1.0):
         self.frame = frame.reset_index(drop=True)
         self.include_regime = include_regime
+        # A window draws a random stretch per episode instead of replaying the whole series.
+        self.window = None if window is None or window >= len(self.frame) else int(window)
+        self.reward_scale = float(reward_scale)
+        self._end = len(self.frame)
         n = len(FEATURE_COLS) + 1 + (len(REGIMES) if include_regime else 0)
         self.observation_space = spaces.Box(-np.inf, np.inf, shape=(n,), dtype=np.float32)
         self.action_space = spaces.Box(-1.0, 1.0, shape=(1,), dtype=np.float32)
@@ -50,16 +54,20 @@ class TradeEnv(gym.Env):
     def reset(self, *, seed=None, options=None):
         super().reset(seed=seed)
         self._i = 0
+        self._end = len(self.frame)
+        if self.window is not None:
+            self._i = int(self.np_random.integers(0, len(self.frame) - self.window + 1))
+            self._end = self._i + self.window
         self.position = 0.0 if not options else float(options.get("position", 0.0))
         return self._obs(), {}
 
     def step(self, action):
         target = float(np.clip(np.asarray(action, dtype=float).reshape(-1)[0], -1.0, 1.0))
         nxt = float(self.frame.iloc[self._i]["next_ret"])
-        reward = target * nxt - TURNOVER_COST * abs(target - self.position)
+        reward = (target * nxt - TURNOVER_COST * abs(target - self.position)) * self.reward_scale
         self.position = target
         self._i += 1
-        terminated = self._i >= len(self.frame)
+        terminated = self._i >= self._end
         obs = (
             np.zeros(self.observation_space.shape, dtype=np.float32)
             if terminated
@@ -68,7 +76,7 @@ class TradeEnv(gym.Env):
         return obs, float(reward), terminated, False, {}
 
 
-def _ppo(env: TradeEnv, seed: int):
+def _ppo(env: TradeEnv, seed: int, ent_coef: float = 0.0):
     from stable_baselines3 import PPO
 
     n_steps = 256 if len(env.frame) >= 256 else max(32, len(env.frame) // 2)
@@ -83,19 +91,28 @@ def _ppo(env: TradeEnv, seed: int):
         learning_rate=3e-4,
         gamma=0.99,
         gae_lambda=0.95,
-        ent_coef=0.0,
+        ent_coef=ent_coef,
         policy_kwargs={"net_arch": [64, 64]},
     )
 
 
-def train_ppo(frame, include_regime: bool, timesteps: int = TIMESTEPS, seed: int = SEED):
+def train_ppo(
+    frame,
+    include_regime: bool,
+    timesteps: int = TIMESTEPS,
+    seed: int = SEED,
+    window: int | None = None,
+    reward_scale: float = 1.0,
+    ent_coef: float = 0.0,
+    threads: int | None = None,
+):
     import os
 
     import torch
 
-    torch.set_num_threads(min(8, os.cpu_count() or 4))
-    env = TradeEnv(frame, include_regime)
-    model = _ppo(env, seed)
+    torch.set_num_threads(threads or min(8, os.cpu_count() or 4))
+    env = TradeEnv(frame, include_regime, window=window, reward_scale=reward_scale)
+    model = _ppo(env, seed, ent_coef=ent_coef)
     model.learn(total_timesteps=timesteps, progress_bar=False)
     return model
 

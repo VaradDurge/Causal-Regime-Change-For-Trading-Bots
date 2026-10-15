@@ -182,13 +182,13 @@ def _aggregate(proba: np.ndarray, assign: np.ndarray) -> np.ndarray:
     return ordered
 
 
-def _window_labels(model: RegimeModel, X: np.ndarray, assign: np.ndarray, prev: str | None):
+def _window_labels(model: RegimeModel, X: np.ndarray, assign: np.ndarray, prev: str | None, dwell: int = MIN_DWELL):
     xs = (np.asarray(X, dtype=float) - model.mu) / model.sd
     raw = model.hmm.predict(xs)
     proba = model.hmm.predict_proba(xs)
     names = [REGIMES[int(assign[int(state)])] for state in raw]
     # Closed here. A later window must not relabel bars already issued.
-    sticky = enforce_dwell(names, prev=prev)
+    sticky = enforce_dwell(names, min_dwell=dwell, prev=prev)
     return sticky, _aggregate(proba, assign), proba
 
 
@@ -198,6 +198,7 @@ def track(
     stride: int = STRIDE,
     eta: float = ETA,
     seed: int = 42,
+    dwell: int = MIN_DWELL,
 ) -> tuple[list[str], np.ndarray]:
     """One causal pass. The burn-in is named by moments; every later window matches templates by W2."""
     X = np.asarray(X, dtype=float)
@@ -212,7 +213,7 @@ def track(
     fitted = _fit_hmm(X[:burn], seed)
     mu, sd = component_params(fitted)
     template_mu, template_sd, assign = _templates_from_lock(mu, sd)
-    window_labels, window_probs, _proba = _window_labels(fitted, X[:burn], assign, None)
+    window_labels, window_probs, _proba = _window_labels(fitted, X[:burn], assign, None, dwell)
     labels.extend(window_labels)
     probs[:burn] = window_probs
 
@@ -222,7 +223,7 @@ def track(
         fitted = _fit_hmm(X[:t], seed)
         mu, sd = component_params(fitted)
         assign = assign_templates(mu, sd, template_mu, template_sd)
-        window_labels, window_probs, proba = _window_labels(fitted, X[t:end], assign, labels[-1])
+        window_labels, window_probs, proba = _window_labels(fitted, X[t:end], assign, labels[-1], dwell)
         labels.extend(window_labels)
         probs[t:end] = window_probs
         template_mu, template_sd = update_templates(template_mu, template_sd, mu, sd, proba, assign, eta)

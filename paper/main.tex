@@ -48,7 +48,7 @@ Pune, India\\
 \maketitle
 
 \begin{abstract}
-Regime-aware reinforcement-learning (RL) trading agents are usually judged by back-tested returns, which cannot show whether the regime signal actually drives their decisions. We present a reproducible pipeline that couples a Wasserstein regime-identity tracker with a suite of interventional tests on the trained policy. A four-state Gaussian hidden Markov model (HMM) is refitted every 42 four-hour bars on past rows only. Each new component is matched to persistent bull, bear, calm and crisis templates by the closed-form 2-Wasserstein distance, so regime names survive refits instead of being re-sorted. Two proximal policy optimisation (PPO) agents, identical except for four regime-probability inputs, are trained walk-forward on BTC/USDT data from 2021 to 2026. Every out-of-fold decision is audited by input ablation, counterfactual regime injection and a crisis-probability sweep. On 11{,}430 test bars, the tracker lowers the mean template-matching cost by a factor of 4.9 and gives labels whose volatility ordering is stable, but its non-injective matching starves the bull template, which is never issued after burn-in. The conditioned agent clearly uses its regime input: ablation moves its position on 60.7\% of bars, and it de-risks in bear and crisis segments. Yet only 0.1\% of bars pass all three checks, against 33.5\% for an archived run with moment-sorted labels. Reference policies confirm that the suite separates a faithful rule (97.9\%) from ignoring and inverted rules (0\%). The agent's Sharpe ratio of $-0.16$ (95\% CI $[-0.98, 0.63]$) beats its blind twin ($-1.12$) but not buy-and-hold ($0.35$). Faithfulness must therefore be re-verified whenever the regime layer changes.
+Regime-aware reinforcement-learning (RL) trading agents are usually judged by back-tested returns, which cannot show whether the regime signal actually drives their decisions. We present a reproducible pipeline that couples a Wasserstein regime-identity tracker with a suite of interventional tests on the trained policy. A four-state Gaussian hidden Markov model (HMM) is refitted every 42 four-hour bars on past rows only. Each new component is matched to persistent bull, bear, calm and crisis templates by the closed-form 2-Wasserstein distance, so regime names survive refits instead of being re-sorted. Two proximal policy optimisation (PPO) agents, identical except for four regime-probability inputs, are trained walk-forward on BTC/USDT data from 2021 to 2026. Every out-of-fold decision is audited by input ablation, counterfactual regime injection and a crisis-probability sweep. On 11{,}430 test bars, the tracker lowers the mean template-matching cost by a factor of 4.9 and gives labels whose volatility ordering is stable, but its non-injective matching starves the bull template, which is never issued after burn-in. The conditioned agent clearly uses its regime input: ablation moves its position on 60.7\% of bars, and it de-risks in bear and crisis segments. Yet only 0.1\% of bars pass all three checks, against 33.5\% for an archived run with moment-sorted labels. Reference policies confirm that the suite separates a faithful rule (97.9\%) from ignoring and inverted rules (0\%). The agent's Sharpe ratio of $-0.16$ (95\% CI $[-0.98, 0.63]$) beats its blind twin ($-1.12$) but not buy-and-hold ($0.35$). A live paper-trading console runs both twins on Binance candles as they close. For 15-min and 1-h candles we train timeframe-native twins on BTC/USDT and ETH/USDT from 2021 with random 2{,}000-bar episodes, after the single-episode recipe collapsed to buy-and-hold on 1-h data. The recipe passed validation, yet on the holdout year five of the eight native twins again stay at or near a fixed position. Only the 1-h ETH conditioned agent trades on its regime input (ablation 27.2\%), gaining 62.6\% against $-34.1$\% for its blind twin, with the gap not significant ($P(\text{gap}{>}0)=0.91$). Over the three weeks after the study (22~Sep--13~Oct 2026), the blind twin finished ahead on 15-min, 1-h and 4-h BTC candles ($+3.4$, $+5.7$ and $+6.2$\% against $-4.1$, $-3.3$ and $-4.8$\%) and on 15-min ETH candles, and the twins finished level on 1-h ETH. No holdout or live gap between the twins is significant under a block bootstrap. Faithfulness must therefore be re-verified whenever the regime layer or the training recipe changes.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -70,6 +70,7 @@ This paper asks two linked questions. Does Wasserstein tracking give regime labe
   \item A per-decision verification suite of three interventions on the regime input (ablation, counterfactual injection and a sensitivity sweep), validated on reference policies that are faithful, regime-ignoring and inverted by construction.
   \item A twin experiment in which regime-conditioned and regime-blind PPO agents share architecture, seed and training budget, evaluated walk-forward with bootstrapped confidence intervals and a per-regime breakdown.
   \item An empirical finding: replacing moment sorting with Wasserstein tracking leaves the regime input load-bearing but collapses the faithfulness rate from 33.5\% to 0.1\%. We trace this to template starvation and to counterfactual inputs that lie outside the training distribution.
+  \item A live paper-trading console that runs both twins on Binance candles as they close, on 15-min, 1-h and 4-h timeframes, and a frozen live study that compares their returns on candles closed after the research data, with a paired block bootstrap of the return gap. On 15-min and 1-h candles the twins are trained on their own timeframe, for BTC/USDT and ETH/USDT, with a validation, holdout and live split. We report how often this recipe still collapses to a fixed position.
 \end{itemize}
 
 %======================================================================
@@ -260,6 +261,42 @@ where $p_t^{\setminus c}$ is $p_t$ with its crisis entry set to zero (uniform ov
 
 A bar is \emph{faithful} when all three checks pass. The faithfulness rate $F$ is the share of faithful bars. Each bar costs 15 batched forward passes.
 
+\subsection{Live paper-trading console}
+\label{sec:console}
+The repository also includes an interactive console, built with Streamlit, in which both twins trade BTC/USDT with paper money as Binance candles close (Fig.~\ref{fig:console}). It never sends an order. The user chooses 15-min, 1-h or 4-h candles, as on a charting terminal, and every time stamp is shown in Indian Standard Time (IST, UTC+5:30).
+
+\emph{Market feed.} Candles come from Binance's public REST API through \texttt{ccxt}, which needs no key. A candle that opens at $t_0$ with width $w$ is kept only once $t_0+w\le t_{\text{now}}$, so a candle that is still forming never reaches an agent. The 4-h store used for training is updated incrementally. The console requests candles from the last stored open time, lets incoming rows replace overlapping ones, and writes the merged file to a temporary path before renaming it over the old one. If the request fails, the saved file is left untouched and the tape is marked stale. The 15-min and 1-h tapes keep their own caches of at most twice the display window (1{,}000 candles, or 500 for 4\,h), so a faster timeframe cannot overwrite the training data. Every 20\,s the console polls for newly closed candles and for the last traded price. The price is only displayed, and every decision uses closed candles.
+
+\emph{Labels.} When a tape is opened, one HMM is fitted on its first $\min(80,\max(20,\lfloor n/5\rfloor))$ rows, its states are named by the moment rule, and the rest of the window is decoded in one pass. Each candle that closes later is decoded by a model fitted on all rows before it, with the last issued label carried across. This is faster than the full tracker but not identical to it, so Section~\ref{sec:live} re-scores the live period with the tracker itself.
+
+\emph{Paper books.} Both agents start flat with unit wealth on the same tape. At each closed candle $t$ each agent chooses $a_t$ from its own observation. When candle $t{+}1$ closes, its wealth is multiplied by $e^{R_t}$, with $R_t$ from~\eqref{eq:reward} including the 10-bp turnover cost. The desk plots both wealth curves, each agent's latest fills and the regime vector fed to the conditioned agent. Sliders let the user override the four regime probabilities for the open candle (rescaled to sum to one), and optionally its features and held position. This applies $\mathrm{do}(p{=}p')$ to the conditioned agent alone and shows its bet next to the blind twin's, so the verifier's interventions can be explored by hand.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[
+  font=\scriptsize, x=1mm, y=1mm,
+  box/.style={draw, rounded corners=2pt, align=center, inner sep=2pt, text width=21mm, minimum height=9mm, fill=white},
+  arr/.style={-{Latex[length=1.6mm]}, thick}]
+\node[box] (feed) at (0,0) {Binance REST\\(\texttt{ccxt}, no key)\\15\,m / 1\,h / 4\,h};
+\node[box] (cache) at (27,0) {closed candles only\\merge, atomic write\\keep file on failure};
+\node[box, fill=ccalm!12] (lab) at (54,0) {features $f_t$\\regimes $p_t$ from\\rows before $t$};
+\node[box, fill=cblue!10] (cond) at (54,-15) {conditioned book\\$\pi^{c}(f_t,a_{t-1},p_t)$};
+\node[box, fill=gray!12] (blind) at (54,-27) {blind book\\$\pi^{b}(f_t,a_{t-1})$};
+\node[box] (settle) at (27,-21) {settle at close of $t{+}1$\\$W{\leftarrow}W e^{R_t}$, cost $c$};
+\node[box, fill=ccrisis!8] (desk) at (0,-21) {desk in IST\\poll every 20\,s\\$\mathrm{do}(p{=}p')$ sliders};
+\draw[arr] (feed) -- (cache);
+\draw[arr] (cache) -- (lab);
+\draw[arr] (lab) -- (cond);
+\draw[arr] (lab.east) -- ++(2.5,0) |- node[pos=0.25, right, font=\tiny]{$f_t$} (blind.east);
+\draw[arr] (cond.west) -- ($(settle.east)+(0,1.5)$);
+\draw[arr] (blind.west) -- ($(settle.east)+(0,-1.5)$);
+\draw[arr] (settle) -- (desk);
+\draw[arr, dashed] (feed) -- node[left, font=\tiny, align=right]{last price\\(display only)} (desk);
+\end{tikzpicture}
+\caption{Live paper-trading console. Only closed candles reach the agents. Both books trade the same tape and are settled with the training reward~\eqref{eq:reward}. The last traded price is shown but never used for a decision.}
+\label{fig:console}
+\end{figure}
+
 %======================================================================
 \section{Experimental Setup}
 %======================================================================
@@ -285,7 +322,7 @@ Fold & Test period & Train & Cond. & Blind & B\&H & Cond.$^\dagger$\\
 \end{table}
 
 \subsection{Implementation details}
-Table~\ref{tab:hyper} lists the settings. PPO uses the Stable-Baselines3 defaults for clipping (0.2) and epochs per update (10). Each agent trains for $\max(8192, 10\,N_{\text{train}})$ steps, which is ten passes over its training window: 10{,}800, 39{,}370, 67{,}940 and 96{,}510 steps for the four folds. HMMs are fitted with \texttt{hmmlearn}. If EM leaves a state with an all-zero transition row, that row is reset to uniform before decoding. The full pipeline (292 tracker refits, eight PPO trainings and the audit) ran in 6.6 minutes on a laptop CPU. All 25 unit tests of the repository pass, including tests for feature leakage, the closed-form distance, label stability under a component swap, and that later bars never change a closed window.
+Table~\ref{tab:hyper} lists the settings. PPO uses the Stable-Baselines3 defaults for clipping (0.2) and epochs per update (10). Each agent trains for $\max(8192, 10\,N_{\text{train}})$ steps, which is ten passes over its training window: 10{,}800, 39{,}370, 67{,}940 and 96{,}510 steps for the four folds. HMMs are fitted with \texttt{hmmlearn}. If EM leaves a state with an all-zero transition row, that row is reset to uniform before decoding. The full pipeline (292 tracker refits, eight PPO trainings and the audit) ran in 6.6 minutes on a laptop CPU. All 32 unit tests of the repository pass. They include tests for feature leakage, the closed-form distance and label stability under a component swap. Others check that later bars never change a closed window and that a failed Binance request leaves the saved candles untouched. Further tests check that a refresh keeps older rows and replaces overlapping ones, and that the faster timeframes never write to the training cache. The last three cover the native-twin recipe: a windowed episode is one contiguous stretch of the series, no window replays the whole series, and the reward scale multiplies return and cost alike.
 
 \begin{table}[t]
 \caption{Implementation settings (from the project code)}
@@ -318,6 +355,32 @@ Bootstrap & 1{,}000 i.i.d. resamples, 95\% percentile CI\\
 
 \subsection{Metrics}
 Strategy log returns follow~\eqref{eq:reward} with the realised positions. We report the annualised Sharpe ratio $\sqrt{2190}\,\bar R/\hat s_R$ and the Sortino ratio $\sqrt{2190}\,\bar R/\sqrt{\overline{\min(R,0)^2}}$, using 2{,}190 four-hour bars per year. Each comes with a 95\% bootstrap interval. We also report maximum drawdown and total return. Every metric is additionally computed within each dwell-smoothed regime. For the tracker we report label shares, switches per year, run lengths, the mean matched $\Wtwo^2$ cost, and an identity-jump statistic: the $\Wtwo^2$ distance between the probability-weighted components that carry the same name at consecutive refits.
+
+\subsection{Timeframe-native twins}
+\label{sec:tfproto}
+\emph{Data.} The 15-min and 1-h tapes get twins of their own, trained on each timeframe's own candles. We add ETH/USDT as a second asset and treat it exactly like BTC/USDT, with its own tracker pass and its own twins. Binance candles from 1~Jan 2021 to the live snapshot give, after feature warm-up, 202{,}596 bars on 15\,min and 50{,}627 bars on 1\,h for each asset, about 16 and 4 times as many as the 4-h series.
+
+\emph{Tracker.} The tracker keeps the calendar spans of the 4-h study, a six-week burn-in, a weekly refit and a five-day dwell. In bars this is $(B,S,L)=(1{,}008,168,120)$ on 1\,h and $(4{,}032,672,480)$ on 15\,min. It runs once over each full series, so the live labels continue those of the training data.
+
+\emph{Training recipe.} We first trained 1-h BTC twins with the 4-h recipe of Sec.~\ref{sec:twins}: one episode over all 41{,}369 training bars, ten passes, unscaled reward and no entropy bonus. Both collapsed towards buy-and-hold. On the holdout year the conditioned agent held $+1.00$ on every bar, so it matched buy-and-hold exactly ($-23.3$\%), and ablation moved its position on no bar. The blind twin averaged $+0.98$ and lost 35.2\%. With per-bar rewards of order $10^{-3}$ and one long episode over a rising market, a constant long position is an easy optimum. The native twins are therefore trained on random windows. Each episode is a randomly placed stretch of 2{,}000 consecutive training bars (83 days on 1\,h, 21 days on 15\,min), and the agent starts it flat. The reward~\eqref{eq:reward} is multiplied by 100 during training only, PPO adds an entropy bonus, and each twin trains for 500{,}000 steps. All other settings follow Table~\ref{tab:hyper}. One recipe is used for both assets and both timeframes.
+
+\emph{Splits.} For validation, twins trained on bars before 22~Sep 2024 16:00~UTC are scored on the following year. For the holdout, twins retrained on bars before 22~Sep 2025 16:00~UTC are scored on the year up to the start of the live window, and the same frozen weights are then scored on the live window. Only the validation stage was used to set the recipe, and the holdout and live stages were run once.
+
+\emph{Recipe selection.} The criterion was set before any training: in validation, both twins must vary their position (standard deviation clearly above 0.05) and ablation must move the conditioned agent on a clear share of bars. Returns were not part of it. With an entropy coefficient of 0.01 no twin held a constant position, but on both 15-min tapes the regime input barely mattered. Ablation passed on 1.1\% (BTC) and 0.8\% (ETH) of validation bars, against 26.1 and 7.5\% on 1\,h, and the ETH 15-min blind twin was almost buy-and-hold (mean position $+1.00$, standard deviation 0.06). We retrained all four combinations once with a coefficient of 0.05. This was worse on every combination. Both 15-min tapes collapsed exactly, with the BTC blind twin and the ETH conditioned agent at $+1.00$ on every bar, and ablation passed on at most 3.4\% of bars anywhere. We therefore kept 0.01 (Table~\ref{tab:val}) and tried no third setting.
+
+\emph{Regime grouping.} On fast candles the five-day dwell outlasts almost every run of the Viterbi path, so the hard label collapses to a single name over nearly the whole series: calm on BTC 1\,h and ETH 15\,min, bear on BTC 15\,min, and bear on 94.7\% of ETH 1-h bars. Per-regime results for the native twins are therefore grouped by the most likely regime $\argmax_g p_t(g)$, the input the agent actually sees. Regime names are fixed per tape at burn-in, so the same name need not mean the same market state on different tapes.
+
+\subsection{Live evaluation protocol}
+\label{sec:liveproto}
+\emph{Window.} The last price used by the walk-forward study is the close of the 22~Sep 2026 12:00~UTC candle. The live study scores every candle that opened from 16:00~UTC (21:30~IST) that day until a snapshot taken on 13~Oct 2026 at 10:47~UTC. The last candle of each tape is dropped because its next return is not yet known. This leaves 1{,}994 decisions on 15-min candles, 497 on 1-h candles and 123 on 4-h candles, over the same 21 calendar days. The candles are frozen with the study script, so the numbers below can be reproduced offline.
+
+\emph{Agents.} On 4\,h we use the fold-3 twins of the main run, which were trained only on bars before 3~Jun 2025. On 15\,min and 1\,h we use the native twins of Sec.~\ref{sec:tfproto}, trained on bars before 22~Sep 2025, for BTC and for ETH. All weights stay fixed. Both twins start flat at the first live candle and carry their positions forward. Buy-and-hold enters at the same candle.
+
+\emph{Labels.} Labels come from the causal tracker of Sec.~\ref{sec:method}, run on each timeframe's own candles over the full history from 2021. On 4\,h it uses $B{=}252$ and $S{=}42$, so the live labels are exactly those the study's tracker would have issued. On 15\,min and 1\,h it uses the calendar-scaled spans of Sec.~\ref{sec:tfproto}.
+
+\emph{Why native twins.} An earlier version of this study ran the 4-h twins on the faster tapes. There the same features are much smaller: the median $\sigma_{20}$ in the window is 0.14\% on 15\,min and 0.31\% on 1\,h, against 0.61\% on 4\,h and 1.04\% over the 4-h training data. The transferred conditioned agent turned over 0.115 and 0.104 units per bar and lost most of its gross gain to costs. Those results measured transfer across scales rather than the regime input, and are replaced here by the native twins.
+
+\emph{Statistics.} We report net and gross (before cost) total return, maximum drawdown, mean position and mean turnover $\lvert a_t-a_{t-1}\rvert$ per bar. Sharpe ratios use 35{,}040, 8{,}760 and 2{,}190 bars per year for 15\,min, 1\,h and 4\,h, with the i.i.d. bootstrap of Table~\ref{tab:hyper}. The twins trade the same candles, so their comparison is paired. We resample the per-bar gap $R^{c}_t-R^{b}_t$ with a circular block bootstrap (2{,}000 resamples, blocks of $\lceil\sqrt n\rceil$ bars, i.e. 45, 23 and 12), which keeps serial dependence. We report the 95\% interval of the summed log-return gap and the share of resamples in which the conditioned agent is ahead. Every live decision of the conditioned agent is also audited by the verification suite, using the position it actually held.
 
 %======================================================================
 \section{Results and Discussion}
@@ -444,6 +507,206 @@ This behaviour follows from the regime layer. The tracker's probabilities are al
 
 The lesson is methodological. Swapping one well-motivated regime component for another, with architecture, data and training unchanged, improved label semantics and reversed the faithfulness verdict. A verdict cannot be carried over to a modified pipeline.
 
+\subsection{Timeframe-native twins}
+\label{sec:tfres}
+In validation the selected recipe gave every twin a varying position (standard deviation 0.06 to 0.73), and the conditioned agent finished ahead of its blind twin on all four tapes, with $P(\text{gap}{>}0)$ between 0.58 and 0.95 (Table~\ref{tab:val}). The holdout does not repeat this. Table~\ref{tab:holdout} and Fig.~\ref{fig:holdout} cover 22~Sep 2025 to 22~Sep 2026, a year in which BTC fell by about 23\% and ETH by about 35\%. Retrained on 27\% more bars, including a validation year in which both assets rose by 62 to 81\%, most twins drift back towards a fixed position. Three of the eight are essentially constant (position standard deviation at most 0.03): the BTC 15-min conditioned agent is long, the ETH 15-min blind twin is short on every bar, and the ETH 1-h blind twin is long on every bar and therefore identical to buy-and-hold. Two more conditioned agents, BTC 1\,h and ETH 15\,min, are long on average by $+0.96$ and $+0.97$.
+
+\begin{table*}[t]
+\caption{Holdout year of the native twins (22~Sep 2025--22~Sep 2026): total return net and gross of cost, annualised Sharpe ratio (95\% bootstrap CI), maximum drawdown, mean and standard deviation of the position, mean turnover per bar, the summed log-return gap of the conditioned agent minus the system in that row ($\times100$, 95\% circular block-bootstrap CI) with the share of resamples in which it is positive, and the share of decisions passing ablation and all three checks (\%)}
+\label{tab:holdout}
+\centering
+\setlength{\tabcolsep}{3.4pt}
+\renewcommand{\arraystretch}{1.05}
+\begin{tabular}{@{}lrrcrrrrcrrr@{}}
+\toprule
+System & Net & Gross & Sharpe & MDD & Pos. & s.d. & Turn. & Gap & $P(\text{gap}{>}0)$ & Abl. & All\\
+\midrule
+\multicolumn{12}{@{}l}{\emph{BTC 15 min: 35{,}040 bars, BTC $-23.6$\%}}\\
+Cond. & $-34.2\%$ & $-25.5\%$ & \ci{-0.93}{-2.91}{1.08} & $-59.7\%$ & $+1.00$ & 0.03 & 0.0035 & -- & -- & 0.7 & 0.7\\
+Blind & $-29.7\%$ & $-28.6\%$ & \ci{-0.78}{-2.75}{1.20} & $-39.9\%$ & $-0.66$ & 0.75 & 0.0004 & \ci{-6.7}{-156.6}{150.3} & 0.45 &  & \\
+B\&H & $-23.7\%$ & $-23.6\%$ & \ci{-0.60}{-2.57}{1.42} & $-53.8\%$ & $+1.00$ & -- & -- & \ci{-14.9}{-20.7}{-9.7} & 0.00 &  & \\
+\midrule
+\multicolumn{12}{@{}l}{\emph{BTC 1 h: 8{,}760 bars, BTC $-23.2$\%}}\\
+Cond. & $-29.8\%$ & $-19.7\%$ & \ci{-0.82}{-2.92}{1.08} & $-57.5\%$ & $+0.96$ & 0.28 & 0.0153 & -- & -- & 1.5 & 1.0\\
+Blind & $-47.7\%$ & $-37.4\%$ & \ci{-1.48}{-3.41}{0.38} & $-52.4\%$ & $+0.58$ & 0.81 & 0.0205 & \ci{29.3}{-60.2}{127.1} & 0.74 &  & \\
+B\&H & $-23.3\%$ & $-23.2\%$ & \ci{-0.61}{-2.59}{1.41} & $-53.7\%$ & $+1.00$ & -- & -- & \ci{-8.9}{-47.0}{33.3} & 0.34 &  & \\
+\midrule
+\multicolumn{12}{@{}l}{\emph{ETH 15 min: 35{,}040 bars, ETH $-34.6$\%}}\\
+Cond. & $-51.0\%$ & $-49.9\%$ & \ci{-1.14}{-3.10}{0.91} & $-69.6\%$ & $+0.97$ & 0.22 & 0.0006 & -- & -- & 0.3 & 0.0\\
+Blind & $+52.8\%$ & $+52.9\%$ & \ci{0.68}{-1.38}{2.61} & $-45.8\%$ & $-1.00$ & 0.00 & 0.0000 & \ci{-113.7}{-334.6}{124.2} & 0.18 &  & \\
+B\&H & $-34.7\%$ & $-34.6\%$ & \ci{-0.68}{-2.61}{1.38} & $-68.0\%$ & $+1.00$ & -- & -- & \ci{-28.8}{-86.7}{14.1} & 0.11 &  & \\
+\midrule
+\multicolumn{12}{@{}l}{\emph{ETH 1 h: 8{,}760 bars, ETH $-34.1$\%}}\\
+Cond. & $+62.6\%$ & $+194.2\%$ & \ci{0.81}{-1.12}{2.74} & $-38.4\%$ & $+0.59$ & 0.80 & 0.0677 & -- & -- & 27.2 & 2.2\\
+Blind & $-34.1\%$ & $-34.1\%$ & \ci{-0.69}{-2.73}{1.27} & $-67.9\%$ & $+1.00$ & 0.00 & 0.0001 & \ci{90.3}{-42.8}{228.6} & 0.91 &  & \\
+B\&H & $-34.1\%$ & $-34.1\%$ & \ci{-0.69}{-2.73}{1.27} & $-67.9\%$ & $+1.00$ & -- & -- & \ci{90.3}{-42.8}{228.6} & 0.91 &  & \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/holdout_equity.pdf}
+\caption{Holdout-year wealth of the native twins on 15-min and 1-h candles (22~Sep 2025--22~Sep 2026, IST), net of the 10-bp cost. Shading shows the most likely regime $\argmax_g p_t(g)$. The ETH 1-h blind twin holds $+1$ throughout, so its curve covers buy-and-hold.}
+\label{fig:holdout}
+\end{figure*}
+
+Only the ETH 1-h conditioned agent trades actively and uses its regime input. Ablation moves its position on 27.2\% of holdout bars. On bars whose most likely regime is crisis (16.8\% of the year) it is short ($-0.99$ on average) and gains 145.9\%, while its blind twin stays long and loses 68.0\% there. Over the year it gains 62.6\% net and 194.2\% gross, against $-34.1$\% for both the blind twin and buy-and-hold, and turnover costs it 59.3 log-return points. Even this gap is not significant: the block-bootstrap interval of $[-42.8, 228.6]$ points contains zero, and the conditioned agent is ahead in 91\% of resamples. It also loses 49.4\% on bull bars, where it cuts its position to $+0.29$.
+
+Elsewhere the conditioned agent does worse than buy-and-hold. On BTC 15\,min it is long throughout and trails buy-and-hold by 14.9 points, the only interval in the table that excludes zero ($[-20.7,-9.7]$). Most of that is its own turnover cost (12.4 points). On BTC 1\,h it is ahead of its blind twin (29.3 points, $P=0.74$) but behind buy-and-hold. On ETH 15\,min it is long and loses 51.0\%, while the blind twin, short on every bar, gains 52.8\%. Across the four tapes the conditioned agent leads its twin twice and trails it twice, and no paired interval excludes zero. Where a twin has collapsed, the comparison is decided by the sign of its fixed position in a falling year rather than by the regime input. The faithfulness verdict is the same on all four tapes. Ablation passes on 0.3 to 27.2\% of bars and the median ablation effect is zero everywhere. Counterfactual checks pass on at most 6.6\% of bars, and at most 2.2\% pass all three.
+
+\begin{table}[t]
+\caption{Validation year (22~Sep 2024--22~Sep 2025) of the native twins for the two entropy coefficients tried: net return (\%), standard deviation of the position, $P(\text{gap}{>}0)$ against the blind twin, and ablation and all-check faithfulness rates (\%)}
+\label{tab:val}
+\centering
+\setlength{\tabcolsep}{2.4pt}
+\begin{tabular}{@{}lrrrrrrrr@{}}
+\toprule
+ & \multicolumn{3}{c}{net return} & \multicolumn{2}{c}{pos. s.d.} & & \multicolumn{2}{c}{faithful}\\
+\cmidrule(lr){2-4}\cmidrule(lr){5-6}\cmidrule(l){8-9}
+Tape & Cond. & Blind & B\&H & Cond. & Blind & $P$ & Abl. & All\\
+\midrule
+\multicolumn{9}{@{}l}{\emph{entropy 0.01 (used)}}\\
+BTC 15 min & $+84.2$ & $-1.2$ & $+80.3$ & 0.46 & 0.66 & 0.95 & 1.1 & 1.0\\
+BTC 1 h & $+112.0$ & $+77.0$ & $+79.2$ & 0.33 & 0.19 & 0.93 & 26.1 & 0.0\\
+ETH 15 min & $+70.5$ & $+27.9$ & $+63.3$ & 0.25 & 0.06 & 0.87 & 0.8 & 0.0\\
+ETH 1 h & $-0.5$ & $-7.1$ & $+61.8$ & 0.73 & 0.55 & 0.58 & 7.5 & 0.8\\
+\midrule
+\multicolumn{9}{@{}l}{\emph{entropy 0.05}}\\
+BTC 15 min & $+78.3$ & $+80.3$ & $+80.3$ & 0.20 & 0.00 & 0.45 & 0.0 & 0.0\\
+BTC 1 h & $+24.6$ & $+49.6$ & $+79.2$ & 1.00 & 0.33 & 0.38 & 0.3 & 0.1\\
+ETH 15 min & $+63.3$ & $-62.2$ & $+63.3$ & 0.00 & 0.96 & 0.91 & 0.0 & 0.0\\
+ETH 1 h & $+73.5$ & $-52.9$ & $+61.8$ & 0.89 & 0.54 & 0.97 & 3.4 & 0.2\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Live market comparison}
+\label{sec:live}
+Table~\ref{tab:live} and Fig.~\ref{fig:live} compare the twins over the live window of Sec.~\ref{sec:liveproto}. The 15-min and 1-h rows now come from the native twins of Sec.~\ref{sec:tfres} and the 4-h rows from the fold-3 twins of the main run. Bitcoin fell by 2.7 to 3.4\% across the window, so buy-and-hold lost money on every timeframe. The blind twin finished ahead of the conditioned agent on all three, by 7.6, 8.9 and 10.9 log-return points on 15-min, 1-h and 4-h candles. None of these gaps is significant (Table~\ref{tab:livegap}). Every 95\% block-bootstrap interval contains zero, and the conditioned agent is ahead in 27, 10 and 5\% of resamples. Over three weeks, the annualised Sharpe intervals are more than 14 units wide and say little.
+
+\begin{table}[t]
+\caption{Live paper trading on BTC/USDT, 22~Sep--13~Oct 2026: total return net and gross of cost, annualised Sharpe ratio (95\% bootstrap CI), maximum drawdown, mean position and mean turnover per bar. 15-min and 1-h twins are native, 4-h twins are the fold-3 agents}
+\label{tab:live}
+\centering
+\setlength{\tabcolsep}{2.6pt}
+\renewcommand{\arraystretch}{1.05}
+\begin{tabular}{@{}lrrcrrr@{}}
+\toprule
+System & Net & Gross & Sharpe & MDD & Pos. & Turn.\\
+\midrule
+\multicolumn{7}{@{}l}{\emph{15 min: 1{,}994 bars, BTC $-3.4$\%}}\\
+Cond.  & $-4.1\%$ & $-3.7\%$ & \ci{-2.39}{-10.43}{5.79} & $-7.9\%$ & $+1.00$ & 0.002\\
+Blind  & $+3.4\%$ & $+3.5\%$ & \ci{1.88}{-6.46}{9.87}   & $-5.0\%$ & $-1.00$ & 0.001\\
+B\&H   & $-3.5\%$ & $-3.4\%$ & \ci{-1.99}{-10.05}{6.26} & $-7.4\%$ & $+1.00$ & --\\
+\midrule
+\multicolumn{7}{@{}l}{\emph{1 h: 497 bars, BTC $-3.2$\%}}\\
+Cond.  & $-3.3\%$ & $-3.2\%$ & \ci{-1.87}{-9.22}{6.47}  & $-7.3\%$ & $+1.00$ & 0.003\\
+Blind  & $+5.7\%$ & $+6.7\%$ & \ci{3.11}{-5.29}{11.49}  & $-4.6\%$ & $+0.43$ & 0.019\\
+B\&H   & $-3.3\%$ & $-3.2\%$ & \ci{-1.90}{-9.26}{6.44}  & $-7.4\%$ & $+1.00$ & --\\
+\midrule
+\multicolumn{7}{@{}l}{\emph{4 h: 123 bars, BTC $-2.7$\%}}\\
+Cond.  & $-4.8\%$ & $-3.5\%$  & \ci{-3.08}{-11.41}{5.33} & $-7.5\%$  & $+0.82$ & 0.108\\
+Blind  & $+6.2\%$ & $+7.1\%$  & \ci{3.73}{-4.70}{11.97}  & $-3.9\%$  & $+0.45$ & 0.072\\
+B\&H   & $-2.8\%$ & $-2.7\%$  & \ci{-1.73}{-9.74}{7.24}  & $-6.5\%$  & $+1.00$ & --\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/live_equity.pdf}
+\caption{Live paper-trading wealth on BTC/USDT candles closed after the research data (22~Sep--13~Oct 2026, IST). The 15-min and 1-h twins are native to their timeframe and shading shows $\argmax_g p_t(g)$. The 4-h twins are the fold-3 agents and shading shows the dwell-smoothed label. All returns are net of the 10-bp cost.}
+\label{fig:live}
+\end{figure}
+
+On the faster tapes the gap comes from the positions the native twins carried out of the holdout (Table~\ref{tab:liveregime}). The BTC conditioned agents are long on every live bar (position standard deviation 0.02 on 15\,min and 0.01 on 1\,h), so they track buy-and-hold to within 0.7 log points. The 15-min blind twin is short on every bar and gains 3.4\%. The 1-h blind twin is the only active BTC twin. Its mean position is $+0.43$ with a standard deviation of 0.90, and it gains 5.7\%. Native training has removed the over-trading of the transferred 4-h agents, whose conditioned turnover was 0.115 and 0.104 units per bar on these tapes. The native conditioned agents turn over 0.002 and 0.003 units, but only because they hardly trade. On 4\,h every live candle is labelled calm, in line with the 88.5\% calm share of Table~\ref{tab:labels}, so the regime input is almost constant and cannot add information. The conditioned agent stayed mostly long ($+0.82$) and lost a little more than buy-and-hold. The blind twin held about half that exposure and gained 6.2\%. Their positions are weakly anti-correlated ($-0.21$), and the gap reflects how differently the two policies read the same market features.
+
+\begin{table}[t]
+\caption{Live paper trading on ETH/USDT with native twins, 22~Sep--13~Oct 2026 (columns as in Table~\ref{tab:live})}
+\label{tab:liveeth}
+\centering
+\setlength{\tabcolsep}{2.6pt}
+\renewcommand{\arraystretch}{1.05}
+\begin{tabular}{@{}lrrcrrr@{}}
+\toprule
+System & Net & Gross & Sharpe & MDD & Pos. & Turn.\\
+\midrule
+\multicolumn{7}{@{}l}{\emph{15 min: 1{,}994 bars, ETH $-8.7$\%}}\\
+Cond.  & $-8.8\%$ & $-8.7\%$ & \ci{-4.21}{-12.31}{3.59} & $-13.2\%$ & $+1.00$ & 0.001\\
+Blind  & $+9.5\%$ & $+9.6\%$ & \ci{4.11}{-3.68}{12.30}  & $-6.2\%$  & $-1.00$ & 0.001\\
+B\&H   & $-8.8\%$ & $-8.7\%$ & \ci{-4.21}{-12.31}{3.59} & $-13.2\%$ & $+1.00$ & --\\
+\midrule
+\multicolumn{7}{@{}l}{\emph{1 h: 497 bars, ETH $-8.4$\%}}\\
+Cond.  & $-8.1\%$ & $-5.4\%$ & \ci{-3.78}{-11.21}{4.51} & $-9.1\%$  & $+0.79$ & 0.058\\
+Blind  & $-8.5\%$ & $-8.4\%$ & \ci{-3.95}{-11.64}{4.19} & $-13.1\%$ & $+1.00$ & 0.002\\
+B\&H   & $-8.5\%$ & $-8.4\%$ & \ci{-3.95}{-11.64}{4.19} & $-13.1\%$ & $+1.00$ & --\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/live_equity_eth.pdf}
+\caption{Live paper-trading wealth of the native ETH/USDT twins (22~Sep--13~Oct 2026, IST). Shading shows $\argmax_g p_t(g)$. On 15\,min the conditioned agent holds $+1$ throughout and its curve covers buy-and-hold; on 1\,h the blind twin does.}
+\label{fig:liveeth}
+\end{figure}
+
+Ether fell by about 8.5\% over the window, more than twice as far as Bitcoin (Table~\ref{tab:liveeth}, Fig.~\ref{fig:liveeth}). The ETH twins keep their holdout behaviour. On 15\,min the conditioned agent is long and the blind twin short on every bar, so the conditioned agent equals buy-and-hold ($-8.8$\%) and the blind twin gains 9.5\%. On 1\,h the blind twin equals buy-and-hold ($-8.5$\%), and the conditioned agent is again the only one that responds to its regime input. It is short ($-1.00$ on average) on bars whose most likely regime is crisis (9.5\% of the window) and mostly long elsewhere, and it finishes level with its twin ($-8.1$ against $-8.5$\%, $P=0.51$). Its gross return of $-5.4$\% is the best of the three, but turnover costs it 2.9 points. The two assets therefore agree in direction only where both twins have collapsed to fixed signs: the short blind twin wins on both 15-min tapes. Neither asset shows a significant live gap between the twins.
+
+\begin{table}[t]
+\caption{Live results by regime: share of bars, mean position and net return of each twin. Native tapes are grouped by $\argmax_g p_t(g)$, the 4-h tape by its dwell-smoothed label}
+\label{tab:liveregime}
+\centering
+\setlength{\tabcolsep}{3.2pt}
+\begin{tabular}{@{}llrrrrr@{}}
+\toprule
+ & & & \multicolumn{2}{c}{mean position} & \multicolumn{2}{c}{net return}\\
+\cmidrule(lr){4-5}\cmidrule(l){6-7}
+Tape & Regime & share & Cond. & Blind & Cond. & Blind\\
+\midrule
+BTC 15 min & bull & 0.2\% & $+1.00$ & $-1.00$ & $-1.5\%$ & $+1.5\%$\\
+ & bear & 89.7\% & $+1.00$ & $-1.00$ & $+2.0\%$ & $-2.2\%$\\
+ & crisis & 10.1\% & $+0.98$ & $-1.00$ & $-4.6\%$ & $+4.2\%$\\
+\midrule
+BTC 1 h & bear & 7.0\% & $+1.00$ & $+0.60$ & $+0.3\%$ & $+0.5\%$\\
+ & calm & 93.0\% & $+1.00$ & $+0.41$ & $-3.5\%$ & $+5.2\%$\\
+\midrule
+BTC 4 h & calm & 100\% & $+0.82$ & $+0.45$ & $-4.8\%$ & $+6.2\%$\\
+\midrule
+ETH 15 min & bull & 7.8\% & $+1.00$ & $-1.00$ & $-0.2\%$ & $+0.2\%$\\
+ & calm & 91.3\% & $+1.00$ & $-1.00$ & $-4.8\%$ & $+4.8\%$\\
+ & crisis & 0.9\% & $+1.00$ & $-1.00$ & $-4.1\%$ & $+4.2\%$\\
+\midrule
+ETH 1 h & bull & 1.0\% & $+0.54$ & $+1.00$ & $+0.4\%$ & $+1.6\%$\\
+ & bear & 86.7\% & $+0.99$ & $+1.00$ & $-9.1\%$ & $-8.3\%$\\
+ & calm & 2.8\% & $+0.90$ & $+1.00$ & $+0.0\%$ & $+0.0\%$\\
+ & crisis & 9.5\% & $-1.00$ & $+1.00$ & $+0.7\%$ & $-1.9\%$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\caption{Live paired comparison and faithfulness. Gap: summed log return of the conditioned agent minus the blind twin ($\times100$), with 95\% circular block-bootstrap CI and the share of resamples in which it is positive. Right: share of live decisions passing each check (\%)}
+\label{tab:livegap}
+\centering
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}lccrrrr@{}}
+\toprule
+Tape & Gap & $P(\text{gap}{>}0)$ & Abl. & CF & Sens. & All\\
+\midrule
+BTC 15 min & \ci{-7.6}{-32.8}{16.5} & 0.27 & 0.4 & 1.2 & 100.0 & 0.4\\
+BTC 1 h & \ci{-8.9}{-24.8}{4.5} & 0.10 & 0.4 & 0.0 & 100.0 & 0.0\\
+BTC 4 h & \ci{-10.9}{-24.9}{2.5} & 0.05 & 83.7 & 1.6 & 91.1 & 0.0\\
+\midrule
+ETH 15 min & \ci{-18.3}{-55.2}{15.9} & 0.15 & 0.3 & 0.0 & 100.0 & 0.0\\
+ETH 1 h & \ci{0.5}{-13.1}{16.7} & 0.51 & 23.9 & 1.6 & 100.0 & 1.2\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The live audit repeats the holdout verdict (Table~\ref{tab:livegap}). Ablation moves the 4-h conditioned agent on 83.7\% of live decisions and the ETH 1-h agent on 23.9\%, but the native BTC 15-min, BTC 1-h and ETH 15-min agents on at most 0.4\%. Their regime input is no longer load-bearing, because a policy that holds $+1$ whatever it sees cannot respond to it. Sensitivity passes on every native decision for the same reason, since a flat curve passes. The counterfactual check passes on at most 1.6\% of decisions on any tape, and at most 1.2\% pass all three. The native twins thus remove the scale mismatch of the transferred agents but not the faithfulness problem. On most tapes they replace a load-bearing but unfaithful regime input with one that is not used at all.
+
 %======================================================================
 \section{Limitations and Future Work}
 %======================================================================
@@ -453,14 +716,16 @@ The lesson is methodological. Swapping one well-motivated regime component for a
 
 \emph{Counterfactual design.} One-hot interventions test the policy off its training distribution. Drawing counterfactual regime vectors from the empirical distribution of $p_t$, and adding a sensitivity criterion that requires a minimum range, would make the verdict more informative.
 
-\emph{Statistics.} The i.i.d. bootstrap ignores the serial dependence of four-hour returns. A stationary block bootstrap would give wider and more honest intervals. All results come from a single PPO seed and a single asset.
+\emph{Statistics.} The i.i.d. bootstrap ignores the serial dependence of four-hour returns. A stationary block bootstrap would give wider and more honest intervals. Only the paired gaps of the native and live studies use a block bootstrap. All results come from a single PPO seed, and only the 15-min and 1-h studies include a second asset.
+
+\emph{Live evidence.} The live study covers 21 days of a falling market. It can show the direction of an effect but cannot establish one. The 15-min and 1-h twins are now trained on their own timeframe, but the random-window recipe did not keep them active. It passed validation, yet after retraining five of the eight holdout twins stay at or near a fixed position, and on those tapes the twin comparison is decided by the sign of that position. The recipe was chosen between only two entropy settings, with one seed. Several seeds, a penalty on constant positions, or a reward measured against buy-and-hold are natural next steps. Paper fills happen at the candle close with a flat 10-bp cost, ignoring slippage, latency and the funding cost of short positions. The console's start-up labelling is faster than the tracker, but it decodes its whole window at once, which smooths within the window over hundreds of candles. Its on-screen wealth curves are therefore illustrative, and every live number reported here comes from the study script and the tracker.
 
 \emph{Scope.} The thresholds $\delta_{\text{ab}}$ and $\delta_{\text{cf}}$ and the defensive ordering $\rho$ are design choices. Transaction costs are a flat 10\,bp, and the agents were built directly on Stable-Baselines3. Ndoutoumou \emph{et al.} instead place the regime signal inside the FinRL stack~\cite{ndoutoumou2025hmm}.
 
 %======================================================================
 \section{Conclusion}
 %======================================================================
-We built a regime-conditioned RL trading agent with a Wasserstein identity tracker and a suite that intervenes on the regime input of every decision. On five years of BTC/USDT four-hour data, the tracker produced labels whose meaning stayed stable across 292 causal refits, which moment sorting did not. The conditioned agent used those labels: removing them changed its position on most bars, and it reduced exposure in bear and crisis segments, where its blind twin did not. Yet it almost never responded to injected regimes in the direction their names imply, because template starvation left the injected states outside its training data. With the same agent and data, an earlier labelling gave a faithfulness rate of 33.5\%; with the new one the rate is 0.1\%. Regime-aware agents should report a faithfulness verdict next to their returns and recompute it whenever an upstream component changes; the suite here is cheap enough to do so routinely.
+We built a regime-conditioned RL trading agent with a Wasserstein identity tracker and a suite that intervenes on the regime input of every decision. On five years of BTC/USDT four-hour data, the tracker produced labels whose meaning stayed stable across 292 causal refits, which moment sorting did not. The conditioned agent used those labels: removing them changed its position on most bars, and it reduced exposure in bear and crisis segments, where its blind twin did not. Yet it almost never responded to injected regimes in the direction their names imply, because template starvation left the injected states outside its training data. With the same agent and data, an earlier labelling gave a faithfulness rate of 33.5\%; with the new one the rate is 0.1\%. A live paper-trading console and a three-week study on 15-min, 1-h and 4-h Binance candles carried the comparison past the research data. For the faster candles we trained twins on each timeframe's own BTC/USDT and ETH/USDT history. Random-window episodes avoided the buy-and-hold collapse of the single-episode recipe in validation, but not after retraining. On the holdout year five of the eight twins stayed at or near a fixed position, and only the 1-h ETH conditioned agent used its regime input, going short in crisis and finishing ahead of its twin by a margin that was not significant. Live, the blind twin finished ahead on all three BTC timeframes and on 15-min ETH, and no gap between the twins was significant. Where the regime input was load-bearing it was again not faithful, and where a twin collapsed it was not used at all. Regime-aware agents should report a faithfulness verdict next to their returns and recompute it whenever an upstream component changes; the suite here is cheap enough to do so routinely.
 
 \bibliographystyle{IEEEtran}
 \bibliography{references}

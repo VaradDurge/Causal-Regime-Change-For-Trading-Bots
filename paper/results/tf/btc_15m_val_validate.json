@@ -1,0 +1,128 @@
+{
+  "generated_utc": "2026-10-14T15:43:27+00:00",
+  "asset": "BTC",
+  "timeframe": "15m",
+  "stage": "validate",
+  "tracker": {
+    "burn": 4032,
+    "stride": 672,
+    "dwell": 480
+  },
+  "recipe": {
+    "window": 2000,
+    "reward_scale": 100.0,
+    "ent_coef": 0.01,
+    "timesteps": 500000
+  },
+  "train": {
+    "n_bars": 130521,
+    "first_bar_utc": "2021-01-01T08:15:00+00:00",
+    "last_bar_utc": "2024-09-22T15:45:00+00:00",
+    "likely_regime_share": {
+      "bull": 0.055174758279376075,
+      "bear": 0.8182608764398486,
+      "calm": 0.00015021069025765086,
+      "crisis": 0.12641415459051775
+    }
+  },
+  "validation": {
+    "n_bars": 35040,
+    "first_bar_utc": "2024-09-22T16:00:00+00:00",
+    "last_bar_utc": "2025-09-22T15:45:00+00:00",
+    "asset_return": 0.8051280344380249,
+    "conditioned": {
+      "total_return": 0.8423496563865494,
+      "gross_return": 1.9247762363515077,
+      "sharpe": {
+        "point": 1.3419446895956169,
+        "low": -0.6757876922148812,
+        "high": 3.327199327733993
+      },
+      "max_drawdown": -0.3042427397429681,
+      "mean_position": 0.8895068074489378,
+      "turnover_per_bar": 0.013189960994064536,
+      "cost_paid": 0.46217623323202134
+    },
+    "blind": {
+      "total_return": -0.012296916415315162,
+      "gross_return": 0.11722644286569861,
+      "sharpe": {
+        "point": -0.02726317833179752,
+        "low": -2.021280328117943,
+        "high": 1.8869597751654759
+      },
+      "max_drawdown": -0.41570729767853976,
+      "mean_position": 0.7521855053800205,
+      "turnover_per_bar": 0.003516620227463169,
+      "cost_paid": 0.12322237277030945
+    },
+    "buy_hold": {
+      "total_return": 0.8033238086668248,
+      "gross_return": 0.8051280344380249,
+      "sharpe": {
+        "point": 1.2948267691502136,
+        "low": -0.7296246221500987,
+        "high": 3.229801595089416
+      },
+      "max_drawdown": -0.3146108544477282,
+      "mean_position": 1.0,
+      "turnover_per_bar": 2.8538812785388127e-05,
+      "cost_paid": 0.001
+    },
+    "position_std": {
+      "conditioned": 0.45517485320926876,
+      "blind": 0.657830008675466
+    },
+    "gap_cond_minus_blind": {
+      "gap_log": 0.6234148932206746,
+      "low": -0.07649240078059483,
+      "high": 1.3905487905176919,
+      "share_positive": 0.9545,
+      "block": 188
+    },
+    "gap_cond_minus_hold": {
+      "gap_log": 0.021410221656981962,
+      "low": -0.43911767201171237,
+      "high": 0.45036088057490153,
+      "share_positive": 0.5565,
+      "block": 188
+    },
+    "regimes": {
+      "bull": {
+        "share": 0.05176940639269406,
+        "cond_position": 0.9553865086381728,
+        "blind_position": 0.5879610956183408,
+        "cond_return": 0.08755236860067916,
+        "blind_return": -0.20950381202728563
+      },
+      "bear": {
+        "share": 0.749857305936073,
+        "cond_position": 0.9967036503530705,
+        "blind_position": 0.764706358134066,
+        "cond_return": 0.1772249504797787,
+        "blind_return": 0.07826035078830462
+      },
+      "calm": {
+        "share": 0.0,
+        "cond_position": null,
+        "blind_position": null,
+        "cond_return": null,
+        "blind_return": null
+      },
+      "crisis": {
+        "share": 0.19837328767123288,
+        "cond_position": 0.467106746268768,
+        "blind_position": 0.7477138715424635,
+        "cond_return": 0.4390053911539402,
+        "blind_return": 0.15878534419788193
+      }
+    },
+    "faithfulness": {
+      "ablation": 0.011386986301369863,
+      "counterfactual": 0.043978310502283104,
+      "sensitivity": 1.0,
+      "all": 0.009703196347031963,
+      "median_ablation_delta": 0.0
+    }
+  }
+}
