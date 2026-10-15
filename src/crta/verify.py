@@ -87,6 +87,207 @@ def audit_bar(action_fn, probs) -> dict:
     }
 
 
+def empirical_banks(probs) -> dict[str, np.ndarray]:
+    """Rows of tracker probabilities grouped by argmax. Empty regimes stay empty."""
+    probs = np.asarray(probs, dtype=float)
+    if len(probs) == 0:
+        return {name: np.zeros((0, len(REGIMES))) for name in REGIMES}
+    names = np.array(REGIMES)[np.argmax(probs, axis=1)]
+    return {name: probs[names == name] for name in REGIMES}
+
+
+def pick_empirical(probs, rows, pick: str = "nearest", rng=None) -> np.ndarray | None:
+    """Nearest training vector in L1, or a random one among the 20 nearest."""
+    rows = np.asarray(rows, dtype=float)
+    if len(rows) == 0:
+        return None
+    dist = np.abs(rows - np.asarray(probs, dtype=float)).sum(axis=1)
+    if pick == "top20":
+        k = min(20, len(rows))
+        pool = np.argpartition(dist, k - 1)[:k]
+        if rng is None:
+            rng = np.random.default_rng(0)
+        return rows[int(rng.choice(pool))]
+    if pick != "nearest":
+        raise ValueError(f"unknown cf_pick {pick}")
+    return rows[int(np.argmin(dist))]
+
+
+def _cf_pair(probs, banks, pick: str, rng):
+    """In-distribution crisis and bull vectors. Missing regimes are untestable, not failures."""
+    probs = np.asarray(probs, dtype=float)
+    rank = DEFENSE[REGIMES[int(np.argmax(probs))]]
+    crisis = bull = None
+    untestable = []
+    if rank < DEFENSE["crisis"]:
+        crisis = pick_empirical(probs, banks.get("crisis", ()), pick, rng)
+        if crisis is None:
+            untestable.append("crisis")
+    if rank > DEFENSE["bull"]:
+        bull = pick_empirical(probs, banks.get("bull", ()), pick, rng)
+        if bull is None:
+            untestable.append("bull")
+    return crisis, bull, untestable
+
+
+def audit_bar_v2(
+    action_fn,
+    probs,
+    banks,
+    *,
+    delta_ab: float = ABLATION_MIN_DELTA,
+    delta_cf: float = CF_MIN_DELTA,
+    delta_sens: float = 0.05,
+    pick: str = "nearest",
+    rng=None,
+) -> dict:
+    """Legacy checks, with in-distribution counterfactuals and a sensitivity range."""
+    probs = np.asarray(probs, dtype=float)
+    actual = float(action_fn(probs))
+    ablated = float(action_fn(np.zeros(len(REGIMES))))
+    delta = abs(actual - ablated)
+    crisis, bull, untestable = _cf_pair(probs, banks, pick, rng)
+    cf_ok = True
+    forced_crisis = forced_bull = None
+    if crisis is not None:
+        forced_crisis = float(action_fn(crisis))
+        cf_ok = cf_ok and (actual - forced_crisis) >= delta_cf
+    if bull is not None:
+        forced_bull = float(action_fn(bull))
+        cf_ok = cf_ok and (forced_bull - actual) >= delta_cf
+    curve = np.array(
+        [float(action_fn(with_crisis_prob(probs, c))) for c in np.linspace(0.0, 1.0, N_SWEEP)]
+    )
+    violations = _violations(curve)
+    span = float(curve.max() - curve.min()) if len(curve) else 0.0
+    sens_ok = violations <= 1 and span >= delta_sens
+    ab_ok = delta >= delta_ab
+    testable = len(untestable) == 0
+    return {
+        "action": actual,
+        "ablation_delta": float(delta),
+        "ablation": ab_ok,
+        "counterfactual": cf_ok if testable else "untestable",
+        "untestable": untestable,
+        "forced_crisis": forced_crisis,
+        "forced_bull": forced_bull,
+        "sensitivity": sens_ok,
+        "sensitivity_span": span,
+        "violations": violations,
+        "curve": curve,
+        # A missing regime is untestable, not a failure. The other checks still have to pass.
+        "passed": bool(ab_ok and cf_ok and sens_ok),
+    }
+
+
+def audit_many_v2(
+    predict,
+    probs,
+    banks,
+    *,
+    delta_ab: float = ABLATION_MIN_DELTA,
+    delta_cf: float = CF_MIN_DELTA,
+    delta_sens: float = 0.05,
+    pick: str = "nearest",
+    rng=None,
+) -> dict:
+    """Batched verifier_v2. A starved regime is untestable on the bars that needed it."""
+    probs = np.asarray(probs, dtype=float)
+    n = len(probs)
+    if rng is None:
+        rng = np.random.default_rng(0)
+    crisis_rows = []
+    bull_rows = []
+    need_c = np.zeros(n, dtype=bool)
+    need_b = np.zeros(n, dtype=bool)
+    untestable = [[] for _ in range(n)]
+    for i, row in enumerate(probs):
+        crisis, bull, missing = _cf_pair(row, banks, pick, rng)
+        need_c[i] = crisis is not None
+        need_b[i] = bull is not None
+        untestable[i] = missing
+        crisis_rows.append(crisis if crisis is not None else row)
+        bull_rows.append(bull if bull is not None else row)
+    zeros = np.zeros_like(probs)
+    grid = np.linspace(0.0, 1.0, N_SWEEP)
+    sweeps = [np.stack([with_crisis_prob(row, c) for row in probs]) for c in grid]
+    packed = np.concatenate(
+        [probs, zeros, np.stack(crisis_rows), np.stack(bull_rows), *sweeps], axis=0
+    )
+    actions = np.asarray(predict(packed), dtype=float).reshape(-1)
+    actual = actions[:n]
+    ablated = actions[n : 2 * n]
+    forced_c = actions[2 * n : 3 * n]
+    forced_b = actions[3 * n : 4 * n]
+    curves = actions[4 * n :].reshape(N_SWEEP, n).T
+    delta = np.abs(actual - ablated)
+    ab_ok = delta >= delta_ab
+    cf_ok = np.ones(n, dtype=bool)
+    cf_ok[need_c] &= (actual[need_c] - forced_c[need_c]) >= delta_cf
+    cf_ok[need_b] &= (forced_b[need_b] - actual[need_b]) >= delta_cf
+    testable = np.array([len(item) == 0 for item in untestable])
+    violations = np.sum(curves[:, 1:] > curves[:, :-1] + 1e-8, axis=1)
+    span = curves.max(axis=1) - curves.min(axis=1)
+    sens_ok = (violations <= 1) & (span >= delta_sens)
+    passed = ab_ok & cf_ok & sens_ok
+    return {
+        "action": actual,
+        "ablation_delta": delta,
+        "pass_ablation": ab_ok,
+        "pass_cf": cf_ok,
+        "pass_sens": sens_ok,
+        "testable": testable,
+        "untestable": untestable,
+        "passed": passed,
+        "curve": curves,
+        "sensitivity_span": span,
+    }
+
+
+def verifier_report(result: dict, regimes=None) -> dict:
+    """Pass rates, per-regime breakdown, and the median absolute ablation effect."""
+    passed = np.asarray(result["passed"], dtype=bool)
+    ab = np.asarray(result["pass_ablation"], dtype=bool)
+    cf = np.asarray(result["pass_cf"], dtype=bool)
+    sens = np.asarray(result["pass_sens"], dtype=bool)
+    testable = np.asarray(result.get("testable", np.ones(len(passed), dtype=bool)))
+    delta = np.asarray(result["ablation_delta"], dtype=float)
+    untestable = result.get("untestable", [[] for _ in range(len(passed))])
+    starved = np.array([len(item) > 0 for item in untestable])
+    out = {
+        "ablation": float(ab.mean()) if len(ab) else None,
+        "counterfactual": float(cf[testable].mean()) if testable.any() else None,
+        "sensitivity": float(sens.mean()) if len(sens) else None,
+        "all": float(passed.mean()) if len(passed) else None,
+        "untestable_share": float(starved.mean()) if len(starved) else None,
+        "median_ablation_delta": float(np.median(np.abs(delta))) if len(delta) else None,
+        "n": int(len(passed)),
+    }
+    if regimes is not None:
+        labels = np.asarray(regimes)
+        per = {}
+        for name in REGIMES:
+            mask = labels == name
+            per[name] = {
+                "n": int(mask.sum()),
+                "ablation": float(ab[mask].mean()) if mask.any() else None,
+                "counterfactual": float(cf[mask & testable].mean()) if np.any(mask & testable) else None,
+                "sensitivity": float(sens[mask].mean()) if mask.any() else None,
+                "all": float(passed[mask].mean()) if mask.any() else None,
+                "untestable_share": float(starved[mask].mean()) if mask.any() else None,
+            }
+        out["per_regime"] = per
+    return out
+
+
+def label_agreement(probs, dwell_labels) -> float:
+    """Share of bars where argmax p_t equals the dwell-smoothed label."""
+    probs = np.asarray(probs, dtype=float)
+    labels = np.asarray(dwell_labels)
+    guessed = np.array(REGIMES)[np.argmax(probs, axis=1)]
+    return float(np.mean(guessed == labels)) if len(labels) else float("nan")
+
+
 def audit_many(predict, probs) -> dict:
     """predict(array of shape (n, 4)) -> actions. Same rules as audit_bar, batched."""
     probs = np.asarray(probs, dtype=float)
