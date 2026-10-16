@@ -1,0 +1,56 @@
+collapse t=10000 mean=-0.228 std=0.533 extreme=0.204
+collapse t=20000 mean=-0.452 std=0.188 extreme=0.018
+collapse t=30000 mean=-0.497 std=0.081 extreme=0.010
+collapse t=40000 mean=-0.433 std=0.180 extreme=0.006
+collapse t=50000 mean=-0.420 std=0.193 extreme=0.006
+collapse t=60000 mean=-0.470 std=0.124 extreme=0.003
+collapse t=70000 mean=-0.483 std=0.096 extreme=0.002
+collapse t=80000 mean=-0.453 std=0.151 extreme=0.003
+collapse t=90000 mean=-0.365 std=0.229 extreme=0.005
+collapse t=100000 mean=-0.419 std=0.195 extreme=0.007
+collapse t=110000 mean=-0.280 std=0.254 extreme=0.003
+collapse t=120000 mean=-0.209 std=0.251 extreme=0.002
+collapse t=130000 mean=-0.007 std=0.060 extreme=0.000
+collapse t=140000 mean=0.000 std=0.000 extreme=0.000
+collapse t=150000 mean=0.000 std=0.011 extreme=0.000
+collapse t=160000 mean=0.000 std=0.000 extreme=0.000
+WARNING: position std 0.0000 < 0.02 for 3 consecutive logs. Training continues.
+collapse t=170000 mean=0.000 std=0.000 extreme=0.000
+WARNING: position std 0.0000 < 0.02 for 4 consecutive logs. Training continues.
+collapse t=180000 mean=0.000 std=0.005 extreme=0.000
+WARNING: position std 0.0050 < 0.02 for 5 consecutive logs. Training continues.
+collapse t=190000 mean=0.000 std=0.005 extreme=0.000
+WARNING: position std 0.0050 < 0.02 for 6 consecutive logs. Training continues.
+collapse t=200000 mean=0.000 std=0.000 extreme=0.000
+WARNING: position std 0.0000 < 0.02 for 7 consecutive logs. Training continues.
+collapse t=210000 mean=-0.022 std=0.105 extreme=0.000
+collapse t=220000 mean=-0.078 std=0.186 extreme=0.003
+collapse t=230000 mean=-0.090 std=0.196 extreme=0.001
+collapse t=240000 mean=-0.276 std=0.250 extreme=0.002
+collapse t=250000 mean=-0.202 std=0.247 extreme=0.001
+collapse t=260000 mean=-0.131 std=0.221 extreme=0.001
+collapse t=270000 mean=-0.163 std=0.246 extreme=0.001
+collapse t=280000 mean=-0.076 std=0.181 extreme=0.000
+collapse t=290000 mean=-0.078 std=0.182 extreme=0.000
+collapse t=300000 mean=-0.077 std=0.199 extreme=0.013
+collapse t=310000 mean=-0.067 std=0.184 extreme=0.009
+collapse t=320000 mean=-0.026 std=0.124 extreme=0.005
+collapse t=330000 mean=-0.028 std=0.119 extreme=0.001
+collapse t=340000 mean=-0.035 std=0.131 extreme=0.001
+collapse t=350000 mean=-0.049 std=0.157 extreme=0.004
+collapse t=360000 mean=-0.010 std=0.084 extreme=0.002
+collapse t=370000 mean=-0.020 std=0.131 extreme=0.012
+collapse t=380000 mean=-0.033 std=0.130 extreme=0.002
+collapse t=390000 mean=-0.028 std=0.127 extreme=0.003
+collapse t=400000 mean=-0.069 std=0.190 extreme=0.005
+collapse t=410000 mean=-0.082 std=0.189 extreme=0.002
+collapse t=420000 mean=-0.140 std=0.225 extreme=0.000
+collapse t=430000 mean=-0.111 std=0.208 extreme=0.000
+collapse t=440000 mean=-0.143 std=0.226 extreme=0.000
+collapse t=450000 mean=-0.137 std=0.226 extreme=0.002
+collapse t=460000 mean=-0.183 std=0.243 extreme=0.002
+collapse t=470000 mean=-0.152 std=0.231 extreme=0.001
+collapse t=480000 mean=-0.096 std=0.202 extreme=0.001
+collapse t=490000 mean=-0.150 std=0.235 extreme=0.001
+collapse t=500000 mean=-0.190 std=0.253 extreme=0.003
+trained validate lam 5 BTC 1h conditioned seed 42 in 231s

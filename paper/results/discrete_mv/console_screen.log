@@ -1,0 +1,69 @@
+launch validate 2.0 BTC 1h conditioned 42
+launch validate 2.0 BTC 1h blind 42
+finished ('validate', 2.0, 'BTC', '1h', 'blind', 42)
+launch validate 2.0 BTC 15m conditioned 42
+finished ('validate', 2.0, 'BTC', '1h', 'conditioned', 42)
+launch validate 2.0 BTC 15m blind 42
+finished ('validate', 2.0, 'BTC', '15m', 'conditioned', 42)
+finished ('validate', 2.0, 'BTC', '15m', 'blind', 42)
+launch validate 2.0 ETH 1h conditioned 42
+launch validate 2.0 ETH 1h blind 42
+finished ('validate', 2.0, 'ETH', '1h', 'conditioned', 42)
+launch validate 2.0 ETH 15m conditioned 42
+finished ('validate', 2.0, 'ETH', '1h', 'blind', 42)
+launch validate 2.0 ETH 15m blind 42
+finished ('validate', 2.0, 'ETH', '15m', 'conditioned', 42)
+launch validate 5.0 BTC 1h conditioned 42
+finished ('validate', 2.0, 'ETH', '15m', 'blind', 42)
+launch validate 5.0 BTC 1h blind 42
+finished ('validate', 5.0, 'BTC', '1h', 'conditioned', 42)
+launch validate 5.0 BTC 15m conditioned 42
+finished ('validate', 5.0, 'BTC', '1h', 'blind', 42)
+launch validate 5.0 BTC 15m blind 42
+finished ('validate', 5.0, 'BTC', '15m', 'blind', 42)
+launch validate 5.0 ETH 1h conditioned 42
+finished ('validate', 5.0, 'BTC', '15m', 'conditioned', 42)
+launch validate 5.0 ETH 1h blind 42
+finished ('validate', 5.0, 'ETH', '1h', 'conditioned', 42)
+launch validate 5.0 ETH 15m conditioned 42
+finished ('validate', 5.0, 'ETH', '1h', 'blind', 42)
+launch validate 5.0 ETH 15m blind 42
+finished ('validate', 5.0, 'ETH', '15m', 'conditioned', 42)
+finished ('validate', 5.0, 'ETH', '15m', 'blind', 42)
+launch validate 10.0 BTC 1h conditioned 42
+launch validate 10.0 BTC 1h blind 42
+finished ('validate', 10.0, 'BTC', '1h', 'blind', 42)
+launch validate 10.0 BTC 15m conditioned 42
+finished ('validate', 10.0, 'BTC', '1h', 'conditioned', 42)
+launch validate 10.0 BTC 15m blind 42
+finished ('validate', 10.0, 'BTC', '15m', 'conditioned', 42)
+launch validate 10.0 ETH 1h conditioned 42
+finished ('validate', 10.0, 'BTC', '15m', 'blind', 42)
+launch validate 10.0 ETH 1h blind 42
+finished ('validate', 10.0, 'ETH', '1h', 'conditioned', 42)
+launch validate 10.0 ETH 15m conditioned 42
+finished ('validate', 10.0, 'ETH', '1h', 'blind', 42)
+launch validate 10.0 ETH 15m blind 42
+finished ('validate', 10.0, 'ETH', '15m', 'conditioned', 42)
+finished ('validate', 10.0, 'ETH', '15m', 'blind', 42)
+val discrete5_raw seed 42 BTC 1h (3s): std 0.000/0.454 E-std 0.000/0.447 ext 0.000/0.000 lv c 0.00/0.00/1.00/0.00/0.00 b 0.00/0.67/0.04/0.29/0.00 ab 0.000 faith 0.000 testable 0.000 (n 8760) v2 0.000 pass False
+val discrete5_raw seed 42 BTC 15m (24s): std 0.579/0.517 E-std 0.546/0.508 ext 0.712/0.137 lv c 0.69/0.11/0.05/0.13/0.02 b 0.00/0.86/0.00/0.00/0.14 ab 0.210 faith 0.035 testable 0.073 (n 16996) v2 0.018 pass True
+val discrete5_raw seed 42 ETH 1h (3s): std 0.501/0.092 E-std 0.483/0.054 ext 0.080/0.005 lv c 0.08/0.50/0.11/0.31/0.00 b 0.00/0.01/0.98/0.01/0.01 ab 0.409 faith 0.115 testable 0.115 (n 8758) v2 0.102 pass True
+val discrete5_raw seed 42 ETH 15m (22s): std 0.826/0.251 E-std 0.805/0.241 ext 0.690/0.000 lv c 0.42/0.09/0.20/0.02/0.27 b 0.00/0.00/0.48/0.52/0.00 ab 0.333 faith 0.248 testable 0.394 (n 22013) v2 0.158 pass True
+val gaussian_clip_raw seed 42 BTC 1h (3s): std 0.326/0.187 E-std 0.326/0.187 ext 0.958/0.990 lv c 0.01/0.00/0.00/0.00/0.94 b 0.01/0.00/0.00/0.00/0.98 ab 0.261 faith 0.000 testable 0.000 (n 353) v2 0.000 pass False
+val gaussian_clip_raw seed 42 BTC 15m (23s): std 0.455/0.658 E-std 0.455/0.658 ext 0.998/0.998 lv c 0.05/0.00/0.00/0.00/0.94 b 0.12/0.00/0.00/0.00/0.87 ab 0.011 faith 0.010 testable 0.093 (n 3670) v2 0.009 pass False
+val gaussian_clip_raw seed 42 ETH 1h (3s): std 0.725/0.552 E-std 0.725/0.552 ext 0.982/0.990 lv c 0.15/0.00/0.00/0.00/0.83 b 0.08/0.00/0.00/0.00/0.91 ab 0.075 faith 0.008 testable 0.068 (n 1073) v2 0.004 pass False
+val gaussian_clip_raw seed 42 ETH 15m (20s): std 0.251/0.060 E-std 0.251/0.060 ext 0.995/0.996 lv c 0.01/0.00/0.00/0.00/0.98 b 0.00/0.00/0.00/0.00/0.99 ab 0.008 faith 0.000 testable 0.000 (n 10746) v2 0.000 pass False
+val discrete5_mv_lam_2 seed 42 BTC 1h (3s): std 0.029/0.259 E-std 0.028/0.252 ext 0.000/0.011 lv c 0.00/0.00/1.00/0.00/0.00 b 0.00/0.00/0.56/0.43/0.01 ab 0.031 faith 0.000 testable 0.000 (n 8760) v2 0.000 pass False
+val discrete5_mv_lam_2 seed 42 BTC 15m (24s): std 0.292/0.236 E-std 0.285/0.230 ext 0.021/0.059 lv c 0.00/0.93/0.00/0.04/0.02 b 0.00/0.00/0.94/0.00/0.06 ab 0.055 faith 0.015 testable 0.015 (n 34916) v2 0.013 pass False
+val discrete5_mv_lam_2 seed 42 ETH 1h (3s): std 0.464/0.219 E-std 0.443/0.217 ext 0.000/0.001 lv c 0.00/0.31/0.00/0.69/0.00 b 0.00/0.75/0.25/0.00/0.00 ab 0.103 faith 0.089 testable 0.089 (n 8760) v2 0.088 pass True
+val discrete5_mv_lam_2 seed 42 ETH 15m (21s): std 0.107/0.981 E-std 0.080/0.958 ext 0.015/0.959 lv c 0.00/0.00/0.03/0.96/0.01 b 0.51/0.01/0.01/0.01/0.45 ab 0.025 faith 0.021 testable 0.021 (n 35040) v2 0.017 pass False
+val discrete5_mv_lam_5 seed 42 BTC 1h (3s): std 0.253/0.000 E-std 0.243/0.000 ext 0.000/0.000 lv c 0.00/0.45/0.55/0.00/0.00 b 0.00/0.00/1.00/0.00/0.00 ab 0.215 faith 0.000 testable 0.000 (n 8760) v2 0.000 pass False
+val discrete5_mv_lam_5 seed 42 BTC 15m (24s): std 0.319/0.433 E-std 0.311/0.430 ext 0.000/0.000 lv c 0.00/0.12/0.00/0.88/0.00 b 0.00/0.25/0.01/0.74/0.00 ab 0.050 faith 0.032 testable 0.032 (n 35040) v2 0.030 pass False
+val discrete5_mv_lam_5 seed 42 ETH 1h (3s): std 0.432/0.011 E-std 0.420/0.008 ext 0.000/0.000 lv c 0.00/0.57/0.16/0.27/0.00 b 0.00/0.00/1.00/0.00/0.00 ab 0.589 faith 0.182 testable 0.182 (n 8760) v2 0.171 pass False
+val discrete5_mv_lam_5 seed 42 ETH 15m (21s): std 0.264/0.045 E-std 0.255/0.040 ext 0.001/0.001 lv c 0.00/0.05/0.13/0.82/0.00 b 0.00/0.00/0.00/1.00/0.00 ab 0.142 faith 0.019 testable 0.019 (n 35040) v2 0.007 pass False
+val discrete5_mv_lam_10 seed 42 BTC 1h (3s): std 0.000/0.249 E-std 0.000/0.239 ext 0.000/0.000 lv c 0.00/0.00/1.00/0.00/0.00 b 0.00/0.00/0.54/0.46/0.00 ab 0.000 faith 0.000 testable 0.000 (n 8760) v2 0.000 pass False
+val discrete5_mv_lam_10 seed 42 BTC 15m (24s): std 0.106/0.166 E-std 0.104/0.152 ext 0.000/0.000 lv c 0.00/0.00/0.05/0.95/0.00 b 0.00/0.03/0.00/0.97/0.00 ab 0.031 faith 0.000 testable 0.000 (n 35040) v2 0.000 pass False
+val discrete5_mv_lam_10 seed 42 ETH 1h (3s): std 0.000/0.000 E-std 0.003/0.000 ext 0.000/0.000 lv c 0.00/0.00/1.00/0.00/0.00 b 0.00/0.00/1.00/0.00/0.00 ab 0.000 faith 0.000 testable 0.000 (n 8760) v2 0.000 pass False
+val discrete5_mv_lam_10 seed 42 ETH 15m (21s): std 0.364/0.144 E-std 0.355/0.137 ext 0.000/0.000 lv c 0.00/0.33/0.46/0.22/0.00 b 0.00/0.91/0.09/0.00/0.00 ab 0.197 faith 0.170 testable 0.170 (n 35040) v2 0.090 pass True
+frozen cell: none

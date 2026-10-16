@@ -1,0 +1,65 @@
+{
+  "cell": "none",
+  "action_mode": null,
+  "reward_mode": null,
+  "risk_aversion": "none",
+  "screen_seed": 42,
+  "split": "validation: train before 2024-09-22T16:00Z, score 2024-09-22T16:00Z to 2025-09-22T16:00Z",
+  "base_config": "configs/final.yaml",
+  "rule": "all four tapes: both twins position std > 0.05, both twins share |a|>0.95 < 0.80 (discrete5: executed level), conditioned ablation >= 0.10 (discrete5: verifier on the expected position, bound_aware=True); among passing lambdas highest minimum ablation, tie to smaller lambda; returns and Sharpe not used",
+  "candidates": [
+    "discrete5_mv_lam_2",
+    "discrete5_mv_lam_5",
+    "discrete5_mv_lam_10"
+  ],
+  "passed": [],
+  "rejected": [
+    {
+      "risk_aversion": 2.0,
+      "n_tapes": 4,
+      "n_tapes_passed": 1,
+      "passed": false,
+      "min_ablation": 0.024771689497716895,
+      "min_position_std": 0.029210140597999968,
+      "max_extreme_share": 0.9594463470319635
+    },
+    {
+      "risk_aversion": 5.0,
+      "n_tapes": 4,
+      "n_tapes_passed": 0,
+      "passed": false,
+      "min_ablation": 0.05037100456621005,
+      "min_position_std": 0.0,
+      "max_extreme_share": 0.0012557077625570776
+    },
+    {
+      "risk_aversion": 10.0,
+      "n_tapes": 4,
+      "n_tapes_passed": 1,
+      "passed": false,
+      "min_ablation": 0.0,
+      "min_position_std": 0.0,
+      "max_extreme_share": 0.0003710045662100457
+    }
+  ],
+  "controls_seed42": {
+    "discrete5_raw": {
+      "weights": "paper/results/action_mode/validation/discrete5",
+      "retrained": false,
+      "n_tapes_passed": 3,
+      "min_ablation": 0.0,
+      "min_position_std": 0.0,
+      "max_extreme_share": 0.7121289954337899
+    },
+    "gaussian_clip_raw": {
+      "weights": "paper/results/saturation/weights",
+      "retrained": false,
+      "n_tapes_passed": 0,
+      "min_ablation": 0.007676940639269407,
+      "min_position_std": 0.06011326233599274,
+      "max_extreme_share": 0.9978025114155251
+    }
+  },
+  "seed_check": "not run: no lambda passed",
+  "holdout_live": "not scored: no lambda passed, so no final-split models were trained"
+}
