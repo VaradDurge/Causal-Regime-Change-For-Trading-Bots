@@ -366,6 +366,7 @@ def _train_kwargs(cfg: ExperimentConfig, seed: int, quick: bool, timeframe: str)
         tracker=cfg.tracker,
         tracker_kwargs=_tracker_kwargs(cfg, timeframe, quick),
         action_mode=cfg.action_mode,
+        risk_aversion=float(cfg.risk_aversion),
     )
 
 

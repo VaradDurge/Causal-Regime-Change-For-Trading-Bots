@@ -78,3 +78,38 @@ def choose_action_mode(rows: list[dict]) -> dict:
         reverse=True,
     )
     return {"mode": passing[0]["mode"], "passed": passing, "rejected": rejected}
+
+
+def choose_risk_aversion(rows: list[dict]) -> dict:
+    """Choose one mean-variance lambda from validation criterion rows, or none.
+
+    Each row is one tape of one lambda with the ``meets_criterion`` fields. A
+    lambda is eligible only when every tape passes. The winner has the highest
+    minimum ablation across its tapes; a tie goes to the smaller lambda.
+    """
+    by_lam: dict[float, list[dict]] = {}
+    for row in rows:
+        by_lam.setdefault(float(row["risk_aversion"]), []).append(row)
+    passing = []
+    rejected = []
+    for lam, tapes in sorted(by_lam.items()):
+        ok = all(
+            meets_criterion(tape["std_c"], tape["std_b"], tape["extreme_c"], tape["extreme_b"], tape["ablation"])
+            for tape in tapes
+        )
+        record = {
+            "risk_aversion": lam,
+            "n_tapes": len(tapes),
+            "n_tapes_passed": sum(
+                meets_criterion(t["std_c"], t["std_b"], t["extreme_c"], t["extreme_b"], t["ablation"]) for t in tapes
+            ),
+            "passed": ok,
+            "min_ablation": min(float(tape["ablation"]) for tape in tapes),
+            "min_position_std": min(min(float(t["std_c"]), float(t["std_b"])) for t in tapes),
+            "max_extreme_share": max(max(float(t["extreme_c"]), float(t["extreme_b"])) for t in tapes),
+        }
+        (passing if ok else rejected).append(record)
+    if not passing:
+        return {"risk_aversion": "none", "passed": [], "rejected": rejected}
+    passing.sort(key=lambda item: (-item["min_ablation"], item["risk_aversion"]))
+    return {"risk_aversion": passing[0]["risk_aversion"], "passed": passing, "rejected": rejected}
