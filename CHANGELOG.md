@@ -99,3 +99,9 @@ The saturation rule called clipping the cause (8 of 8 tapes), so `action_mode` w
 The screen used the validation split only. `gaussian_clip` reused the seed-42 validation weights. `tanh_env` and `discrete5` were trained at seed 42 with the same native recipe. A mode had to pass on all four tapes: both twins with position standard deviation above 0.05, an `|a| > 0.95` share below 0.80, and a conditioned ablation rate of at least 10%. The pre-registered tie-break was the highest minimum ablation across the four tapes, then the minimum twin position standard deviation, then `tanh_env`, `discrete5`, `gaussian_clip`. Returns were not an input.
 
 No mode passed. `gaussian_clip` and `tanh_env` missed the extreme-share bar on every tape. `discrete5` passed BTC 15m, ETH 1h, and ETH 15m, and failed BTC 1h because the conditioned twin was constant. The frozen file is `results/action_mode_choice.txt` and it says `none`. Holdout and live were not scored.
+
+## Mean-variance reward and limit-aware audit
+
+- `reward_mode: mean_variance` with `risk_aversion` (default reward stays `raw`, `risk_aversion` defaults to 0). The reward is `a*r - c*|a - a_prev| - risk_aversion * a^2 * vol_20^2`, scaled by `reward_scale`. `vol_20` is the volatility already known at the decision bar. A reward linear in the position is maximised at a rail, so this mode gives an interior optimum `a* = E[r] / (2 * risk_aversion * vol^2)` instead of forcing variety.
+- `audit_many(..., bound_aware=True)` reports bars where the position limit makes the required counterfactual move impossible (`cf_untestable`) and the all-check rate on the rest (`faith_rate_testable`). `passed` keeps the original rule, and the original rate is still the headline.
+- `paper/scripts/bound_aware_audit.py` re-scores the published four-hour run from its saved pass flags: 7,040 of 11,430 bars are untestable, and the all-check rate on the 4,390 testable bars is 0.25% (11 bars overall).

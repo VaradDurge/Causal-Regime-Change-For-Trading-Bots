@@ -232,6 +232,7 @@ class TradeEnv(gym.Env):
         tracker: str = "v1",
         tracker_kwargs: dict | None = None,
         action_mode: str = "gaussian_clip",
+        risk_aversion: float = 0.0,
     ):
         self.frame = frame.reset_index(drop=True)
         self.include_regime = include_regime
@@ -239,7 +240,7 @@ class TradeEnv(gym.Env):
         self.window = None if window is None or window >= len(self.frame) else int(window)
         self.reward_scale = float(reward_scale)
         self.reward_mode = str(reward_mode)
-        if self.reward_mode not in ("raw", "excess_bh", "diff_sharpe"):
+        if self.reward_mode not in ("raw", "excess_bh", "diff_sharpe", "mean_variance"):
             raise ValueError(f"unknown reward_mode {reward_mode}")
         self.diff_sharpe_eta = float(diff_sharpe_eta)
         self.pos_extreme_penalty = float(pos_extreme_penalty)
@@ -256,6 +257,9 @@ class TradeEnv(gym.Env):
         self.tracker = tracker
         self.tracker_kwargs = dict(tracker_kwargs or {})
         self.action_mode = str(action_mode)
+        self.risk_aversion = float(risk_aversion)
+        if self.reward_mode == "mean_variance" and self.risk_aversion <= 0.0:
+            raise ValueError("mean_variance needs risk_aversion > 0")
         self._end = len(self.frame)
         n = len(FEATURE_COLS) + 1 + (len(REGIMES) if include_regime else 0)
         self.observation_space = spaces.Box(-np.inf, np.inf, shape=(n,), dtype=np.float32)
@@ -280,6 +284,7 @@ class TradeEnv(gym.Env):
     def _bind(self, frame) -> None:
         self._next = frame["next_ret"].to_numpy(dtype=np.float64)
         self._feats = frame[list(FEATURE_COLS)].to_numpy(dtype=np.float64)
+        self._vol = frame["vol_20"].to_numpy(dtype=np.float64)
         if all(name in frame.columns for name in REGIMES):
             self._probs = frame[list(REGIMES)].to_numpy(dtype=np.float64)
         else:
@@ -376,6 +381,11 @@ class TradeEnv(gym.Env):
             reward = (target * nxt - turnover) * self.reward_scale
         elif self.reward_mode == "excess_bh":
             reward = ((target - 1.0) * nxt - turnover) * self.reward_scale
+        elif self.reward_mode == "mean_variance":
+            # A linear reward is maximised at a rail. The variance term uses the volatility known at bar t.
+            sigma = float(self._vol[self._i])
+            penalty = self.risk_aversion * target * target * sigma * sigma
+            reward = (target * nxt - turnover - penalty) * self.reward_scale
         else:
             # Scale multiplies return and cost before the EMA. DSR itself is homogeneous of degree 0.
             portfolio = (target * nxt - turnover) * self.reward_scale
@@ -500,6 +510,7 @@ def train_ppo(
     tracker: str = "v1",
     tracker_kwargs: dict | None = None,
     action_mode: str = "gaussian_clip",
+    risk_aversion: float = 0.0,
 ):
     import os
 
@@ -525,6 +536,7 @@ def train_ppo(
         tracker=tracker,
         tracker_kwargs=tracker_kwargs,
         action_mode=action_mode,
+        risk_aversion=risk_aversion,
     )
     regularize = bool(faithfulness_regularizer) and include_regime
     cls = None
@@ -566,6 +578,7 @@ def train_ppo(
         "regime_perturb_prob": float(regime_perturb_prob),
         "sign_flip_prob": float(sign_flip_prob),
         "action_mode": str(action_mode),
+        "risk_aversion": float(risk_aversion),
     }
     return model
 

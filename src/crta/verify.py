@@ -288,8 +288,13 @@ def label_agreement(probs, dwell_labels) -> float:
     return float(np.mean(guessed == labels)) if len(labels) else float("nan")
 
 
-def audit_many(predict, probs) -> dict:
-    """predict(array of shape (n, 4)) -> actions. Same rules as audit_bar, batched."""
+def audit_many(predict, probs, bound_aware: bool = False) -> dict:
+    """predict(array of shape (n, 4)) -> actions. Same rules as audit_bar, batched.
+
+    With ``bound_aware`` a counterfactual direction that the position limit makes
+    impossible is not scored. Those bars are counted in ``cf_untestable`` and left
+    out of ``faith_rate_testable``; ``passed`` keeps the original rule.
+    """
     probs = np.asarray(probs, dtype=float)
     n = len(probs)
     zeros = np.zeros_like(probs)
@@ -315,7 +320,19 @@ def audit_many(predict, probs) -> dict:
     violations = np.sum(curves[:, 1:] > curves[:, :-1] + 1e-8, axis=1)
     sens_ok = violations <= 1
     passed = ab_ok & cf_ok & sens_ok
+    extra = {}
+    if bound_aware:
+        blocked_down = need_down & (actual < -1.0 + CF_MIN_DELTA)
+        blocked_up = need_up & (actual > 1.0 - CF_MIN_DELTA)
+        untestable = blocked_down | blocked_up
+        testable = ~untestable
+        extra = {
+            "cf_untestable": untestable,
+            "n_testable": int(testable.sum()),
+            "faith_rate_testable": float(passed[testable].mean()) if testable.any() else float("nan"),
+        }
     return {
+        **extra,
         "action": actual,
         "ablation_delta": delta,
         "pass_ablation": ab_ok,

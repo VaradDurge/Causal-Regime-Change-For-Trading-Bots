@@ -1,0 +1,11 @@
+{
+  "n_bars": 11430,
+  "n_passed": 11,
+  "faith_rate": 0.0009623797025371828,
+  "n_untestable": 7040,
+  "untestable_share": 0.615923009623797,
+  "n_testable": 4390,
+  "faith_rate_testable": 0.0025056947608200456,
+  "cf_rate_testable": 0.02369020501138952,
+  "share_abs_action_gt_095": 0.616010498687664
+}
