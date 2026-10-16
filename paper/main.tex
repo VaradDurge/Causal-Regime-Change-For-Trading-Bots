@@ -740,6 +740,15 @@ Because that check said clipping was the cause, two other action heads were scre
 
 No head passed. The clipped Gaussian and the tanh execution stayed above the 0.80 rail share on every tape. Under tanh the BTC conditioned twins are essentially constant (position standard deviation about 0, ablation 0). The five-point head passes BTC 15\,min, ETH 1\,h and ETH 15\,min. It fails BTC 1\,h because the conditioned position is constant at 0 (standard deviation 0, ablation 0). The frozen choice is that none of the three heads is selected. Holdout and live were not scored.
 
+Four numbers in the published single run are easy to misread, so the measured follow-ups are stated here and the original tables are left in place. The combined faithfulness rate of 0.1\% is 11 of 11{,}430 bars, the intersection of the three checks. Ablation alone passes on 60.7\% of those bars, so the regime input does move the position. The counterfactual check passes on 0.9\%, and that is what pulls the intersection down to 0.1\%. On the five-seed repetition the legacy all-check rate is 0.7\% for tracker v1 and 2.4\% for tracker v2 (Table~\ref{tab:4hseeds}). The rate was not produced by a miscounted denominator.
+
+The 97--100\% share of native bars at $|a|>0.95$ is Table~\ref{tab:sat}: the raw Gaussian mean is already outside $[-1,1]$ on 95.6--99.8\% of validation bars, and the clip executes that request. The tanh execution and the five-point action were the two changes aimed at that mechanism. Neither passed the pre-registered bar on all four tapes, so the rail share in the native holdout and live tables is unchanged.
+
+The negative holdout Sharpe ratios, and a conditioned win on a majority of seeds in two of eight windows, are Table~\ref{tab:v2seeds} and Table~\ref{tab:v2risk}. Those windows were not used to choose the recipe.
+
+The bull share after burn-in is 0 under tracker v1 (Table~\ref{tab:labels}). Tracker v2, with template birth, a forward-only posterior and the same frozen four-hour candles, labels 121 of 12{,}258 post-burn bars as bull (0.99\%), with a mean return of $+3.3$\,bp. That is a real label, and it is still a thin regime. The five-seed trading result for that tracker is a loss on every seed (Section~\ref{sec:fourhseeds}). Restoring a few bull bars did not restore the faithfulness rate or the Sharpe ratio.
+
+
 %======================================================================
 \section{Limitations and Future Work}
 %======================================================================
