@@ -48,9 +48,11 @@ Pune, India\\
 \maketitle
 
 \begin{abstract}
-Regime-aware reinforcement-learning (RL) trading agents are usually judged by back-tested returns, which cannot show whether the regime signal drives their decisions. We couple a Wasserstein regime-identity tracker with three interventions on the regime input, and we train a proximal policy optimisation (PPO) twin that differs only by lacking that input. On BTC/USDT four-hour bars the tracker lowers the mean template-matching cost by a factor of 4.9, but it issues no bull label after burn-in. On 11{,}430 out-of-fold bars ablation moves the conditioned position on 60.7\% of bars and the agent de-risks in bear and crisis segments, yet only 0.1\% of bars pass all three checks, against 33.5\% for an archived moment-sorted labelling. The Sharpe ratios are $-0.16$ for the conditioned agent, $-1.12$ for the blind twin and $0.35$ for buy-and-hold. Those four-hour numbers were not recomputed for the study below.
+Regime-aware reinforcement-learning (RL) trading agents are usually judged by back-tested returns, which cannot show whether the regime signal drives their decisions. We couple a Wasserstein regime-identity tracker with three interventions on the regime input, and we train a proximal policy optimisation (PPO) twin that differs only by lacking that input. On BTC/USDT four-hour bars the tracker lowers the mean template-matching cost by a factor of 4.9, but it issues no bull label after burn-in. On 11{,}430 out-of-fold bars ablation moves the conditioned position on 60.7\% of bars and the agent de-risks in bear and crisis segments, yet only 0.1\% of bars pass all three checks, against 33.5\% for an archived moment-sorted labelling. The Sharpe ratios are $-0.16$ for the conditioned agent, $-1.12$ for the blind twin and $0.35$ for buy-and-hold. Those four-hour numbers are the published single run. A five-seed repetition of the same recipe is reported beside them and does not replace them.
 
 The comparison in this paper is five seeds of timeframe-native twins on BTC/USDT and ETH/USDT, at 15\,min and 1\,h. A one-factor grid on the validation split did not meet the pre-registered bar: both twins with position standard deviation above 0.05, a share of bars with $|a|>0.95$ below 0.80, and ablation of at least 0.10, on all four tapes. The baseline had the lowest mean deficit (about 0.985), so \texttt{configs/final.yaml} stayed the native recipe: raw reward, scale 100, entropy coefficient 0.01, uniform 2{,}000-bar windows, tracker v1, no perturbation and no faithfulness regularizer. Holdout and live were scored once and were not used to choose the recipe. The mean share of bars with $|a|>0.95$ is 97--100\% for every twin, and the mean holdout Sharpe ratio is negative for both twins. The conditioned agent beats the blind twin on a majority of seeds in two of eight windows only. On BTC 1\,h holdout its mean return is $+2.8\%$ (standard deviation 38.2) against $-26.1\%$ (12.8), with beats share 0.80 and ablation 7.3\% (13.6). On ETH 1\,h live the means are $+0.4\%$ against $-5.5\%$, with beats share 0.80. It does not win overall. The agents are not regularized, and both verifiers report small faithfulness rates.
+
+Repeating the four-hour walk-forward study on seeds 42--46 does not turn that single run into a stable gain. Tracker v1's conditioned mean return is $+57.8\%$ only because seed 46 returns $+515\%$. The other four seeds are negative, and the mean Sharpe ratio is $-0.27$. Tracker v2's mean return is $-83.6\%$, and the moment-sorted labelling's is $-44.0\%$. Legacy faithfulness stays under 3\% for both trackers and is 12.5\% for moment-sorted names. On the native validation twins the raw Gaussian mean lies outside $[-1,1]$ on 95.6--99.8\% of bars, which is what the clip then executes as a rail. A tanh execution and a five-point discrete action were screened on the validation split only. Neither met the pre-registered bar on all four tapes, so holdout and live were not scored for those modes.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -73,6 +75,7 @@ This paper asks two linked questions. Does Wasserstein tracking give regime labe
   \item A twin experiment in which regime-conditioned and regime-blind PPO agents share architecture, seed and training budget, evaluated walk-forward with bootstrapped confidence intervals and a per-regime breakdown.
   \item An empirical finding: replacing moment sorting with Wasserstein tracking leaves the regime input load-bearing but collapses the faithfulness rate from 33.5\% to 0.1\%. We trace this to template starvation and to counterfactual inputs that lie outside the training distribution.
   \item A live paper-trading console that runs both twins on closed Binance candles, and a five-seed study of timeframe-native twins on BTC/USDT and ETH/USDT at 15\,min and 1\,h. The validation grid did not meet the pre-registered bar, so the native recipe was frozen before holdout and live were scored. The conditioned twin beats the blind twin on a majority of seeds in two of eight windows only. Every twin spends 97--100\% of bars at $|a|>0.95$, and the mean holdout Sharpe ratio is negative for both twins.
+  \item A five-seed repetition of the four-hour study, and a check of whether Gaussian clipping puts the native twins on the rails. The four-hour return mean is one seed. The raw policy mean lies outside $[-1,1]$ on nearly every validation bar, and neither a tanh execution nor a five-point discrete action passed the pre-registered bar on every tape.
 \end{itemize}
 
 %======================================================================
@@ -511,6 +514,36 @@ This behaviour follows from the regime layer. The tracker's probabilities are al
 
 The lesson is methodological. Swapping one well-motivated regime component for another, with architecture, data and training unchanged, improved label semantics and reversed the faithfulness verdict. A verdict cannot be carried over to a modified pipeline.
 
+\subsection{Five-seed repetition of the four-hour study}
+\label{sec:fourhseeds}
+Tables~\ref{tab:perf} and~\ref{tab:regime} and Figs.~\ref{fig:equity}--\ref{fig:interv} stay the published single run. They were not overwritten. The same walk-forward recipe was repeated for seeds 42--46 on the frozen candles through 22~Sep 2026 12:00~UTC. Tracker v1, tracker v2 and moment-sorted names were each trained from scratch. Moment-sorted names are assigned on the same causal refits as tracker v1. The budget stayed $\max(8192, 10 N_{\text{train}})$, with raw reward, scale 1 and entropy coefficient 0. Each labelling was scored by the legacy verifier and by verifier v2. The return does not depend on the verifier.
+
+Table~\ref{tab:4hseeds} is the mean and the standard deviation of those five seeds. The tracker-v1 conditioned mean return is $+57.8\%$ (standard deviation 257). Four of the five seeds lose money, $-37.5\%$, $-96.3\%$, $-61.6\%$ and $-30.8\%$. Seed 46 returns $+515\%$. Of its four test folds, fold 2 alone returns $+870\%$, against $+111\%$ for buy-and-hold on that same fold. The other three folds return $+23\%$, $-56\%$ and $+16\%$. The mean Sharpe ratio stays negative, $-0.27$ (0.78). One wealth path dominates the average of the returns and does not dominate the average of the Sharpe ratios. Seed 42 of this repetition returns $-37.5\%$ with Sharpe $-0.22$, next to the published $-29.3\%$ and $-0.16$. The frozen file differs from the published run by one restored close. A single seed moves when that close moves, which is the same fact the five-seed spread is showing.
+
+Tracker v2 loses on every seed. Its conditioned mean return is $-83.6\%$ (17.6) and its mean Sharpe ratio is $-0.96$ (0.47). Moment-sorted names lose on four seeds and gain $+116\%$ on seed 46, so the mean return is $-44.0\%$ (92.3). The blind twin does not see the labels, so its series is the same for every labelling: mean return $-87.1\%$ (7.6), Sharpe $-0.93$ (0.36). Buy-and-hold remains $+156.2\%$ with Sharpe $0.35$.
+
+The mean share of bars with $|a|>0.95$ is 0.71--0.82. That is below the native twins and still a policy that lives on the rails. Ablation passes on 28.9\% (24.8) of bars for tracker v1, 27.7\% (12.9) for tracker v2 and 42.9\% (13.8) for moment-sorted names. Faithfulness does not follow the ablation rate. The legacy all-check rate is 0.7\% (0.8) for tracker v1, 2.4\% (2.9) for tracker v2 and 12.5\% (9.6) for moment-sorted names. Verifier v2 sits at or below the legacy rate in each case: 0.6\%, 2.0\% and 11.5\%.
+
+\begin{table*}[t]
+\caption{Five-seed repetition of the four-hour walk-forward study. Entries are the mean across seeds 42--46, with the standard deviation of those five numbers in parentheses. Return is the out-of-fold total return in percent. Ablation and faithfulness are shares of out-of-fold bars, in percent. Faithfulness is the share passing all three checks. The blind twin does not depend on the labelling. Buy-and-hold is $+156.2\%$ with Sharpe $0.35$ on every seed. These numbers do not replace Table~\ref{tab:perf}.}
+\label{tab:4hseeds}
+\centering
+\footnotesize
+\setlength{\tabcolsep}{3.2pt}
+\begin{tabular}{@{}l rr rr r cc@{}}
+\toprule
+ & \multicolumn{2}{c}{conditioned} & \multicolumn{2}{c}{conditioned} & & \multicolumn{2}{c}{faithfulness}\\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){7-8}
+Labelling & return (\%) & Sharpe & pos.\ s.d. & $|a|>0.95$ & ablation (\%) & legacy & v2\\
+\midrule
+Tracker v1 & $+57.8$ (257) & $-0.27$ (0.78) & 0.88 (0.09) & 0.79 (0.11) & 28.9 (24.8) & 0.7 (0.8) & 0.6 (0.8)\\
+Tracker v2 & $-83.6$ (17.6) & $-0.96$ (0.47) & 0.89 (0.05) & 0.79 (0.09) & 27.7 (12.9) & 2.4 (2.9) & 2.0 (2.6)\\
+Moment-sorted & $-44.0$ (92.3) & $-0.95$ (0.96) & 0.82 (0.06) & 0.71 (0.04) & 42.9 (13.8) & 12.5 (9.6) & 11.5 (9.7)\\
+Blind twin & $-87.1$ (7.6) & $-0.93$ (0.36) & 0.90 (0.04) & 0.82 (0.10) & -- & -- & --\\
+\bottomrule
+\end{tabular}
+\end{table*}
+
 \subsection{Five-seed native twins}
 \label{sec:native}
 The native recipe is the control cell of a one-factor grid. Each cell trains both twins for 500{,}000 steps on the validation split only (window 2{,}000, reward scale 100, two threads, seed 42), on BTC and ETH at 1\,h and 15\,min. The factors, one at a time, are the reward (raw, excess over buy-and-hold, differential Sharpe), the window sampler (uniform, regime-balanced, return-balanced), the entropy coefficient (0.01 or 0.02), a per-episode perturbation of the regime probabilities (0, 0.05 or 0.1), and the tracker (v1 or v2). Returns are not a selection input. A tape would pass only if both twins had position standard deviation above 0.05, both spent less than 80\% of bars at $|a|>0.95$, and ablation moved the conditioned agent on at least 10\% of bars. The score of a cell is the mean, over the four tapes, of the summed relative shortfalls from those three bars.
@@ -675,16 +708,48 @@ ETH 15\,min & live & crisis & 0.9\% & $+0.74$ (0.38) & $+0.53$ (0.87) & $-1.7$ (
 
 On the 1\,h tapes the v2 tracker, which was not selected, does change the dwell labels. After burn-in on BTC, v1 issues no bull bar and the dwell label is calm on the whole series. v2 issues bull on 3.7\% of post-burn bars and about 0.35 switches per year; bear and crisis dwell runs are still absent, while the argmax of $p_t$ is bull, bear, calm and crisis on 11.6\%, 11.3\%, 69.7\% and 7.4\% of those bars. On ETH 1\,h, v1 and v2 both leave about 5.4\% bull and 94.7\% bear. The mean matched $\Wtwo^2$ on BTC 1\,h falls from $4.8\times 10^{-5}$ to $2.7\times 10^{-5}$. The trading tables above use v1 because that is what the validation score selected. Agreement between $\argmax p_t$ and the dwell label on the holdout is 0.82 (BTC 1\,h), 0.74 (BTC 15\,min), 0.52 (ETH 1\,h) and 0.71 (ETH 15\,min).
 
+\subsection{Clipping and the action head}
+\label{sec:clip}
+The validation weights for the native recipe were not in the repository, so seed 42 was retrained on the validation split with that recipe and the diagnostic was run on those weights. The final-stage weights and the rejected entropy-0.05 run were not used. For each of the eight twins the raw Gaussian mean was recorded on every validation bar, before the clip to $[-1,1]$.
+
+Table~\ref{tab:sat} is that check. On every tape and both twins the raw mean lies outside $[-1,1]$ on 95.6--99.8\% of bars, and the executed position lies beyond 0.95 on 95.8--99.8\% of bars. The mean absolute change in the executed position is between 0.003 and 0.062 per bar. The rule fixed before this table was read treats clipping as the cause only if at least six of the eight rows have both shares at or above 0.50 and 0.80. All eight rows clear both bars. The policy is asking for a position outside the legal interval, and the clip is what leaves it on the rail.
+
+\begin{table}[t]
+\caption{Validation-split saturation of the native twins, seed 42, retrained because the validation weights had not been kept. Share of bars whose raw Gaussian mean has absolute value above 1, share whose executed position has absolute value above 0.95, and the mean absolute change in the executed position.}
+\label{tab:sat}
+\centering
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}ll l ccc@{}}
+\toprule
+Asset & Tape & Twin & $|u|>1$ & $|a|>0.95$ & mean $|\Delta a|$\\
+\midrule
+BTC & 1\,h & cond. & 0.956 & 0.958 & 0.062\\
+BTC & 1\,h & blind & 0.989 & 0.990 & 0.006\\
+BTC & 15\,min & cond. & 0.998 & 0.998 & 0.013\\
+BTC & 15\,min & blind & 0.998 & 0.998 & 0.003\\
+ETH & 1\,h & cond. & 0.980 & 0.982 & 0.030\\
+ETH & 1\,h & blind & 0.990 & 0.990 & 0.020\\
+ETH & 15\,min & cond. & 0.995 & 0.995 & 0.004\\
+ETH & 15\,min & blind & 0.995 & 0.996 & 0.005\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Because that check said clipping was the cause, two other action heads were screened on the validation split only, at seed 42, with the clipped Gaussian as the control. Both twins in a run used the same head. The reward, the seed and the training budget were unchanged. \texttt{tanh\_env} executes $a=\tanh(u)$. \texttt{discrete5} chooses among $\{-1,-0.5,0,0.5,1\}$, and the verifier scores the expected position. The pass bar was the one already used for the native grid: both twins with position standard deviation above 0.05, both with a share of bars at $|a|>0.95$ below 0.80, and ablation on at least 10\% of bars, on all four tapes. Returns were not an input.
+
+No head passed. The clipped Gaussian and the tanh execution stayed above the 0.80 rail share on every tape. Under tanh the BTC conditioned twins are essentially constant (position standard deviation about 0, ablation 0). The five-point head passes BTC 15\,min, ETH 1\,h and ETH 15\,min. It fails BTC 1\,h because the conditioned position is constant at 0 (standard deviation 0, ablation 0). The frozen choice is that none of the three heads is selected. Holdout and live were not scored.
+
 %======================================================================
 \section{Limitations and Future Work}
 %======================================================================
 \emph{Within-window smoothing.} Each HMM is fitted only on rows before its window, but decoding uses Viterbi and forward--backward over the whole 42-bar window. The probability at a bar therefore conditions on up to 41 later bars of the same window, and the dwell merge similarly needs a run to finish before it can be judged. Labels are never revised after their window closes, but they are not strictly filtered. A forward-only (filtered) posterior and an online dwell rule would remove this leakage. Until then, the per-regime results should be read with this caveat. The native tapes use the same decoder inside each weekly refit window.
 
-\emph{Template starvation.} Non-injective matching with a frozen unmatched template removes the bull regime on the four-hour tracker (Table~\ref{tab:labels}). One-to-one matching is not a complete fix either (Sec.~\ref{sec:identity}). Template birth and death, and a longer or multi-cycle burn-in, are natural next steps. Tracker v2 was scored on the validation split and was not selected.
+\emph{Template starvation.} Non-injective matching with a frozen unmatched template removes the bull regime on the four-hour tracker (Table~\ref{tab:labels}). One-to-one matching is not a complete fix either (Sec.~\ref{sec:identity}). Template birth and death, and a longer or multi-cycle burn-in, are natural next steps. Tracker v2 was scored on the native validation split and was not selected. On the five-seed four-hour repetition it loses on every seed (Section~\ref{sec:fourhseeds}).
 
 \emph{Counterfactual design.} One-hot interventions test the four-hour policy off its training distribution, because template starvation leaves some of those inputs unseen. Verifier v2 draws counterfactual regime vectors from the training distribution and rejects a flat sensitivity curve. On the five-seed twins that rate is at or below the legacy rate, and both are small (Fig.~\ref{fig:v2faith}). The agents were not trained with a faithfulness penalty.
 
-\emph{Statistics.} The i.i.d.\ bootstrap ignores the serial dependence of four-hour returns. A stationary block bootstrap would give wider intervals for Tables~\ref{tab:folds} and~\ref{tab:perf}. Those tables and Table~\ref{tab:regime} are the four-hour study and were not recomputed. The native comparison uses five seeds on BTC/USDT and ETH/USDT. It reports the standard deviation of the five numbers and the share of seeds on which the conditioned log-return sum is larger.
+\emph{Statistics.} The i.i.d.\ bootstrap ignores the serial dependence of four-hour returns. A stationary block bootstrap would give wider intervals for Tables~\ref{tab:folds} and~\ref{tab:perf}. Tables~\ref{tab:folds}--\ref{tab:regime} remain the published single run. Section~\ref{sec:fourhseeds} repeats that recipe for five seeds and does not replace those tables. The repetition uses a circular block bootstrap with block length $\lceil\sqrt{n}\rceil$ and 1{,}000 resamples. The native comparison uses five seeds on BTC/USDT and ETH/USDT. It reports the standard deviation of the five numbers and the share of seeds on which the conditioned log-return sum is larger.
 
 \emph{Live evidence.} The live window is 21 days, from 22~Sep to 13~Oct 2026, and buy-and-hold lost money on every native tape. The window can show the direction of a gap. It cannot establish one. Paper fills happen at the candle close with a flat 10-bp cost, ignoring slippage, latency and the funding cost of short positions. Across the five seeds the mean share of bars with $|a|>0.95$ is 97--100\% for every twin. The validation grid did not meet the pre-registered bar, and holdout and live were not used to choose the recipe. The console's start-up labelling is faster than the tracker, but it decodes its whole window at once, which smooths within the window over hundreds of candles. Its on-screen wealth curves are illustrative, and every live number reported here comes from the frozen study and the tracker.
 
@@ -695,7 +760,9 @@ On the 1\,h tapes the v2 tracker, which was not selected, does change the dwell 
 %======================================================================
 We built a regime-conditioned RL trading agent with a Wasserstein identity tracker and a suite that intervenes on the regime input of every decision. On BTC/USDT four-hour data the tracker kept a stable volatility ordering across 292 causal refits and starved the bull template. The conditioned agent used those labels: removing them changed its position on 60.7\% of the 11{,}430 out-of-fold bars, and it reduced exposure in bear and crisis segments. Only 0.1\% of bars passed all three checks, against 33.5\% for an archived moment-sorted labelling. The out-of-fold Sharpe ratios are $-0.16$ for the conditioned agent, $-1.12$ for the blind twin and $0.35$ for buy-and-hold. These four-hour numbers were not recomputed here.
 
-The native-twin result is five seeds of the frozen recipe on BTC/USDT and ETH/USDT, at 15\,min and 1\,h. The validation grid did not meet the pre-registered bar, so \texttt{configs/final.yaml} stayed the native recipe: raw reward, scale 100, entropy coefficient 0.01, uniform 2{,}000-bar windows, tracker v1, no perturbation and no faithfulness regularizer. The baseline had the lowest mean deficit, about 0.985. Holdout and live were scored once and were not used to choose the recipe. Every twin spends 97--100\% of bars at $|a|>0.95$ on average across the five seeds. The ETH 1\,h blind twin and the BTC 15-min live blind twin are flat, and the mean holdout Sharpe ratio is negative for both twins. The conditioned twin beats the blind twin on a majority of seeds in two of eight windows only, BTC 1\,h holdout ($+2.8\%$ against $-26.1\%$, beats share 0.80) and ETH 1\,h live ($+0.4\%$ against $-5.5\%$, beats share 0.80). Table~\ref{tab:v2seeds} lists the other six windows, including BTC 15\,min live, where the blind position standard deviation is 0 on all five seeds, and ETH 1\,h holdout, where the conditioned mean is one large path (beats share 0.20). The conditioned agent does not win overall. The agents are not regularized, and both faithfulness rates are small. A faithfulness verdict has to be recomputed when the regime layer or the training recipe changes.
+The native-twin result is five seeds of the frozen recipe on BTC/USDT and ETH/USDT, at 15\,min and 1\,h. The validation grid did not meet the pre-registered bar, so \texttt{configs/final.yaml} stayed the native recipe: raw reward, scale 100, entropy coefficient 0.01, uniform 2{,}000-bar windows, tracker v1, no perturbation and no faithfulness regularizer. The baseline had the lowest mean deficit, about 0.985. Holdout and live were scored once and were not used to choose the recipe. Every twin spends 97--100\% of bars at $|a|>0.95$ on average across the five seeds. The ETH 1\,h blind twin and the BTC 15-min live blind twin are flat, and the mean holdout Sharpe ratio is negative for both twins. The conditioned twin beats the blind twin on a majority of seeds in two of eight windows only, BTC 1\,h holdout ($+2.8\%$ against $-26.1\%$, beats share 0.80) and ETH 1\,h live ($+0.4\%$ against $-5.5\%$, beats share 0.80). Table~\ref{tab:v2seeds} lists the other six windows, including BTC 15\,min live, where the blind position standard deviation is 0 on all five seeds, and ETH 1\,h holdout, where the conditioned mean is one large path (beats share 0.20). The conditioned agent does not win overall. The agents are not regularized, and both faithfulness rates are small.
+
+The four-hour recipe was then repeated on seeds 42--46. Tracker v1's conditioned mean return of $+57.8\%$ is seed 46 at $+515\%$, from one test fold at $+870\%$. The other four seeds lose money, and the mean Sharpe ratio is $-0.27$. Tracker v2 and moment-sorted names lose on average ($-83.6\%$ and $-44.0\%$). Faithfulness stays under 3\% for both trackers and is 12.5\% for moment-sorted names. On the native validation twins the raw Gaussian mean is outside $[-1,1]$ on 95.6--99.8\% of bars, so the clip is what pins the executed position to the rail. Neither a tanh execution nor a five-point discrete action passed the pre-registered bar on all four tapes, and holdout and live were not scored for those heads. A faithfulness verdict has to be recomputed when the regime layer or the training recipe changes.
 
 
 \clearpage
