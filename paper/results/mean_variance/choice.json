@@ -1,0 +1,49 @@
+{
+  "risk_aversion": "none",
+  "reward_mode": null,
+  "screen_seed": 42,
+  "split": "validation: train before 2024-09-22T16:00Z, score 2024-09-22T16:00Z to 2025-09-22T16:00Z",
+  "base_config": "configs/final.yaml",
+  "rule": "all four tapes: both twins position std > 0.05, both twins share |a|>0.95 < 0.80, conditioned ablation >= 0.10; among passing lambdas highest minimum ablation, tie to smaller lambda; returns and Sharpe not used",
+  "candidates": [
+    2.0,
+    5.0,
+    10.0
+  ],
+  "passed": [],
+  "rejected": [
+    {
+      "risk_aversion": 2.0,
+      "n_tapes": 4,
+      "n_tapes_passed": 0,
+      "passed": false,
+      "min_ablation": 0.005936073059360731,
+      "min_position_std": 0.003892035349304921,
+      "max_extreme_share": 0.9998858447488584
+    },
+    {
+      "risk_aversion": 5.0,
+      "n_tapes": 4,
+      "n_tapes_passed": 0,
+      "passed": false,
+      "min_ablation": 0.0,
+      "min_position_std": 0.0,
+      "max_extreme_share": 1.0
+    },
+    {
+      "risk_aversion": 10.0,
+      "n_tapes": 4,
+      "n_tapes_passed": 0,
+      "passed": false,
+      "min_ablation": 0.0,
+      "min_position_std": 0.0,
+      "max_extreme_share": 1.0
+    }
+  ],
+  "control_raw_seed42": {
+    "n_tapes_passed": 0,
+    "min_ablation": 0.007676940639269407,
+    "min_position_std": 0.06011326233599274
+  },
+  "holdout_live": "not scored: no lambda passed, so no final-split models were trained"
+}
