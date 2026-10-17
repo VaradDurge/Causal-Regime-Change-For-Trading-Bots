@@ -105,3 +105,34 @@ No mode passed. `gaussian_clip` and `tanh_env` missed the extreme-share bar on e
 - `reward_mode: mean_variance` with `risk_aversion` (default reward stays `raw`, `risk_aversion` defaults to 0). The reward is `a*r - c*|a - a_prev| - risk_aversion * a^2 * vol_20^2`, scaled by `reward_scale`. `vol_20` is the volatility already known at the decision bar. A reward linear in the position is maximised at a rail, so this mode gives an interior optimum `a* = E[r] / (2 * risk_aversion * vol^2)` instead of forcing variety.
 - `audit_many(..., bound_aware=True)` reports bars where the position limit makes the required counterfactual move impossible (`cf_untestable`) and the all-check rate on the rest (`faith_rate_testable`). `passed` keeps the original rule, and the original rate is still the headline.
 - `paper/scripts/bound_aware_audit.py` re-scores the published four-hour run from its saved pass flags: 7,040 of 11,430 bars are untestable, and the all-check rate on the 4,390 testable bars is 0.25% (11 bars overall).
+
+## Causal regime inputs (breaks the tracker default above)
+
+The published tracker decoded each 42-bar window with forward-backward smoothing (`predict_proba`), so the probability at bar `t` had already seen later bars of its window, including `next_ret`, the return the agent is paid on. Defaults now change on purpose; the old behavior is still reachable, for audits only.
+
+- `track`, `track_v2`, `label_span` and `decode` return filtered probabilities and online-dwell labels by default. `posterior="smoothed"` keeps the old decoder. Each window's filter first runs over `WARM_STRIDES * stride` earlier rows, so it does not restart from the fit's start vector.
+- W2 matching compares components in units of the burn-in standard deviation (`scale="burn"`), so per-state mean returns are no longer drowned by trend. `scale="raw"` is the old rule.
+- `BURN` is 1,080 bars, fold 0's training window, so naming the templates costs no test bar.
+- `LEGACY_V1` and `LEGACY_V2` hold the published settings. `rerun_4h.py`, `tracker_diagnostics.py` and `tracker_one_to_one.py` pass them, so they still reproduce the published numbers.
+- `crta.pipeline` labels with `track_v2(burn=min_train)` and scores the baselines next to the twins.
+- `timeframe_study.py` and `run_experiment.py` key their label caches on `LABELLER_VERSION`, so labels cached before this change are rebuilt.
+- New: `crta.dating` (hindsight 20% bull/bear dating and label quality), `crta.baselines`, `crta.predictability`, `crta.leakage`.
+- New scripts: `leakage_audit.py` (published weights under published, one-bar-lagged and filtered probabilities), `label_quality.py`, `predictability_study.py`, and `causal_4h.py`, the five-seed walk-forward study that replaces the published four-hour run. Outputs go to `paper/results/causal/` and `paper/results/causal_4h/`.
+
+## Tier 2: verifier v3, regularizer, statistics and labels
+
+- Verifier v3 (`audit_many_v3`): ablation replaces `p_t` by the training-mean probability vector instead of zeros, which the policy never saw. The risk order is fixed from the training fold by `regime_order`, the mean-variance position mu/sigma^2 of the next return per regime, so the counterfactual and the sweep test what a risk-aware reward pays for. A bar is faithful only if it is testable. `reference_weights` builds faithful, ignoring and inverted reference policies from the same order. Legacy and v2 are unchanged.
+- `FaithfulPPO` applies the hinge to the raw Gaussian mean (or tanh of it for `tanh_env`) instead of the mean clamped to [-1, 1], so a violation beyond the limits still has a gradient.
+- `eval.bootstrap_ci` is a circular block bootstrap (block `ceil(sqrt(n))`; `block=1` is the old i.i.d. one). `crta.stats` adds the probabilistic and deflated Sharpe ratios and the median and IQR across seeds.
+- Labels: `track_v2(semantic_guard=True)` is the new default. Templates are re-named by their moments after every rebirth and update, and a rebirth takes the component the moments name, so the crisis template can no longer drift calmer than calm. `crta.data.drawdown` and `HMM_COLS_DD` add the distance below the 90-day high as an HMM input. `label_selection.py` chose the labeller on fold 1's training span by a rule written before the run; the guard with the drawdown input was the only candidate whose names matched their moments, and the pipeline now uses it. `LABELLER_VERSION` is `filtered-scaled-guard-1`.
+- The filter warm-up listed in Tier 2 was already part of the causal fix.
+- `causal_4h.py --labeller guard_dd` (the default) writes the canonical study to `paper/results/causal_4h_guard_dd/`, with verifier v3, the v3 reference check, phase splits, seed medians and IQRs, and deflated Sharpe ratios. `--labeller tier1` re-tables `paper/results/causal_4h/`.
+- `train_ppo` takes `device`, and `rerun_4h.walk_forward_seed` reads `CRTA_DEVICE`. CPU stays the default because it was about twice as fast as the GPU for this policy.
+
+## Tier 3: daily long/flat task, monotone head, alternative labellers, native rerun
+
+- `crta.daily`: one decision per daily close (the 4h bar opening 20:00 UTC), long/flat positions in [0, 1], daily features plus 2/4/8-week momentum standardised on each training fold, and the reward `a*r - c|a - a_prev| - lambda a^2 sigma^2` with the 20-day volatility known at the decision. Daily folds cut on the same calendar instants as the 4h folds. The regime block is the 4h labeller's filtered probability at the decision bar.
+- `crta.policies.PositionPolicy`: actor-critic heads `clip01`, `tanh01` (tanh with the mean-variance reward, never tested before) and `beta` (Beta policy with a learned concentration). `monotone=True` builds z = base(features, position) + sum_g w_g p_g, where the base network never sees the regime block and the weights fall along the training fold's risk order, so the head is faithful by construction.
+- `crta.jump` (statistical jump model with online forward inference) and `crta.wkmeans` (Wasserstein k-means on sorted rolling return windows) are causal walk-forward labellers named by moment sorting. `label_alternatives.py` picks each family's setting on the early span with the rule of `label_selection.py`.
+- `daily_study.py`: a 3-head x 3-risk-aversion x 3-twin x 5-seed grid on the guard_dd labels, a cell chosen on folds 0-1 by a non-return bar fixed in advance, the report on folds 2-3 beside the baselines with seed medians, IQRs and deflated Sharpe ratios, and the chosen cell rerun with the jump-model and Wasserstein labels. Verifier v3 thresholds are halved for [0, 1] positions.
+- `native_filtered.py`: the five-seed native twins rerun under the frozen recipe with filtered probabilities. Rebuilding the labels overwrites the cached `paper/results/tf/*_labels.parquet`; the smoothed versions remain in git history.

@@ -404,7 +404,7 @@ class TradeEnv(gym.Env):
         return obs, float(reward), terminated, False, {}
 
 
-def _ppo(env: TradeEnv, seed: int, ent_coef: float = 0.0, cls=None):
+def _ppo(env: TradeEnv, seed: int, ent_coef: float = 0.0, cls=None, device: str = "cpu"):
     from stable_baselines3 import PPO
 
     algo = cls or PPO
@@ -413,7 +413,7 @@ def _ppo(env: TradeEnv, seed: int, ent_coef: float = 0.0, cls=None):
         "MlpPolicy",
         env,
         seed=seed,
-        device="cpu",
+        device=device,
         verbose=0,
         n_steps=n_steps,
         batch_size=min(64, n_steps),
@@ -511,7 +511,9 @@ def train_ppo(
     tracker_kwargs: dict | None = None,
     action_mode: str = "gaussian_clip",
     risk_aversion: float = 0.0,
+    device: str = "cpu",
 ):
+    """Train one twin. ``device`` is passed to Stable-Baselines3 ("cpu", "cuda" or "auto")."""
     import os
 
     import torch
@@ -545,12 +547,13 @@ def train_ppo(
 
         cls = FaithfulPPO
     start_ent = float(ent_coef if ent_coef_start is None else ent_coef_start)
-    model = _ppo(env, seed, ent_coef=start_ent, cls=cls)
+    model = _ppo(env, seed, ent_coef=start_ent, cls=cls, device=device)
     if regularize:
         crisis, bull = _regime_banks(frame, prob_temperature, prob_floor)
         model.crta_crisis_bank = crisis
         model.crta_bull_bank = bull
         model.crta_faith_coef = float(faithfulness_reg_coef)
+        model.crta_action_mode = str(action_mode)
         model.crta_untestable = [
             name
             for name, bank in (("crisis", crisis), ("bull", bull))

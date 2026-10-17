@@ -1,0 +1,620 @@
+{
+  "chosen": {
+    "jump": "jump_l20",
+    "wkmeans": "wk_w42"
+  },
+  "candidates": {
+    "jump_l20": {
+      "selection": {
+        "bars": [
+          1080,
+          3937
+        ],
+        "quality": {
+          "n": 2857,
+          "bull_bars": 1256,
+          "bear_bars": 1601,
+          "label_share": {
+            "bull": 0.15645782289114454,
+            "bear": 0.4515225761288064,
+            "calm": 0.3769688484424221,
+            "crisis": 0.015050752537626881
+          },
+          "bull_labelled_bull": 0.24044585987261147,
+          "bull_labelled_calm": 0.42038216560509556,
+          "bear_labelled_bear_or_crisis": 0.5665209244222361,
+          "bear_labelled_calm": 0.34291068082448467,
+          "bear_labelled_bull": 0.0905683947532792,
+          "confusion": {
+            "bull": {
+              "bull": 302,
+              "bear": 426,
+              "calm": 528,
+              "crisis": 0
+            },
+            "bear": {
+              "bull": 145,
+              "bear": 864,
+              "calm": 549,
+              "crisis": 43
+            }
+          }
+        },
+        "mean_vol": {
+          "bull": 0.01285971143618725,
+          "bear": 0.0136833902114813,
+          "calm": 0.012347650526947888,
+          "crisis": 0.022687585448095557
+        },
+        "mean_return": {
+          "bull": 0.00021432574761416588,
+          "bear": -0.0003131510743239887,
+          "calm": -0.00026745545639216516,
+          "crisis": 0.0011270169413218048
+        },
+        "semantic_ok": true,
+        "balanced_recall": 0.4034833921474238
+      },
+      "evaluation": {
+        "bars": [
+          3937,
+          12510
+        ],
+        "quality": {
+          "n": 8573,
+          "bull_bars": 5875,
+          "bear_bars": 2698,
+          "label_share": {
+            "bull": 0.16808585092733,
+            "bear": 0.24810451417240173,
+            "calm": 0.5728449784206229,
+            "crisis": 0.010964656479645398
+          },
+          "bull_labelled_bull": 0.16,
+          "bull_labelled_calm": 0.6333617021276595,
+          "bear_labelled_bear_or_crisis": 0.3732394366197183,
+          "bear_labelled_calm": 0.44106745737583397,
+          "bear_labelled_bull": 0.18569310600444774,
+          "confusion": {
+            "bull": {
+              "bull": 940,
+              "bear": 1169,
+              "calm": 3721,
+              "crisis": 45
+            },
+            "bear": {
+              "bull": 501,
+              "bear": 958,
+              "calm": 1190,
+              "crisis": 49
+            }
+          }
+        },
+        "mean_vol": {
+          "bull": 0.010030391399518916,
+          "bear": 0.008134585601346998,
+          "calm": 0.00843941433454497,
+          "crisis": 0.023090440803122093
+        },
+        "mean_return": {
+          "bull": 0.00014262787894512576,
+          "bear": 0.00011930126407718503,
+          "calm": 0.00016860870066956544,
+          "crisis": 0.0021985868761180646
+        },
+        "semantic_ok": true,
+        "balanced_recall": 0.26661971830985914
+      }
+    },
+    "jump_l80": {
+      "selection": {
+        "bars": [
+          1080,
+          3937
+        ],
+        "quality": {
+          "n": 2857,
+          "bull_bars": 1256,
+          "bear_bars": 1601,
+          "label_share": {
+            "bull": 0.17535876793839691,
+            "bear": 0.3783689184459223,
+            "calm": 0.4427721386069303,
+            "crisis": 0.0035001750087504373
+          },
+          "bull_labelled_bull": 0.1449044585987261,
+          "bull_labelled_calm": 0.36863057324840764,
+          "bear_labelled_bear_or_crisis": 0.29981261711430357,
+          "bear_labelled_calm": 0.5009369144284822,
+          "bear_labelled_bull": 0.19925046845721425,
+          "confusion": {
+            "bull": {
+              "bull": 182,
+              "bear": 611,
+              "calm": 463,
+              "crisis": 0
+            },
+            "bear": {
+              "bull": 319,
+              "bear": 470,
+              "calm": 802,
+              "crisis": 10
+            }
+          }
+        },
+        "mean_vol": {
+          "bull": 0.013742398569534608,
+          "bear": 0.014009214277467595,
+          "calm": 0.012170274107310943,
+          "crisis": null
+        },
+        "mean_return": {
+          "bull": 9.528740459836524e-05,
+          "bear": -0.0002018609947456377,
+          "calm": -0.00032777638635830163,
+          "crisis": null
+        },
+        "semantic_ok": false,
+        "balanced_recall": 0.22235853785651483
+      },
+      "evaluation": {
+        "bars": [
+          3937,
+          12510
+        ],
+        "quality": {
+          "n": 8573,
+          "bull_bars": 5875,
+          "bear_bars": 2698,
+          "label_share": {
+            "bull": 0.08340137641432405,
+            "bear": 0.20307943543683657,
+            "calm": 0.7109529919514755,
+            "crisis": 0.0025661961973638165
+          },
+          "bull_labelled_bull": 0.060085106382978724,
+          "bull_labelled_calm": 0.7421276595744681,
+          "bear_labelled_bear_or_crisis": 0.22275759822090438,
+          "bear_labelled_calm": 0.6430689399555226,
+          "bear_labelled_bull": 0.134173461823573,
+          "confusion": {
+            "bull": {
+              "bull": 353,
+              "bear": 1162,
+              "calm": 4360,
+              "crisis": 0
+            },
+            "bear": {
+              "bull": 362,
+              "bear": 579,
+              "calm": 1735,
+              "crisis": 22
+            }
+          }
+        },
+        "mean_vol": {
+          "bull": 0.009090256779898066,
+          "bear": 0.008420514041600945,
+          "calm": 0.008820453815908862,
+          "crisis": null
+        },
+        "mean_return": {
+          "bull": -0.0004928190397253726,
+          "bear": 0.00013916264447702323,
+          "calm": 0.00026343704193787287,
+          "crisis": null
+        },
+        "semantic_ok": false,
+        "balanced_recall": 0.14142135230194156
+      }
+    },
+    "jump_l320": {
+      "selection": {
+        "bars": [
+          1080,
+          3937
+        ],
+        "quality": {
+          "n": 2857,
+          "bull_bars": 1256,
+          "bear_bars": 1601,
+          "label_share": {
+            "bull": 0.12250612530626531,
+            "bear": 0.18970948547427371,
+            "calm": 0.38851942597129857,
+            "crisis": 0.29926496324816243
+          },
+          "bull_labelled_bull": 0.19187898089171976,
+          "bull_labelled_calm": 0.3057324840764331,
+          "bear_labelled_bear_or_crisis": 0.47845096814490945,
+          "bear_labelled_calm": 0.45346658338538415,
+          "bear_labelled_bull": 0.06808244846970643,
+          "confusion": {
+            "bull": {
+              "bull": 241,
+              "bear": 36,
+              "calm": 384,
+              "crisis": 595
+            },
+            "bear": {
+              "bull": 109,
+              "bear": 506,
+              "calm": 726,
+              "crisis": 260
+            }
+          }
+        },
+        "mean_vol": {
+          "bull": 0.013641350555162484,
+          "bear": 0.011939530049307033,
+          "calm": 0.013203532366004455,
+          "crisis": 0.013768691543019108
+        },
+        "mean_return": {
+          "bull": 0.0006772876713675709,
+          "bear": -0.0011609806689181277,
+          "calm": -0.0005739463908103972,
+          "crisis": 0.0005631956217807939
+        },
+        "semantic_ok": true,
+        "balanced_recall": 0.3351649745183146
+      },
+      "evaluation": {
+        "bars": [
+          3937,
+          12510
+        ],
+        "quality": {
+          "n": 8573,
+          "bull_bars": 5875,
+          "bear_bars": 2698,
+          "label_share": {
+            "bull": 0.0012830980986819082,
+            "bear": 0.21311092966289513,
+            "calm": 0.785605972238423,
+            "crisis": 0.0
+          },
+          "bull_labelled_bull": 0.0,
+          "bull_labelled_calm": 0.7775319148936171,
+          "bear_labelled_bear_or_crisis": 0.1927353595255745,
+          "bear_labelled_calm": 0.8031875463306153,
+          "bear_labelled_bull": 0.00407709414381023,
+          "confusion": {
+            "bull": {
+              "bull": 0,
+              "bear": 1307,
+              "calm": 4568,
+              "crisis": 0
+            },
+            "bear": {
+              "bull": 11,
+              "bear": 520,
+              "calm": 2167,
+              "crisis": 0
+            }
+          }
+        },
+        "mean_vol": {
+          "bull": null,
+          "bear": 0.00840320454759307,
+          "calm": 0.008890637118986891,
+          "crisis": null
+        },
+        "mean_return": {
+          "bull": null,
+          "bear": 0.0004178932313423282,
+          "calm": 0.00010590273552748795,
+          "crisis": null
+        },
+        "semantic_ok": false,
+        "balanced_recall": 0.09636767976278725
+      }
+    },
+    "wk_w42": {
+      "selection": {
+        "bars": [
+          1080,
+          3937
+        ],
+        "quality": {
+          "n": 2857,
+          "bull_bars": 1256,
+          "bear_bars": 1601,
+          "label_share": {
+            "bull": 0.05110255512775639,
+            "bear": 0.12670633531676584,
+            "calm": 0.8116905845292265,
+            "crisis": 0.010500525026251312
+          },
+          "bull_labelled_bull": 0.11624203821656051,
+          "bull_labelled_calm": 0.7460191082802548,
+          "bear_labelled_bear_or_crisis": 0.136789506558401,
+          "bear_labelled_calm": 0.863210493441599,
+          "bear_labelled_bull": 0.0,
+          "confusion": {
+            "bull": {
+              "bull": 146,
+              "bear": 143,
+              "calm": 937,
+              "crisis": 30
+            },
+            "bear": {
+              "bull": 0,
+              "bear": 219,
+              "calm": 1382,
+              "crisis": 0
+            }
+          }
+        },
+        "mean_vol": {
+          "bull": 0.016112135621545492,
+          "bear": 0.018912881123928475,
+          "calm": 0.01193674346833615,
+          "crisis": 0.02645691019660915
+        },
+        "mean_return": {
+          "bull": 0.0003446946894962965,
+          "bear": -0.0018505966810657222,
+          "calm": -3.72752793709673e-05,
+          "crisis": 0.005276095732955592
+        },
+        "semantic_ok": true,
+        "balanced_recall": 0.12651577238748074
+      },
+      "evaluation": {
+        "bars": [
+          3937,
+          12510
+        ],
+        "quality": {
+          "n": 8573,
+          "bull_bars": 5875,
+          "bear_bars": 2698,
+          "label_share": {
+            "bull": 0.27703254403359384,
+            "bear": 0.06485477662428554,
+            "calm": 0.656946226525137,
+            "crisis": 0.001166452816983553
+          },
+          "bull_labelled_bull": 0.2418723404255319,
+          "bull_labelled_calm": 0.7005957446808511,
+          "bear_labelled_bear_or_crisis": 0.08450704225352113,
+          "bear_labelled_calm": 0.5618977020014826,
+          "bear_labelled_bull": 0.3535952557449963,
+          "confusion": {
+            "bull": {
+              "bull": 1421,
+              "bear": 338,
+              "calm": 4116,
+              "crisis": 0
+            },
+            "bear": {
+              "bull": 954,
+              "bear": 218,
+              "calm": 1516,
+              "crisis": 10
+            }
+          }
+        },
+        "mean_vol": {
+          "bull": 0.01125373457882502,
+          "bear": 0.01679474112480971,
+          "calm": 0.0069520511249909454,
+          "crisis": null
+        },
+        "mean_return": {
+          "bull": 0.0002617105279125015,
+          "bear": 0.00024560564746724375,
+          "calm": 0.00012450390610173743,
+          "crisis": null
+        },
+        "semantic_ok": false,
+        "balanced_recall": 0.16318969133952652
+      }
+    },
+    "wk_w180": {
+      "selection": {
+        "bars": [
+          1080,
+          3937
+        ],
+        "quality": {
+          "n": 2857,
+          "bull_bars": 1256,
+          "bear_bars": 1601,
+          "label_share": {
+            "bull": 0.0,
+            "bear": 0.1641582079103955,
+            "calm": 0.8358417920896045,
+            "crisis": 0.0
+          },
+          "bull_labelled_bull": 0.0,
+          "bull_labelled_calm": 0.8686305732484076,
+          "bear_labelled_bear_or_crisis": 0.18988132417239226,
+          "bear_labelled_calm": 0.8101186758276078,
+          "bear_labelled_bull": 0.0,
+          "confusion": {
+            "bull": {
+              "bull": 0,
+              "bear": 165,
+              "calm": 1091,
+              "crisis": 0
+            },
+            "bear": {
+              "bull": 0,
+              "bear": 304,
+              "calm": 1297,
+              "crisis": 0
+            }
+          }
+        },
+        "mean_vol": {
+          "bull": null,
+          "bear": 0.012901031619813761,
+          "calm": 0.013242573847104235,
+          "crisis": null
+        },
+        "mean_return": {
+          "bull": null,
+          "bear": -0.0006927358977398229,
+          "calm": -9.332325741706894e-05,
+          "crisis": null
+        },
+        "semantic_ok": false,
+        "balanced_recall": 0.09494066208619613
+      },
+      "evaluation": {
+        "bars": [
+          3937,
+          12510
+        ],
+        "quality": {
+          "n": 8573,
+          "bull_bars": 5875,
+          "bear_bars": 2698,
+          "label_share": {
+            "bull": 0.06590458415957075,
+            "bear": 0.36894902601189783,
+            "calm": 0.5651463898285314,
+            "crisis": 0.0
+          },
+          "bull_labelled_bull": 0.0585531914893617,
+          "bull_labelled_calm": 0.6051063829787234,
+          "bear_labelled_bear_or_crisis": 0.43995552260934023,
+          "bear_labelled_calm": 0.4781319495922906,
+          "bear_labelled_bull": 0.08191252779836916,
+          "confusion": {
+            "bull": {
+              "bull": 344,
+              "bear": 1976,
+              "calm": 3555,
+              "crisis": 0
+            },
+            "bear": {
+              "bull": 221,
+              "bear": 1187,
+              "calm": 1290,
+              "crisis": 0
+            }
+          }
+        },
+        "mean_vol": {
+          "bull": 0.011423754402385083,
+          "bear": 0.010363349010652244,
+          "calm": 0.007458994562471626,
+          "crisis": null
+        },
+        "mean_return": {
+          "bull": 0.0006135203686558064,
+          "bear": -2.8392127586792167e-05,
+          "calm": 0.0002553457892387876,
+          "crisis": null
+        },
+        "semantic_ok": false,
+        "balanced_recall": 0.24925435704935098
+      }
+    },
+    "guard_dd": {
+      "selection": {
+        "bars": [
+          1080,
+          3937
+        ],
+        "quality": {
+          "n": 2857,
+          "bull_bars": 1256,
+          "bear_bars": 1601,
+          "label_share": {
+            "bull": 0.14700735036751839,
+            "bear": 0.42737136856842844,
+            "calm": 0.35001750087504374,
+            "crisis": 0.07560378018900946
+          },
+          "bull_labelled_bull": 0.1823248407643312,
+          "bull_labelled_calm": 0.23805732484076433,
+          "bear_labelled_bear_or_crisis": 0.4428482198625859,
+          "bear_labelled_calm": 0.43785134291068084,
+          "bear_labelled_bull": 0.1193004372267333,
+          "confusion": {
+            "bull": {
+              "bull": 229,
+              "bear": 515,
+              "calm": 299,
+              "crisis": 213
+            },
+            "bear": {
+              "bull": 191,
+              "bear": 706,
+              "calm": 701,
+              "crisis": 3
+            }
+          }
+        },
+        "mean_vol": {
+          "bull": 0.013754542037664843,
+          "bear": 0.012807674330999086,
+          "calm": 0.012825537433180583,
+          "crisis": 0.015894605228832674
+        },
+        "mean_return": {
+          "bull": 0.0004434471320626291,
+          "bear": -8.977553304884276e-05,
+          "calm": -0.0007461132124172743,
+          "crisis": 0.0005635753150540254
+        },
+        "semantic_ok": true,
+        "balanced_recall": 0.3125865303134585
+      },
+      "evaluation": {
+        "bars": [
+          3937,
+          12510
+        ],
+        "quality": {
+          "n": 8573,
+          "bull_bars": 5875,
+          "bear_bars": 2698,
+          "label_share": {
+            "bull": 0.2653680158637583,
+            "bear": 0.2555698122010965,
+            "calm": 0.45421672693339554,
+            "crisis": 0.024845445001749678
+          },
+          "bull_labelled_bull": 0.3007659574468085,
+          "bull_labelled_calm": 0.4444255319148936,
+          "bear_labelled_bear_or_crisis": 0.3361749444032617,
+          "bear_labelled_calm": 0.47553743513713864,
+          "bear_labelled_bull": 0.1882876204595997,
+          "confusion": {
+            "bull": {
+              "bull": 1767,
+              "bear": 1410,
+              "calm": 2611,
+              "crisis": 87
+            },
+            "bear": {
+              "bull": 508,
+              "bear": 781,
+              "calm": 1283,
+              "crisis": 126
+            }
+          }
+        },
+        "mean_vol": {
+          "bull": 0.009686967764499878,
+          "bear": 0.008679674219699519,
+          "calm": 0.008178014510466255,
+          "crisis": 0.011607119389019663
+        },
+        "mean_return": {
+          "bull": 9.504516259821382e-05,
+          "bear": 0.00024177076404289678,
+          "calm": 0.0001760998784768476,
+          "crisis": 0.0002925100557636851
+        },
+        "semantic_ok": false,
+        "balanced_recall": 0.3184704509250351
+      }
+    }
+  }
+}

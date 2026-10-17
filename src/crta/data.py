@@ -9,6 +9,10 @@ import pandas as pd
 
 FEATURE_COLS = ("log_ret", "vol_20", "trend", "rsi", "macd")
 HMM_COLS = ("log_ret", "vol_20", "trend")
+# Optional regime input: distance below the 90-day high (540 4h bars). A rally inside a
+# bear market stays far below its high; a bull market sits near it.
+DD_WINDOW = 540
+HMM_COLS_DD = (*HMM_COLS, "drawdown")
 
 
 def project_root() -> Path:
@@ -258,6 +262,13 @@ def _macd_ratio(close: pd.Series) -> pd.Series:
     return (macd - signal) / close
 
 
+def drawdown(close, window: int = DD_WINDOW) -> np.ndarray:
+    """close / (highest close of the last ``window`` bars) - 1. Uses closes up to t only."""
+    close = pd.Series(np.asarray(close, dtype=float))
+    peak = close.rolling(int(window), min_periods=1).max()
+    return (close / peak - 1.0).to_numpy()
+
+
 def features(df: pd.DataFrame) -> pd.DataFrame:
     out = df.copy()
     close = out["close"].astype(float)
@@ -268,6 +279,7 @@ def features(df: pd.DataFrame) -> pd.DataFrame:
     out["trend"] = close / sma - 1.0
     out["rsi"] = _rsi(close) / 100.0
     out["macd"] = _macd_ratio(close)
+    out["drawdown"] = drawdown(close)
     out["next_ret"] = log_ret.shift(-1)
     return out
 

@@ -17,7 +17,7 @@ uv run streamlit run src/crta/demo.py
 
 ## What you are looking at
 
-The ribbon is a dwell-smoothed label. Runs shorter than five days (30 bars of 4h) are merged into the previous label, so a single day cannot flip it. The policy sees the raw probabilities, not that label. The wealth curves are out-of-fold only: each test block is scored by a model fit on the bars before it.
+The ribbon is a dwell-held label. A new label replaces the old one only after five days (30 bars of 4h) in a row, so a single day cannot flip it and a label already shown is never rewritten. The policy sees the filtered probabilities, not that label: the probability at bar `t` uses candles up to `t` only. The wealth curves are out-of-fold only: each test block is scored by a model fit on the bars before it.
 
 The conditioned and blind agents use the same seed, learning rate, network width, and number of passes over the training window (ten). The first linear layer is wider by four inputs on the conditioned agent. That width is the experiment.
 
@@ -95,10 +95,13 @@ The leakage test checks that a truncated history produces the same features as t
 The package is `src/crta`.
 
 - `data.py` builds causal features. Column `t` uses rows at or before `t` only. The candle cache is written to a temporary file and renamed over the old one. A candle still forming is dropped.
-- `regime.py` is the walk-forward 4-state Gaussian HMM. `track(X, burn, stride, eta, seed, dwell)` names the burn-in by moments and matches later refits by diagonal Wasserstein distance. 4h defaults are burn 252, stride 42, dwell 30. `track_v2` is off unless a config asks for it.
+- `regime.py` is the walk-forward 4-state Gaussian HMM. `track` and `track_v2` name the burn-in by moments and match later refits by diagonal Wasserstein distance on burn-in-scaled features. Probabilities are filtered (bar `t` uses rows up to `t`), and each window's filter is warmed on the six strides before it. 4h defaults are burn 1080 (fold 0's training window), stride 42, dwell 30. `track_v2` adds template rebirth and, by default, a semantic guard that re-names templates by their moments after every update so "crisis" stays the low-return, high-volatility state. The 4h pipeline runs `track_v2` on `HMM_COLS_DD`, the three HMM features plus the distance below the 90-day high. `LEGACY_V1` and `LEGACY_V2` reproduce the published, smoothed labels for audits only; `TIER1_V2` is the labeller before the guard.
+- `dating.py` is hindsight 20% bull/bear dating, the yardstick for label quality. `baselines.py` is buy-and-hold, long/flat 2/4/8-week momentum and the regime rule `1 - p(bear) - p(crisis)`. `predictability.py` is the walk-forward forecast test.
 - `agent.py` is the Gymnasium `TradeEnv` and the two PPO twins. `include_regime` is the only architectural difference: 10 inputs with the four probabilities, 6 without. `train_ppo` is the shared trainer.
-- `verify.py` is ablation, counterfactual, and sensitivity. `audit_bar` is the one-hot verifier. `audit_many_v2` is the in-distribution verifier.
-- `eval.py` is the walk-forward split and the return statistics. `pipeline.py` is the 4h probe and the trained run.
+- `verify.py` is ablation, counterfactual, and sensitivity. `audit_bar` is the one-hot verifier. `audit_many_v2` is the in-distribution verifier. `audit_many_v3` ablates to the training-mean probability vector and takes its risk order from `regime_order`, which ranks regimes by the mean-variance position mu/sigma^2 on the training fold.
+- `eval.py` is the walk-forward split and the return statistics; its intervals use a circular block bootstrap. `stats.py` adds the deflated Sharpe ratio and the median and interquartile range across seeds. `pipeline.py` is the 4h probe and the trained run.
+- `daily.py` is the redesigned task: daily long/flat decisions, momentum features and a mean-variance reward. `policies.py` holds its clipped, tanh and Beta heads and the monotone regime head that is faithful by construction. `jump.py` and `wkmeans.py` are the statistical jump model and Wasserstein k-means labellers.
+- `train_ppo(device=...)` and `CRTA_DEVICE` select the PPO device. CPU is the default: on an RTX 4060 laptop GPU one 4h twin trained about twice as slowly as on the CPU, because the 64x64 policy is too small to pay for the transfers. `uv sync` reinstalls the CPU build of torch. The CUDA build maps about 1.5 GB of GPU libraries into every process, so parallel CPU runs use a separate CPU-only environment: `UV_PROJECT_ENVIRONMENT=.venv-cpu uv sync --frozen`, then run the study scripts with `.venv-cpu/Scripts/python`.
 - `paper/scripts/timeframe_study.py` trains the native BTC and ETH twins. Validation trains before 2024-09-22 16:00 UTC and scores until 2025-09-22. The final stage trains before 2025-09-22 16:00 UTC, then scores the holdout year and the live window from 2026-09-22 16:00 UTC. The native recipe is window 2000, reward scale 100, entropy 0.01, 500k steps, 2 threads.
 - `paper/scripts/run_experiment.py` is the multi-seed runner. `paper/scripts/run_grid.py` is the validation grid.
 - `demo.py` is the Streamlit console. It only steps on closed candles.

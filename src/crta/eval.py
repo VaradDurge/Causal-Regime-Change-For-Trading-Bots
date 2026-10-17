@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 
 from crta.regime import REGIMES
+from crta.stats import circular_block_indices
 
 TURNOVER_COST = 0.001
 N_FOLDS = 4
@@ -65,23 +66,29 @@ def sortino(returns):
     return _ratio(returns, downside=True)
 
 
-def bootstrap_ci(returns, fn, n: int = N_BOOT, seed: int = SEED) -> dict:
+def bootstrap_ci(returns, fn, n: int = N_BOOT, seed: int = SEED, block: int | None = None) -> dict:
+    """95% percentile interval from a circular block bootstrap.
+
+    Bars are serially dependent, so resampling single bars understates the spread. The
+    default block is ceil(sqrt(len(returns))); ``block=1`` is the i.i.d. bootstrap.
+    """
     rng = np.random.default_rng(seed)
     r = np.asarray(returns, dtype=float)
     point = fn(r)
+    size = max(1, int(np.ceil(np.sqrt(len(r))))) if block is None else max(1, int(block))
     stats = []
-    for _ in range(n):
-        sample = r[rng.integers(0, len(r), size=len(r))]
-        val = fn(sample)
+    for idx in circular_block_indices(len(r), size, n, rng):
+        val = fn(r[idx])
         if val is not None and np.isfinite(val):
             stats.append(val)
     if not stats:
-        return {"point": None if point is None else float(point), "low": None, "high": None}
+        return {"point": None if point is None else float(point), "low": None, "high": None, "block": size}
     lo, hi = np.percentile(stats, [2.5, 97.5])
     return {
         "point": None if point is None else float(point),
         "low": float(lo),
         "high": float(hi),
+        "block": size,
     }
 
 

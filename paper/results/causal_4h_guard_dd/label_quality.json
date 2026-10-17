@@ -1,0 +1,94 @@
+{
+  "labeller": "guard_dd",
+  "labeller_version": "filtered-scaled-guard-1",
+  "settings": {
+    "cols": [
+      "log_ret",
+      "vol_20",
+      "trend",
+      "drawdown"
+    ],
+    "burn": 1080,
+    "semantic_guard": 1,
+    "stride": 42,
+    "dwell": 30,
+    "death_after": 20
+  },
+  "scored_from_bar": 1080,
+  "quality": {
+    "n": 11430,
+    "bull_bars": 7131,
+    "bear_bars": 4299,
+    "label_share": {
+      "bull": 0.2357830271216098,
+      "bear": 0.2985126859142607,
+      "calm": 0.42817147856517934,
+      "crisis": 0.03753280839895013
+    },
+    "bull_labelled_bull": 0.27990464170523066,
+    "bull_labelled_calm": 0.40807740849810686,
+    "bear_labelled_bear_or_crisis": 0.3759013724121889,
+    "bear_labelled_calm": 0.46150267504070713,
+    "bear_labelled_bull": 0.162595952547104,
+    "confusion": {
+      "bull": {
+        "bull": 1996,
+        "bear": 1925,
+        "calm": 2910,
+        "crisis": 300
+      },
+      "bear": {
+        "bull": 699,
+        "bear": 1487,
+        "calm": 1984,
+        "crisis": 129
+      }
+    }
+  },
+  "statistics": {
+    "n": 11430,
+    "switches_per_year": 9.388451443569554,
+    "median_run_bars": 126.0,
+    "mean_matched_w2": 0.1735000628251373,
+    "identity_jump": 0.30468499862337595,
+    "identity_jump_per_regime": {
+      "bull": 0.5277215119568689,
+      "bear": 0.24028838129059124,
+      "calm": 0.16007643823252518,
+      "crisis": 0.29065366301351847
+    },
+    "per_regime": {
+      "bull": {
+        "share": 0.2357830271216098,
+        "mean_return": 0.00014934157342383697,
+        "volatility": 0.010320875443434676
+      },
+      "bear": {
+        "share": 0.2985126859142607,
+        "mean_return": 0.00012312538633216583,
+        "volatility": 0.010156898175120613
+      },
+      "calm": {
+        "share": 0.42817147856517934,
+        "mean_return": -1.2337614554235733e-05,
+        "volatility": 0.009127651397003715
+      },
+      "crisis": {
+        "share": 0.03753280839895013,
+        "mean_return": 0.0004289904660357446,
+        "volatility": 0.013765853518156282
+      }
+    }
+  },
+  "rebirths": [
+    {
+      "kind": "death_birth",
+      "refit_index": 118,
+      "bar": 6036,
+      "date": null,
+      "template": "bull",
+      "source": "moment",
+      "component": 3
+    }
+  ]
+}

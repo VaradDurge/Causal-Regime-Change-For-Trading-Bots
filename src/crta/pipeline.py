@@ -9,7 +9,8 @@ import numpy as np
 import pandas as pd
 
 from crta.agent import TIMESTEPS, observation, rollout, train_ppo
-from crta.data import FEATURE_COLS, HMM_COLS, RAW_PATH, ROOT, fetch_ohlcv, model_frame, synthetic_ohlcv
+from crta.baselines import baseline_positions
+from crta.data import FEATURE_COLS, HMM_COLS_DD, RAW_PATH, ROOT, fetch_ohlcv, model_frame, synthetic_ohlcv
 from crta.eval import (
     SEED,
     by_regime,
@@ -20,7 +21,7 @@ from crta.eval import (
     wealth_curve,
 )
 from crta.plots import save_figures
-from crta.regime import REGIMES, track
+from crta.regime import LABELLER_VERSION, REGIMES, track_v2
 from crta.verify import audit_many, probe_action
 
 RUN = ROOT / "outputs" / "run"
@@ -107,8 +108,10 @@ def build(mode: str = "trained", timesteps: int = TIMESTEPS, synthetic: bool = F
     models: dict = {}
     carry_c = 0.0
     carry_b = 0.0
-    # One causal pass. Folds slice it; a test bar is never fit on rows after its window.
-    labels, label_probs = track(frame[list(HMM_COLS)].to_numpy())
+    # One causal pass with filtered probabilities. Folds slice it; a test bar is never fit
+    # on rows after its window. Fold 0's training rows are the burn-in, so no test bar is spent.
+    # The labeller (semantic guard plus the drawdown input) was chosen on fold 1's training span.
+    labels, label_probs = track_v2(frame[list(HMM_COLS_DD)].to_numpy(), burn=min_train)
     for fold, (train_end, test_end) in enumerate(bounds):
         # Features at t do not include the next close. The last train reward does.
         train = frame.iloc[:train_end].reset_index(drop=True)
@@ -165,6 +168,11 @@ def build(mode: str = "trained", timesteps: int = TIMESTEPS, synthetic: bool = F
     if "ret_blind" in out.columns:
         metrics["blind"] = performance(out["ret_blind"])
         grouped["blind"] = by_regime(out["ret_blind"], out["regime"])
+    # Rules see the full close history, so the first test bars already have a lookback.
+    first_test = bounds[0][0]
+    for name, position in baseline_positions(frame["close"], label_probs).items():
+        if name != "buy_hold":
+            metrics[name] = performance(strategy_returns(position[first_test:], out["next_ret"]))
     by = {}
     for name in REGIMES:
         by[name] = {"n": grouped["conditioned"][name]["n"]}
@@ -180,6 +188,7 @@ def build(mode: str = "trained", timesteps: int = TIMESTEPS, synthetic: bool = F
         "source": source,
         "symbol": "BTC/USDT",
         "timeframe": "4h",
+        "labeller": LABELLER_VERSION,
         "pass_rate": float(np.mean(out["passed"].to_numpy(dtype=float))),
         "n_bars": int(len(out)),
         "timesteps": None if mode == "probe" else int(timesteps),

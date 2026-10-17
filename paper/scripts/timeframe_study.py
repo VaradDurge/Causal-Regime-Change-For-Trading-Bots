@@ -25,7 +25,7 @@ import pandas as pd
 from crta.agent import train_ppo
 from crta.data import FEATURE_COLS, HMM_COLS, features
 from crta.eval import strategy_returns
-from crta.regime import REGIMES, track
+from crta.regime import LABELLER_VERSION, REGIMES, track
 
 OUT = L.PAPER / "results" / "tf"
 HISTORY_START = pd.Timestamp("2021-01-01", tz="UTC")
@@ -63,7 +63,10 @@ def candles(asset: str, tf: str) -> pd.DataFrame:
 def labelled(asset: str, tf: str, raw: pd.DataFrame) -> pd.DataFrame:
     framed = features(raw).dropna(subset=list(FEATURE_COLS)).reset_index(drop=True)
     path = OUT / f"{asset.lower()}_{tf}_labels.parquet"
-    if path.exists():
+    # Labels cached before the filtered tracker have no key and are rebuilt.
+    key_path = path.with_suffix(".key.json")
+    key = {"labeller": LABELLER_VERSION, **CAL[tf]}
+    if path.exists() and key_path.exists() and json.loads(key_path.read_text()) == key:
         lab = pd.read_parquet(path)
         lab["timestamp"] = pd.to_datetime(lab["timestamp"], utc=True)
         if len(lab) == len(framed) and lab["timestamp"].equals(framed["timestamp"]):
@@ -75,6 +78,7 @@ def labelled(asset: str, tf: str, raw: pd.DataFrame) -> pd.DataFrame:
         framed[name] = probs[:, i]
     framed["regime"] = names
     framed[["timestamp", *REGIMES, "regime"]].to_parquet(path, index=False)
+    key_path.write_text(json.dumps(key))
     return framed
 
 

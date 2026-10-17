@@ -1,0 +1,126 @@
+{
+  "decision": {
+    "head": "beta",
+    "risk_aversion": 5.0,
+    "fallback": false
+  },
+  "cells": [
+    {
+      "head": "clip01",
+      "risk_aversion": 1.0,
+      "passes": false,
+      "score": 0.34433546660904285,
+      "blind_position_std": 0.26374451263571175,
+      "conditioned_position_std": 0.24365271176302455,
+      "monotone_position_std": 0.26400460913722906,
+      "blind_extreme_share": 0.9031512605042016,
+      "conditioned_extreme_share": 0.8756302521008404,
+      "monotone_extreme_share": 0.9119747899159665,
+      "conditioned_ablation_v3": 0.09936974789915967
+    },
+    {
+      "head": "clip01",
+      "risk_aversion": 2.0,
+      "passes": false,
+      "score": 0.052543173065614436,
+      "blind_position_std": 0.23052668265761583,
+      "conditioned_position_std": 0.22589489626528278,
+      "monotone_position_std": 0.2154968644184918,
+      "blind_extreme_share": 0.9260504201680673,
+      "conditioned_extreme_share": 0.8813025210084033,
+      "monotone_extreme_share": 0.9228991596638656,
+      "conditioned_ablation_v3": 0.08004201680672268
+    },
+    {
+      "head": "clip01",
+      "risk_aversion": 5.0,
+      "passes": false,
+      "score": 0.3471951642310118,
+      "blind_position_std": 0.1919627673159338,
+      "conditioned_position_std": 0.17364073236623892,
+      "monotone_position_std": 0.18604222264314765,
+      "blind_extreme_share": 0.9382352941176471,
+      "conditioned_extreme_share": 0.9478991596638655,
+      "monotone_extreme_share": 0.9464285714285715,
+      "conditioned_ablation_v3": 0.038445378151260506
+    },
+    {
+      "head": "tanh01",
+      "risk_aversion": 1.0,
+      "passes": false,
+      "score": 0.23423499738298237,
+      "blind_position_std": 0.27171764877373555,
+      "conditioned_position_std": 0.2643330373738601,
+      "monotone_position_std": 0.24507606590378422,
+      "blind_extreme_share": 0.32941176470588235,
+      "conditioned_extreme_share": 0.2852941176470588,
+      "monotone_extreme_share": 0.33529411764705885,
+      "conditioned_ablation_v3": 0.08592436974789916
+    },
+    {
+      "head": "tanh01",
+      "risk_aversion": 2.0,
+      "passes": false,
+      "score": 0.5531431763502946,
+      "blind_position_std": 0.2535427563622475,
+      "conditioned_position_std": 0.2528987616981834,
+      "monotone_position_std": 0.23709558142296702,
+      "blind_extreme_share": 0.34747899159663864,
+      "conditioned_extreme_share": 0.3222689075630252,
+      "monotone_extreme_share": 0.3584033613445379,
+      "conditioned_ablation_v3": 0.06449579831932772
+    },
+    {
+      "head": "tanh01",
+      "risk_aversion": 5.0,
+      "passes": false,
+      "score": 0.4756535828125133,
+      "blind_position_std": 0.2584327181439442,
+      "conditioned_position_std": 0.24152445988728316,
+      "monotone_position_std": 0.2312409591375532,
+      "blind_extreme_share": 0.39348739495798324,
+      "conditioned_extreme_share": 0.3168067226890756,
+      "monotone_extreme_share": 0.4023109243697479,
+      "conditioned_ablation_v3": 0.05609243697478992
+    },
+    {
+      "head": "beta",
+      "risk_aversion": 1.0,
+      "passes": false,
+      "score": 0.5028808607101286,
+      "blind_position_std": 0.21784158114657798,
+      "conditioned_position_std": 0.1895799152120397,
+      "monotone_position_std": 0.22307620456874275,
+      "blind_extreme_share": 0.14432773109243696,
+      "conditioned_extreme_share": 0.0661764705882353,
+      "monotone_extreme_share": 0.08781512605042018,
+      "conditioned_ablation_v3": 0.042226890756302524
+    },
+    {
+      "head": "beta",
+      "risk_aversion": 2.0,
+      "passes": true,
+      "score": 0.47788876670714026,
+      "blind_position_std": 0.24368315061263307,
+      "conditioned_position_std": 0.2188194777824152,
+      "monotone_position_std": 0.21662065888663462,
+      "blind_extreme_share": 0.11701680672268908,
+      "conditioned_extreme_share": 0.13403361344537817,
+      "monotone_extreme_share": 0.08928571428571427,
+      "conditioned_ablation_v3": 0.13949579831932774
+    },
+    {
+      "head": "beta",
+      "risk_aversion": 5.0,
+      "passes": true,
+      "score": 0.7018664102635064,
+      "blind_position_std": 0.27197346128652516,
+      "conditioned_position_std": 0.2373312377259423,
+      "monotone_position_std": 0.1909352811522316,
+      "blind_extreme_share": 0.34411764705882353,
+      "conditioned_extreme_share": 0.1989495798319328,
+      "monotone_extreme_share": 0.08508403361344538,
+      "conditioned_ablation_v3": 0.10756302521008403
+    }
+  ]
+}

@@ -1,0 +1,89 @@
+{
+  "labeller": "guard_dd",
+  "head": "clip01",
+  "risk_aversion": 1.0,
+  "twin": "monotone",
+  "seed": 42,
+  "folds": [
+    {
+      "fold": 0,
+      "n_train": 124,
+      "n_test": 476,
+      "order": [
+        "crisis",
+        "bear",
+        "calm"
+      ],
+      "v3": {
+        "ablation": 0.058823529411764705,
+        "counterfactual": 0.12339331619537275,
+        "sensitivity": 0.11134453781512606,
+        "all": 0.03361344537815126,
+        "untestable_share": 0.18277310924369747,
+        "median_ablation_delta": 0.0,
+        "n": 476
+      }
+    },
+    {
+      "fold": 1,
+      "n_train": 600,
+      "n_test": 476,
+      "order": [
+        "crisis",
+        "bear",
+        "calm",
+        "bull"
+      ],
+      "v3": {
+        "ablation": 0.008403361344537815,
+        "counterfactual": 0.01050420168067227,
+        "sensitivity": 0.012605042016806723,
+        "all": 0.008403361344537815,
+        "untestable_share": 0.0,
+        "median_ablation_delta": 0.0,
+        "n": 476
+      }
+    },
+    {
+      "fold": 2,
+      "n_train": 1076,
+      "n_test": 477,
+      "order": [
+        "crisis",
+        "bear",
+        "bull",
+        "calm"
+      ],
+      "v3": {
+        "ablation": 0.36268343815513626,
+        "counterfactual": 0.5387840670859538,
+        "sensitivity": 0.6163522012578616,
+        "all": 0.33962264150943394,
+        "untestable_share": 0.0,
+        "median_ablation_delta": 0.011629045009613037,
+        "n": 477
+      }
+    },
+    {
+      "fold": 3,
+      "n_train": 1553,
+      "n_test": 475,
+      "order": [
+        "crisis",
+        "bear",
+        "bull",
+        "calm"
+      ],
+      "v3": {
+        "ablation": 0.029473684210526315,
+        "counterfactual": 0.042105263157894736,
+        "sensitivity": 0.05052631578947368,
+        "all": 0.029473684210526315,
+        "untestable_share": 0.0,
+        "median_ablation_delta": 0.0,
+        "n": 475
+      }
+    }
+  ],
+  "seconds": 62.56738877296448
+}

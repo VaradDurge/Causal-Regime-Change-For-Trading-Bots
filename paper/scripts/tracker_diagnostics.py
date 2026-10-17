@@ -19,8 +19,8 @@ import pandas as pd
 
 from crta.data import HMM_COLS, RAW_PATH, model_frame
 from crta.regime import (
-    BURN,
     ETA,
+    LEGACY_V1,
     MIN_DWELL,
     N_STATES,
     REGIMES,
@@ -35,6 +35,8 @@ from crta.regime import (
     update_templates,
 )
 
+# Reproduces the published tracker, smoothed probabilities included. Not for new results.
+BURN = LEGACY_V1["burn"]
 PAPER = Path(__file__).resolve().parents[1]
 OUT = PAPER / "results"
 PERIODS = 6 * 365
@@ -124,7 +126,7 @@ def main() -> int:
     fitted = _fit_hmm(X[:BURN], seed)
     mu, sd = component_params(fitted)
     tmu, tsd, assign = _templates_from_lock(mu, sd)
-    wl, wp, proba = _window_labels(fitted, X[:BURN], assign, None)
+    wl, wp, proba = _window_labels(fitted, X[:BURN], assign, None, posterior="smoothed")
     labels_w2.extend(wl)
     labels_ms.extend(wl)
     probs_w2[:BURN] = wp
@@ -146,18 +148,18 @@ def main() -> int:
         log_tmu.append(tmu.copy())
         log_tsd.append(tsd.copy())
         log_cost.append(cost)
-        wl, wp, proba = _window_labels(fitted, X[t:end], assign, labels_w2[-1])
+        wl, wp, proba = _window_labels(fitted, X[t:end], assign, labels_w2[-1], posterior="smoothed")
         log_w.append(proba.sum(axis=0))
         labels_w2.extend(wl)
         probs_w2[t:end] = wp
-        wl_ms, _wp_ms, _ = _window_labels(fitted, X[t:end], ms, labels_ms[-1])
+        wl_ms, _wp_ms, _ = _window_labels(fitted, X[t:end], ms, labels_ms[-1], posterior="smoothed")
         labels_ms.extend(wl_ms)
         tmu, tsd = update_templates(tmu, tsd, mu, sd, proba, assign, ETA)
         t = end
     replay_s = time.time() - t0
 
     t1 = time.time()
-    ref_labels, ref_probs = track(X)
+    ref_labels, ref_probs = track(X, **LEGACY_V1)
     track_s = time.time() - t1
     assert ref_labels == labels_w2, "replay diverged from crta.regime.track"
     assert np.allclose(ref_probs, probs_w2)

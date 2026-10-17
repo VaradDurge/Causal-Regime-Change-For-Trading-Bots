@@ -1,0 +1,89 @@
+{
+  "labeller": "guard_dd",
+  "head": "tanh01",
+  "risk_aversion": 5.0,
+  "twin": "monotone",
+  "seed": 45,
+  "folds": [
+    {
+      "fold": 0,
+      "n_train": 124,
+      "n_test": 476,
+      "order": [
+        "crisis",
+        "bear",
+        "calm"
+      ],
+      "v3": {
+        "ablation": 0.037815126050420166,
+        "counterfactual": 0.061696658097686374,
+        "sensitivity": 0.1638655462184874,
+        "all": 0.01050420168067227,
+        "untestable_share": 0.18277310924369747,
+        "median_ablation_delta": 0.0015249252319335938,
+        "n": 476
+      }
+    },
+    {
+      "fold": 1,
+      "n_train": 600,
+      "n_test": 476,
+      "order": [
+        "crisis",
+        "bear",
+        "calm",
+        "bull"
+      ],
+      "v3": {
+        "ablation": 0.031512605042016806,
+        "counterfactual": 0.11974789915966387,
+        "sensitivity": 0.5168067226890757,
+        "all": 0.031512605042016806,
+        "untestable_share": 0.0,
+        "median_ablation_delta": 0.013618946075439453,
+        "n": 476
+      }
+    },
+    {
+      "fold": 2,
+      "n_train": 1076,
+      "n_test": 477,
+      "order": [
+        "crisis",
+        "bear",
+        "bull",
+        "calm"
+      ],
+      "v3": {
+        "ablation": 0.07547169811320754,
+        "counterfactual": 0.18238993710691823,
+        "sensitivity": 0.7547169811320755,
+        "all": 0.07337526205450734,
+        "untestable_share": 0.0,
+        "median_ablation_delta": 0.019327431917190552,
+        "n": 477
+      }
+    },
+    {
+      "fold": 3,
+      "n_train": 1553,
+      "n_test": 475,
+      "order": [
+        "crisis",
+        "bear",
+        "bull",
+        "calm"
+      ],
+      "v3": {
+        "ablation": 0.08210526315789474,
+        "counterfactual": 0.4842105263157895,
+        "sensitivity": 1.0,
+        "all": 0.08,
+        "untestable_share": 0.0,
+        "median_ablation_delta": 0.058498263359069824,
+        "n": 475
+      }
+    }
+  ],
+  "seconds": 54.75109624862671
+}

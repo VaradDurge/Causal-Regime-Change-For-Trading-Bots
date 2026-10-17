@@ -2,8 +2,9 @@
 
 Every scored candle opened after the last bar of the research run, so neither the
 agents (fold 3, trained on bars before 3 Jun 2025) nor the walk-forward study saw it.
-Regime labels come from the same causal tracker as the paper (burn-in 252, stride 42),
-run on each timeframe's own candles. The candles are frozen to paper/results/live so
+Regime labels come from crta.regime.track with its defaults (filtered probabilities,
+burn-in BURN, stride 42), run on each timeframe's own candles. Numbers written before
+the filtered tracker used smoothed probabilities and are not comparable. The candles are frozen to paper/results/live so
 the numbers can be reproduced; pass --refresh to fetch a new snapshot.
 
 Usage: .venv/bin/python paper/scripts/live_study.py [--refresh]
