@@ -1,0 +1,89 @@
+{
+  "labeller": "guard_dd",
+  "head": "beta",
+  "risk_aversion": 5.0,
+  "twin": "conditioned",
+  "seed": 43,
+  "folds": [
+    {
+      "fold": 0,
+      "n_train": 124,
+      "n_test": 476,
+      "order": [
+        "crisis",
+        "bear",
+        "calm"
+      ],
+      "v3": {
+        "ablation": 0.09873949579831932,
+        "counterfactual": 0.0,
+        "sensitivity": 0.03361344537815126,
+        "all": 0.0,
+        "untestable_share": 0.18277310924369747,
+        "median_ablation_delta": 0.00010920449858531356,
+        "n": 476
+      }
+    },
+    {
+      "fold": 1,
+      "n_train": 600,
+      "n_test": 476,
+      "order": [
+        "crisis",
+        "bear",
+        "calm",
+        "bull"
+      ],
+      "v3": {
+        "ablation": 0.01680672268907563,
+        "counterfactual": 0.02100840336134454,
+        "sensitivity": 1.0,
+        "all": 0.0063025210084033615,
+        "untestable_share": 0.0,
+        "median_ablation_delta": 0.03251121938228607,
+        "n": 476
+      }
+    },
+    {
+      "fold": 2,
+      "n_train": 1076,
+      "n_test": 477,
+      "order": [
+        "crisis",
+        "bear",
+        "bull",
+        "calm"
+      ],
+      "v3": {
+        "ablation": 0.1320754716981132,
+        "counterfactual": 0.3249475890985325,
+        "sensitivity": 0.16352201257861634,
+        "all": 0.08385744234800839,
+        "untestable_share": 0.0,
+        "median_ablation_delta": 0.015343964099884033,
+        "n": 477
+      }
+    },
+    {
+      "fold": 3,
+      "n_train": 1553,
+      "n_test": 475,
+      "order": [
+        "crisis",
+        "bear",
+        "bull",
+        "calm"
+      ],
+      "v3": {
+        "ablation": 0.40421052631578946,
+        "counterfactual": 0.0,
+        "sensitivity": 0.29894736842105263,
+        "all": 0.0,
+        "untestable_share": 0.0,
+        "median_ablation_delta": 0.03245735168457031,
+        "n": 475
+      }
+    }
+  ],
+  "seconds": 65.6261236667633
+}

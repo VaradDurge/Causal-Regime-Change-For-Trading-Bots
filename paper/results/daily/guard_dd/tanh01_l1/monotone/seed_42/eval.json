@@ -1,0 +1,89 @@
+{
+  "labeller": "guard_dd",
+  "head": "tanh01",
+  "risk_aversion": 1.0,
+  "twin": "monotone",
+  "seed": 42,
+  "folds": [
+    {
+      "fold": 0,
+      "n_train": 124,
+      "n_test": 476,
+      "order": [
+        "crisis",
+        "bear",
+        "calm"
+      ],
+      "v3": {
+        "ablation": 0.014705882352941176,
+        "counterfactual": 0.05141388174807198,
+        "sensitivity": 0.15546218487394958,
+        "all": 0.0021008403361344537,
+        "untestable_share": 0.18277310924369747,
+        "median_ablation_delta": 0.0008649826049804688,
+        "n": 476
+      }
+    },
+    {
+      "fold": 1,
+      "n_train": 600,
+      "n_test": 476,
+      "order": [
+        "crisis",
+        "bear",
+        "calm",
+        "bull"
+      ],
+      "v3": {
+        "ablation": 0.004201680672268907,
+        "counterfactual": 0.025210084033613446,
+        "sensitivity": 0.2647058823529412,
+        "all": 0.004201680672268907,
+        "untestable_share": 0.0,
+        "median_ablation_delta": 0.009425625205039978,
+        "n": 476
+      }
+    },
+    {
+      "fold": 2,
+      "n_train": 1076,
+      "n_test": 477,
+      "order": [
+        "crisis",
+        "bear",
+        "bull",
+        "calm"
+      ],
+      "v3": {
+        "ablation": 0.06079664570230608,
+        "counterfactual": 0.24947589098532494,
+        "sensitivity": 1.0,
+        "all": 0.06079664570230608,
+        "untestable_share": 0.0,
+        "median_ablation_delta": 0.030017733573913574,
+        "n": 477
+      }
+    },
+    {
+      "fold": 3,
+      "n_train": 1553,
+      "n_test": 475,
+      "order": [
+        "crisis",
+        "bear",
+        "bull",
+        "calm"
+      ],
+      "v3": {
+        "ablation": 0.01263157894736842,
+        "counterfactual": 0.11578947368421053,
+        "sensitivity": 0.3494736842105263,
+        "all": 0.01263157894736842,
+        "untestable_share": 0.0,
+        "median_ablation_delta": 0.006202220916748047,
+        "n": 475
+      }
+    }
+  ],
+  "seconds": 52.52229070663452
+}

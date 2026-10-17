@@ -1,0 +1,49 @@
+{
+  "labeller": "wk_w42",
+  "head": "beta",
+  "risk_aversion": 5.0,
+  "twin": "blind",
+  "seed": 46,
+  "folds": [
+    {
+      "fold": 0,
+      "n_train": 124,
+      "n_test": 476,
+      "order": [
+        "bear",
+        "calm"
+      ]
+    },
+    {
+      "fold": 1,
+      "n_train": 600,
+      "n_test": 476,
+      "order": [
+        "bear",
+        "calm",
+        "bull"
+      ]
+    },
+    {
+      "fold": 2,
+      "n_train": 1076,
+      "n_test": 477,
+      "order": [
+        "bull",
+        "calm",
+        "bear"
+      ]
+    },
+    {
+      "fold": 3,
+      "n_train": 1553,
+      "n_test": 475,
+      "order": [
+        "bull",
+        "bear",
+        "calm"
+      ]
+    }
+  ],
+  "seconds": 66.65430688858032
+}
