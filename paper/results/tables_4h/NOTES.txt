@@ -1,0 +1,32 @@
+Four-hour rerun notes
+=====================
+
+Candle. data/raw/btc_usdt_4h.parquet is gitignored and was not in the checkout.
+paper/results/live/btc_usdt_4h.parquet was built from that cache plus a later tail.
+This rerun keeps rows with timestamp <= 2026-09-22 12:00 UTC (12,544 bars, the
+study end in the paper) and checks closes against paper/results/tracker.npz.
+No candle was downloaded. The live file's 12:00 close does not reproduce the
+archived run's last next_ret, so that one close is restored from
+paper/results/run/bars.parquet before features are built. Every other out-of-fold
+close and next_ret already matched.
+
+Moment-sorted labelling. Names on the same causal refits as tracker v1, using
+lock_states on the unscaled component means. Templates still move under the
+Wasserstein assignment. This is the third labelling next to tracker v1 and
+tracker v2, not a separate per-fold HMM.
+
+Bootstrap. Circular blocks of length ceil(sqrt(n)), 1000 resamples, seed 42.
+src/crta/eval.py uses 1000 i.i.d. resamples. The 2000-resample circular
+bootstrap in the repo belongs to the native-twin gap, not the four-hour table.
+The task said to match 2000 only if the four-hour code uses it.
+
+Threads. Each PPO call passes threads=1. train_ppo's default is unchanged.
+Budget is max(8192, 10 * n_train), reward raw, scale 1, entropy 0, no window.
+
+Verifier v2 banks are the training rows of that fold. Position is carried
+across folds the way crta.pipeline.build carries it. Faithfulness is the share
+of out-of-fold bars passing all three checks. Ablation is that verifier's
+ablation pass rate. Both are properties of the conditioned agent.
+
+Canonical table directory: paper/results/tables_4h/
+Copy: results/tables/

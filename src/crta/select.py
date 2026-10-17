@@ -32,3 +32,84 @@ def criterion_deficit(std_c, std_b, extreme_c, extreme_b, ablation) -> float:
     deficit += max(0.0, float(extreme_b) - CLEAR_EXTREME) / CLEAR_EXTREME
     deficit += max(0.0, CLEAR_ABLATION - float(ablation)) / CLEAR_ABLATION
     return float(deficit)
+
+
+# Pre-registered before the action-mode screen. Returns are not an input.
+# A remaining tie prefers the continuous squash, then the discrete grid, then the clipped Gaussian.
+_MODE_TIE = {"tanh_env": 2, "discrete5": 1, "gaussian_clip": 0}
+
+
+def choose_action_mode(rows: list[dict]) -> dict:
+    """Choose one action mode from validation criterion rows, or none.
+
+    Each row is one tape of one mode and must carry std_c, std_b, extreme_c,
+    extreme_b and ablation. A mode is eligible only when every one of its tapes
+    passes ``meets_criterion``. The winner has the highest minimum ablation
+    across its tapes. Ties break on the minimum twin position standard deviation,
+    then on tanh_env, discrete5, gaussian_clip.
+    """
+    by_mode: dict[str, list[dict]] = {}
+    for row in rows:
+        by_mode.setdefault(str(row["mode"]), []).append(row)
+    passing = []
+    rejected = []
+    for mode, tapes in by_mode.items():
+        ok = all(
+            meets_criterion(tape["std_c"], tape["std_b"], tape["extreme_c"], tape["extreme_b"], tape["ablation"])
+            for tape in tapes
+        )
+        min_ablation = min(float(tape["ablation"]) for tape in tapes)
+        min_std = min(min(float(tape["std_c"]), float(tape["std_b"])) for tape in tapes)
+        record = {
+            "mode": mode,
+            "n_tapes": len(tapes),
+            "passed": ok,
+            "min_ablation": min_ablation,
+            "min_position_std": min_std,
+        }
+        if ok:
+            passing.append(record)
+        else:
+            rejected.append(record)
+    if not passing:
+        return {"mode": "none", "passed": [], "rejected": rejected}
+    passing.sort(
+        key=lambda item: (item["min_ablation"], item["min_position_std"], _MODE_TIE.get(item["mode"], -1)),
+        reverse=True,
+    )
+    return {"mode": passing[0]["mode"], "passed": passing, "rejected": rejected}
+
+
+def choose_risk_aversion(rows: list[dict]) -> dict:
+    """Choose one mean-variance lambda from validation criterion rows, or none.
+
+    Each row is one tape of one lambda with the ``meets_criterion`` fields. A
+    lambda is eligible only when every tape passes. The winner has the highest
+    minimum ablation across its tapes; a tie goes to the smaller lambda.
+    """
+    by_lam: dict[float, list[dict]] = {}
+    for row in rows:
+        by_lam.setdefault(float(row["risk_aversion"]), []).append(row)
+    passing = []
+    rejected = []
+    for lam, tapes in sorted(by_lam.items()):
+        ok = all(
+            meets_criterion(tape["std_c"], tape["std_b"], tape["extreme_c"], tape["extreme_b"], tape["ablation"])
+            for tape in tapes
+        )
+        record = {
+            "risk_aversion": lam,
+            "n_tapes": len(tapes),
+            "n_tapes_passed": sum(
+                meets_criterion(t["std_c"], t["std_b"], t["extreme_c"], t["extreme_b"], t["ablation"]) for t in tapes
+            ),
+            "passed": ok,
+            "min_ablation": min(float(tape["ablation"]) for tape in tapes),
+            "min_position_std": min(min(float(t["std_c"]), float(t["std_b"])) for t in tapes),
+            "max_extreme_share": max(max(float(t["extreme_c"]), float(t["extreme_b"])) for t in tapes),
+        }
+        (passing if ok else rejected).append(record)
+    if not passing:
+        return {"risk_aversion": "none", "passed": [], "rejected": rejected}
+    passing.sort(key=lambda item: (-item["min_ablation"], item["risk_aversion"]))
+    return {"risk_aversion": passing[0]["risk_aversion"], "passed": passing, "rejected": rejected}

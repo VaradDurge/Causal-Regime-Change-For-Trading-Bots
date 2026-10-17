@@ -106,6 +106,9 @@ class ExperimentConfig:
     asset: str = "BTC"
     timeframe: str = "1h"
     stage: str = "validate"
+    action_mode: str = "gaussian_clip"
+    risk_aversion: float = 0.0
+    faith_bound_aware: bool = False
 
     @classmethod
     def from_dict(cls, raw: dict) -> "ExperimentConfig":

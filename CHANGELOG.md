@@ -77,3 +77,31 @@ The one-factor grid did not meet that criterion on any tape: every twin still sp
 ## 10. Console
 
 Saved twins store `reward_mode`, `prob_temperature`, `prob_floor`, and `tracker` on the model and in a `.meta.json` sidecar. Loading a zip applies that smoothing. A `*_conditioned.zip` dropped in `bots/` with a sibling `*_blind.zip` is the live pair. Closed candles and the atomic cache rename are unchanged.
+
+## 11. Validation saturation and the five-seed four-hour rerun
+
+No zip in the tree carried metadata for a validation-split native twin (train rows before 2024-09-22 16:00 UTC). `paper/results/tf/val_ent005/` is the rejected entropy-0.05 run and was not used. The final-stage zips were not used. Seed 42 was retrained with the frozen native recipe and labelled `retrained_seed42_validation`.
+
+The saturation CSV is canonical at `results/saturation_diagnostic.csv` (the path named for the check). A copy is at `paper/results/saturation_diagnostic.csv`. The eight decision numbers are ordered BTC then ETH, 1h then 15m, conditioned then blind. `mean_abs_delta_position` is the mean of consecutive executed-position changes, with no fictional start at 0. The verdict file is `results/saturation_decision.txt`.
+
+The four-hour candle cache `data/raw/btc_usdt_4h.parquet` is gitignored and was not in the checkout. The rerun uses rows of `paper/results/live/btc_usdt_4h.parquet` at or before 2026-09-22 12:00 UTC and checks them against `paper/results/tracker.npz`. No candle was downloaded. That live file's 12:00 close does not reproduce the archived run's last `next_ret`, so that one close is restored from `paper/results/run/bars.parquet` before features are built. Every other out-of-fold close and next return already matched.
+
+Moment-sorted is a third labelling on the same v1 refits (`lock_states` on unscaled means). Templates still update under the Wasserstein assignment. It is not a separate per-fold HMM.
+
+Sharpe and Sortino intervals use a circular block bootstrap with block length `ceil(sqrt(n))` and 1000 resamples (seed 42). `src/crta/eval.py` uses 1000 i.i.d. resamples. The 2000-resample circular bootstrap in the repo is the native-twin gap, not the four-hour table. Each PPO call in the rerun passes `threads=1`. `train_ppo`'s default is unchanged. The budget stays `max(8192, 10 * n_train)`, raw reward, scale 1, entropy 0, no window.
+
+Canonical tables: `paper/results/tables_4h/`. Copy: `results/tables/`. Table I is settings and folds (paper `tab:hyper` and `tab:folds`). Table III is label statistics after burn-in (paper `tab:labels`). Table IV is out-of-fold performance (paper `tab:perf`). Table V is per-regime (paper `tab:regime`). `paper/main.tex` was not edited.
+
+## 12. Action mode
+
+The saturation rule called clipping the cause (8 of 8 tapes), so `action_mode` was added. The default is `gaussian_clip`, the previous Gaussian policy with the executed action clipped to [-1, 1]. Omitting the flag keeps that path. `tanh_env` lets the environment execute `tanh(u)`. `discrete5` is `Discrete(5)` on `{-1, -0.5, 0, 0.5, 1}`. The verifier audits the expected level under that categorical distribution, not a sampled action.
+
+The screen used the validation split only. `gaussian_clip` reused the seed-42 validation weights. `tanh_env` and `discrete5` were trained at seed 42 with the same native recipe. A mode had to pass on all four tapes: both twins with position standard deviation above 0.05, an `|a| > 0.95` share below 0.80, and a conditioned ablation rate of at least 10%. The pre-registered tie-break was the highest minimum ablation across the four tapes, then the minimum twin position standard deviation, then `tanh_env`, `discrete5`, `gaussian_clip`. Returns were not an input.
+
+No mode passed. `gaussian_clip` and `tanh_env` missed the extreme-share bar on every tape. `discrete5` passed BTC 15m, ETH 1h, and ETH 15m, and failed BTC 1h because the conditioned twin was constant. The frozen file is `results/action_mode_choice.txt` and it says `none`. Holdout and live were not scored.
+
+## Mean-variance reward and limit-aware audit
+
+- `reward_mode: mean_variance` with `risk_aversion` (default reward stays `raw`, `risk_aversion` defaults to 0). The reward is `a*r - c*|a - a_prev| - risk_aversion * a^2 * vol_20^2`, scaled by `reward_scale`. `vol_20` is the volatility already known at the decision bar. A reward linear in the position is maximised at a rail, so this mode gives an interior optimum `a* = E[r] / (2 * risk_aversion * vol^2)` instead of forcing variety.
+- `audit_many(..., bound_aware=True)` reports bars where the position limit makes the required counterfactual move impossible (`cf_untestable`) and the all-check rate on the rest (`faith_rate_testable`). `passed` keeps the original rule, and the original rate is still the headline.
+- `paper/scripts/bound_aware_audit.py` re-scores the published four-hour run from its saved pass flags: 7,040 of 11,430 bars are untestable, and the all-check rate on the 4,390 testable bars is 0.25% (11 bars overall).

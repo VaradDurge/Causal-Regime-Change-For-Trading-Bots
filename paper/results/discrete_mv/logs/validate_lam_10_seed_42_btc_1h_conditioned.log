@@ -1,0 +1,74 @@
+collapse t=10000 mean=-0.052 std=0.465 extreme=0.165
+collapse t=20000 mean=0.004 std=0.109 extreme=0.010
+collapse t=30000 mean=0.000 std=0.014 extreme=0.000
+collapse t=40000 mean=0.000 std=0.000 extreme=0.000
+collapse t=50000 mean=0.000 std=0.012 extreme=0.000
+WARNING: position std 0.0122 < 0.02 for 3 consecutive logs. Training continues.
+collapse t=60000 mean=0.000 std=0.007 extreme=0.000
+WARNING: position std 0.0071 < 0.02 for 4 consecutive logs. Training continues.
+collapse t=70000 mean=0.000 std=0.000 extreme=0.000
+WARNING: position std 0.0000 < 0.02 for 5 consecutive logs. Training continues.
+collapse t=80000 mean=-0.001 std=0.036 extreme=0.001
+collapse t=90000 mean=-0.002 std=0.040 extreme=0.002
+collapse t=100000 mean=-0.000 std=0.017 extreme=0.000
+collapse t=110000 mean=-0.001 std=0.034 extreme=0.001
+collapse t=120000 mean=0.000 std=0.018 extreme=0.000
+collapse t=130000 mean=-0.000 std=0.005 extreme=0.000
+collapse t=140000 mean=0.000 std=0.010 extreme=0.000
+WARNING: position std 0.0100 < 0.02 for 3 consecutive logs. Training continues.
+collapse t=150000 mean=0.000 std=0.000 extreme=0.000
+WARNING: position std 0.0000 < 0.02 for 4 consecutive logs. Training continues.
+collapse t=160000 mean=0.000 std=0.000 extreme=0.000
+WARNING: position std 0.0000 < 0.02 for 5 consecutive logs. Training continues.
+collapse t=170000 mean=-0.000 std=0.018 extreme=0.000
+WARNING: position std 0.0180 < 0.02 for 6 consecutive logs. Training continues.
+collapse t=180000 mean=-0.000 std=0.019 extreme=0.000
+WARNING: position std 0.0194 < 0.02 for 7 consecutive logs. Training continues.
+collapse t=190000 mean=0.000 std=0.019 extreme=0.000
+WARNING: position std 0.0194 < 0.02 for 8 consecutive logs. Training continues.
+collapse t=200000 mean=0.001 std=0.029 extreme=0.001
+collapse t=210000 mean=-0.000 std=0.019 extreme=0.000
+collapse t=220000 mean=-0.001 std=0.048 extreme=0.002
+collapse t=230000 mean=-0.001 std=0.029 extreme=0.001
+collapse t=240000 mean=0.000 std=0.000 extreme=0.000
+collapse t=250000 mean=0.000 std=0.014 extreme=0.000
+collapse t=260000 mean=0.000 std=0.000 extreme=0.000
+WARNING: position std 0.0000 < 0.02 for 3 consecutive logs. Training continues.
+collapse t=270000 mean=-0.000 std=0.010 extreme=0.000
+WARNING: position std 0.0100 < 0.02 for 4 consecutive logs. Training continues.
+collapse t=280000 mean=0.000 std=0.000 extreme=0.000
+WARNING: position std 0.0000 < 0.02 for 5 consecutive logs. Training continues.
+collapse t=290000 mean=0.000 std=0.010 extreme=0.000
+WARNING: position std 0.0100 < 0.02 for 6 consecutive logs. Training continues.
+collapse t=300000 mean=0.000 std=0.000 extreme=0.000
+WARNING: position std 0.0000 < 0.02 for 7 consecutive logs. Training continues.
+collapse t=310000 mean=0.000 std=0.000 extreme=0.000
+WARNING: position std 0.0000 < 0.02 for 8 consecutive logs. Training continues.
+collapse t=320000 mean=-0.000 std=0.010 extreme=0.000
+WARNING: position std 0.0100 < 0.02 for 9 consecutive logs. Training continues.
+collapse t=330000 mean=0.006 std=0.054 extreme=0.000
+collapse t=340000 mean=0.000 std=0.011 extreme=0.000
+collapse t=350000 mean=-0.000 std=0.010 extreme=0.000
+collapse t=360000 mean=0.000 std=0.005 extreme=0.000
+WARNING: position std 0.0050 < 0.02 for 3 consecutive logs. Training continues.
+collapse t=370000 mean=0.000 std=0.007 extreme=0.000
+WARNING: position std 0.0071 < 0.02 for 4 consecutive logs. Training continues.
+collapse t=380000 mean=0.000 std=0.007 extreme=0.000
+WARNING: position std 0.0071 < 0.02 for 5 consecutive logs. Training continues.
+collapse t=390000 mean=0.002 std=0.047 extreme=0.002
+collapse t=400000 mean=0.034 std=0.185 extreme=0.034
+collapse t=410000 mean=0.025 std=0.158 extreme=0.025
+collapse t=420000 mean=0.007 std=0.087 extreme=0.008
+collapse t=430000 mean=0.000 std=0.000 extreme=0.000
+collapse t=440000 mean=0.000 std=0.000 extreme=0.000
+collapse t=450000 mean=0.000 std=0.000 extreme=0.000
+WARNING: position std 0.0000 < 0.02 for 3 consecutive logs. Training continues.
+collapse t=460000 mean=0.000 std=0.005 extreme=0.000
+WARNING: position std 0.0050 < 0.02 for 4 consecutive logs. Training continues.
+collapse t=470000 mean=0.000 std=0.000 extreme=0.000
+WARNING: position std 0.0000 < 0.02 for 5 consecutive logs. Training continues.
+collapse t=480000 mean=0.000 std=0.000 extreme=0.000
+WARNING: position std 0.0000 < 0.02 for 6 consecutive logs. Training continues.
+collapse t=490000 mean=-0.001 std=0.024 extreme=0.000
+collapse t=500000 mean=-0.000 std=0.007 extreme=0.000
+trained validate lam 10 BTC 1h conditioned seed 42 in 226s
