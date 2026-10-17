@@ -38,8 +38,9 @@ from crta.eval import (  # noqa: E402
     walk_forward_bounds,
 )
 from crta.regime import (  # noqa: E402
-    BURN,
     ETA,
+    LEGACY_V1,
+    LEGACY_V2,
     REGIMES,
     STRIDE,
     _fit_hmm,
@@ -56,6 +57,9 @@ from crta.regime import (  # noqa: E402
 from crta.report import label_statistics  # noqa: E402
 from crta.verify import audit_many, audit_many_v2, empirical_banks, verifier_report  # noqa: E402
 
+# Reproduces the published five-seed rerun, smoothed v1 probabilities included.
+# New results come from causal_4h.py.
+BURN = LEGACY_V1["burn"]
 OUT = ROOT / "paper" / "results" / "4h_rerun"
 TAB = ROOT / "paper" / "results" / "tables_4h"
 TAB_COPY = ROOT / "results" / "tables"
@@ -179,7 +183,7 @@ def moment_sorted_on_v1_refits(X: np.ndarray) -> tuple[list[str], np.ndarray, di
     fitted = _fit_hmm(X[:BURN], 42)
     mu, sd = component_params(fitted)
     tmu, tsd, assign = _templates_from_lock(mu, sd)
-    wl, wp, _proba = _window_labels(fitted, X[:BURN], assign, None)
+    wl, wp, _proba = _window_labels(fitted, X[:BURN], assign, None, posterior="smoothed")
     labels_w2.extend(wl)
     labels_ms.extend(list(wl))
     probs_w2[:BURN] = wp
@@ -195,10 +199,10 @@ def moment_sorted_on_v1_refits(X: np.ndarray) -> tuple[list[str], np.ndarray, di
         moment = _moment_assign(mu)
         w2_cost = float(cost[np.arange(len(mu)), assign].mean())
         ms_cost = float(cost[np.arange(len(mu)), moment].mean())
-        wl, wp, proba = _window_labels(fitted, X[t:end], assign, labels_w2[-1])
+        wl, wp, proba = _window_labels(fitted, X[t:end], assign, labels_w2[-1], posterior="smoothed")
         labels_w2.extend(wl)
         probs_w2[t:end] = wp
-        wl_ms, wp_ms, proba_ms = _window_labels(fitted, X[t:end], moment, labels_ms[-1])
+        wl_ms, wp_ms, proba_ms = _window_labels(fitted, X[t:end], moment, labels_ms[-1], posterior="smoothed")
         labels_ms.extend(wl_ms)
         probs_ms[t:end] = wp_ms
         weight = np.asarray(proba).sum(axis=0)
@@ -214,7 +218,7 @@ def moment_sorted_on_v1_refits(X: np.ndarray) -> tuple[list[str], np.ndarray, di
         tmu, tsd = update_templates(tmu, tsd, mu, sd, proba, assign, ETA)
         t = end
 
-    ref_labels, ref_probs = track(X)
+    ref_labels, ref_probs = track(X, **LEGACY_V1)
     if ref_labels != labels_w2 or not np.allclose(ref_probs, probs_w2):
         raise RuntimeError("moment-sort replay diverged from track()")
     return labels_ms, probs_ms, diag_w2, diag_ms
@@ -240,10 +244,10 @@ def prepare() -> None:
     frame = load_frozen_frame()
     X = frame[list(HMM_COLS)].to_numpy(dtype=float)
     print("fitting tracker v1", flush=True)
-    labels_v1, probs_v1 = track(X)
+    labels_v1, probs_v1 = track(X, **LEGACY_V1)
     print("fitting tracker v2", flush=True)
     diag_v2: dict = {}
-    labels_v2, probs_v2 = track_v2(X, diagnostics=diag_v2, seed=42)
+    labels_v2, probs_v2 = track_v2(X, diagnostics=diag_v2, seed=42, **LEGACY_V2)
     print("fitting moment sort on the v1 refits", flush=True)
     labels_ms, probs_ms, diag_w2, diag_ms = moment_sorted_on_v1_refits(X)
     if labels_v1 != list(labels_v1):
@@ -371,8 +375,6 @@ def _concat_reports(parts: list[dict]) -> dict:
 
 
 def run_seed(labelling: str, seed: int, timesteps_override: int | None = None) -> dict:
-    from stable_baselines3 import PPO
-
     prepare()
     frame = pd.read_parquet(OUT / "frame.parquet")
     frame["timestamp"] = pd.to_datetime(frame["timestamp"], utc=True)
@@ -380,8 +382,20 @@ def run_seed(labelling: str, seed: int, timesteps_override: int | None = None) -
     labels, probs = _labels_for(labelling, packed)
     if len(labels) != len(frame):
         raise RuntimeError(f"{labelling} labels {len(labels)} != frame {len(frame)}")
+    return walk_forward_seed(frame, labels, probs, labelling, seed, OUT / labelling / f"seed_{seed}", timesteps_override)
+
+
+def walk_forward_seed(
+    frame: pd.DataFrame,
+    labels,
+    probs,
+    labelling: str,
+    seed: int,
+    seed_dir: Path,
+    timesteps_override: int | None = None,
+) -> dict:
+    """Train both twins per fold, audit the conditioned twin, and write eval.json under seed_dir."""
     bounds = walk_forward_bounds(len(frame), min_train=1080)
-    seed_dir = OUT / labelling / f"seed_{seed}"
     seed_dir.mkdir(parents=True, exist_ok=True)
     carry_c = 0.0
     carry_b = 0.0

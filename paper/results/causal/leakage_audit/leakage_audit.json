@@ -1,0 +1,116 @@
+{
+  "n_oos_bars": 11430,
+  "variants": {
+    "published": {
+      "regime_rule": {
+        "sharpe": {
+          "point": 1.1250422345109197,
+          "low": 0.24760544974902254,
+          "high": 1.932415458630971,
+          "block": 107,
+          "n_boot": 1000
+        },
+        "total_return": 8.222725626522173,
+        "max_drawdown": -0.31296646954113627,
+        "mean_position": 0.7502271677985023,
+        "extreme_share": 0.6993875765529309
+      },
+      "conditioned_ppo": {
+        "sharpe": {
+          "point": -0.1601523176292211,
+          "low": -0.878113189169446,
+          "high": 0.5850989832186798,
+          "block": 107,
+          "n_boot": 1000
+        },
+        "total_return": -0.2932880050118234,
+        "max_drawdown": -0.7703981829812133,
+        "mean_position": 0.3540497093778413,
+        "extreme_share": 0.616010498687664
+      }
+    },
+    "lagged_1": {
+      "regime_rule": {
+        "sharpe": {
+          "point": 0.4566191615808754,
+          "low": -0.41642355262326836,
+          "high": 1.2563342082490514,
+          "block": 107,
+          "n_boot": 1000
+        },
+        "total_return": 1.5180170286762174,
+        "max_drawdown": -0.5634656898175625,
+        "mean_position": 0.750227214437498,
+        "extreme_share": 0.6993875765529309
+      },
+      "conditioned_ppo": {
+        "sharpe": {
+          "point": -0.5978027786350718,
+          "low": -1.4035495625130616,
+          "high": 0.2758681118443614,
+          "block": 107,
+          "n_boot": 1000
+        },
+        "total_return": -0.7280923718829051,
+        "max_drawdown": -0.8369940532469273,
+        "mean_position": 0.3685327442749122,
+        "extreme_share": 0.6195975503062118
+      }
+    },
+    "filtered": {
+      "regime_rule": {
+        "sharpe": {
+          "point": 0.19486741387769377,
+          "low": -0.7713606298867388,
+          "high": 1.073061248993998,
+          "block": 107,
+          "n_boot": 1000
+        },
+        "total_return": 0.4931181780437821,
+        "max_drawdown": -0.6866535284959607,
+        "mean_position": 0.7510009901777696,
+        "extreme_share": 0.6909886264216973
+      },
+      "conditioned_ppo": {
+        "sharpe": {
+          "point": -1.0207933475975615,
+          "low": -1.7929725585243177,
+          "high": -0.10158664288746634,
+          "block": 107,
+          "n_boot": 1000
+        },
+        "total_return": -0.8911751785172944,
+        "max_drawdown": -0.9241948515290803,
+        "mean_position": 0.33684380096949684,
+        "extreme_share": 0.6252843394575678
+      }
+    }
+  },
+  "published_replay_max_gap": 4.708766937255859e-06,
+  "blind_twin_published": {
+    "sharpe": {
+      "point": -1.1236586651592642,
+      "low": -1.9268322961324336,
+      "high": -0.31768826983174286,
+      "block": 107,
+      "n_boot": 1000
+    },
+    "total_return": -0.9296124980027222,
+    "max_drawdown": -0.9440650744129827,
+    "mean_position": 0.2423988880782713,
+    "extreme_share": 0.6498687664041994
+  },
+  "buy_hold": {
+    "sharpe": {
+      "point": 0.35216934980242126,
+      "low": -0.5749722921828107,
+      "high": 1.2860519426565384,
+      "block": 107,
+      "n_boot": 1000
+    },
+    "total_return": 1.5621620618576997,
+    "max_drawdown": -0.7704339319608701,
+    "mean_position": 1.0,
+    "extreme_share": 1.0
+  }
+}

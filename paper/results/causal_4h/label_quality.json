@@ -1,0 +1,87 @@
+{
+  "labeller": "filtered-scaled-1",
+  "settings": {
+    "burn": 1080,
+    "stride": 42,
+    "dwell": 30,
+    "matching": "nearest",
+    "death_after": 20
+  },
+  "scored_from_bar": 1080,
+  "quality": {
+    "n": 11430,
+    "bull_bars": 7131,
+    "bear_bars": 4299,
+    "label_share": {
+      "bull": 0.6923884514435695,
+      "bear": 0.26535433070866143,
+      "calm": 0.02930883639545057,
+      "crisis": 0.01294838145231846
+    },
+    "bull_labelled_bull": 0.7850231384097602,
+    "bull_labelled_calm": 0.01809002944888515,
+    "bear_labelled_bear_or_crisis": 0.4133519423121656,
+    "bear_labelled_calm": 0.04791812049313794,
+    "bear_labelled_bull": 0.5387299371946964,
+    "confusion": {
+      "bull": {
+        "bull": 5598,
+        "bear": 1335,
+        "calm": 129,
+        "crisis": 69
+      },
+      "bear": {
+        "bull": 2316,
+        "bear": 1698,
+        "calm": 206,
+        "crisis": 79
+      }
+    }
+  },
+  "statistics": {
+    "n": 11430,
+    "switches_per_year": 3.4488188976377954,
+    "median_run_bars": 217.0,
+    "mean_matched_w2": 0.10014840511271834,
+    "identity_jump": 0.10458357117590478,
+    "identity_jump_per_regime": {
+      "bull": 0.04226009844507537,
+      "bear": 0.15925072817498645,
+      "calm": 0.09873041130443312,
+      "crisis": 0.11809304677912419
+    },
+    "per_regime": {
+      "bull": {
+        "share": 0.6923884514435695,
+        "mean_return": 0.0001911426004370474,
+        "volatility": 0.008673694484869697
+      },
+      "bear": {
+        "share": 0.26535433070866143,
+        "mean_return": -0.00018684121080715112,
+        "volatility": 0.012696049923208157
+      },
+      "calm": {
+        "share": 0.02930883639545057,
+        "mean_return": -8.786632113109282e-05,
+        "volatility": 0.013291151637472928
+      },
+      "crisis": {
+        "share": 0.01294838145231846,
+        "mean_return": 0.00020039224960613126,
+        "volatility": 0.009750673114126186
+      }
+    }
+  },
+  "rebirths": [
+    {
+      "kind": "death_birth",
+      "refit_index": 55,
+      "bar": 3390,
+      "date": null,
+      "template": "bull",
+      "source": "farthest",
+      "component": 2
+    }
+  ]
+}

@@ -105,3 +105,16 @@ No mode passed. `gaussian_clip` and `tanh_env` missed the extreme-share bar on e
 - `reward_mode: mean_variance` with `risk_aversion` (default reward stays `raw`, `risk_aversion` defaults to 0). The reward is `a*r - c*|a - a_prev| - risk_aversion * a^2 * vol_20^2`, scaled by `reward_scale`. `vol_20` is the volatility already known at the decision bar. A reward linear in the position is maximised at a rail, so this mode gives an interior optimum `a* = E[r] / (2 * risk_aversion * vol^2)` instead of forcing variety.
 - `audit_many(..., bound_aware=True)` reports bars where the position limit makes the required counterfactual move impossible (`cf_untestable`) and the all-check rate on the rest (`faith_rate_testable`). `passed` keeps the original rule, and the original rate is still the headline.
 - `paper/scripts/bound_aware_audit.py` re-scores the published four-hour run from its saved pass flags: 7,040 of 11,430 bars are untestable, and the all-check rate on the 4,390 testable bars is 0.25% (11 bars overall).
+
+## Causal regime inputs (breaks the tracker default above)
+
+The published tracker decoded each 42-bar window with forward-backward smoothing (`predict_proba`), so the probability at bar `t` had already seen later bars of its window, including `next_ret`, the return the agent is paid on. Defaults now change on purpose; the old behavior is still reachable, for audits only.
+
+- `track`, `track_v2`, `label_span` and `decode` return filtered probabilities and online-dwell labels by default. `posterior="smoothed"` keeps the old decoder. Each window's filter first runs over `WARM_STRIDES * stride` earlier rows, so it does not restart from the fit's start vector.
+- W2 matching compares components in units of the burn-in standard deviation (`scale="burn"`), so per-state mean returns are no longer drowned by trend. `scale="raw"` is the old rule.
+- `BURN` is 1,080 bars, fold 0's training window, so naming the templates costs no test bar.
+- `LEGACY_V1` and `LEGACY_V2` hold the published settings. `rerun_4h.py`, `tracker_diagnostics.py` and `tracker_one_to_one.py` pass them, so they still reproduce the published numbers.
+- `crta.pipeline` labels with `track_v2(burn=min_train)` and scores the baselines next to the twins.
+- `timeframe_study.py` and `run_experiment.py` key their label caches on `LABELLER_VERSION`, so labels cached before this change are rebuilt.
+- New: `crta.dating` (hindsight 20% bull/bear dating and label quality), `crta.baselines`, `crta.predictability`, `crta.leakage`.
+- New scripts: `leakage_audit.py` (published weights under published, one-bar-lagged and filtered probabilities), `label_quality.py`, `predictability_study.py`, and `causal_4h.py`, the five-seed walk-forward study that replaces the published four-hour run. Outputs go to `paper/results/causal/` and `paper/results/causal_4h/`.

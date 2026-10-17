@@ -30,7 +30,7 @@ from crta.agent import prob_peak_report, save_twin, train_ppo  # noqa: E402
 from crta.config import ExperimentConfig, _parse_scalar  # noqa: E402
 from crta.data import FEATURE_COLS, HMM_COLS, features, synthetic_ohlcv  # noqa: E402
 from crta.eval import TURNOVER_COST, max_drawdown, strategy_returns  # noqa: E402
-from crta.regime import REGIMES, track, track_v2  # noqa: E402
+from crta.regime import LABELLER_VERSION, REGIMES, track, track_v2  # noqa: E402
 from crta.verify import audit_many, audit_many_v2, empirical_banks, label_agreement, verifier_report  # noqa: E402
 
 LABELS = ROOT / "paper" / "results" / "v2" / "labels"
@@ -158,7 +158,12 @@ def timeframe_frame(cfg: ExperimentConfig, asset: str, timeframe: str) -> tuple[
         LABELS.mkdir(parents=True, exist_ok=True)
         cache = LABELS / f"{asset.lower()}_{timeframe}_v2.parquet"
         key_path = LABELS / f"{asset.lower()}_{timeframe}_v2.key.json"
-        key = {"n": len(framed), "kwargs": kwargs, "first": str(framed["timestamp"].iloc[0])}
+        key = {
+            "n": len(framed),
+            "kwargs": kwargs,
+            "first": str(framed["timestamp"].iloc[0]),
+            "labeller": LABELLER_VERSION,
+        }
         if cache.exists() and key_path.exists() and json.loads(key_path.read_text()) == key:
             lab = pd.read_parquet(cache)
             for col in [*REGIMES, "regime"]:

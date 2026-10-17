@@ -1,4 +1,9 @@
-"""4-state Gaussian HMM. The burn-in is named by moments; later refits keep those names by Wasserstein distance."""
+"""4-state Gaussian HMM. The burn-in is named by moments; later refits keep those names by Wasserstein distance.
+
+Probabilities are filtered: the value at bar t uses rows up to t only. The smoothed
+(forward-backward) posterior lets bar t see later bars of its window, including the
+next bar's return, so it is kept only to reproduce and audit the published runs.
+"""
 
 from __future__ import annotations
 
@@ -12,10 +17,22 @@ REGIMES = ("bull", "bear", "calm", "crisis")
 # A 1-day dwell (6 bars) still reads as barcode noise on a five-year plate.
 MIN_DWELL = 30
 N_STATES = 4
-# Six weeks to name the templates. Each later window is one week, fit on earlier rows only.
-BURN = 252
+# Fold 0's training window (1,080 4h bars, six months) names the templates, so the
+# burn-in costs no test bar. Each later window is one week, fit on earlier rows only.
+BURN = 1080
 STRIDE = 42
 ETA = 0.2
+# A window's forward filter first runs over this many strides of earlier rows, so it
+# does not restart from the fit's start vector. Those rows are all before the window.
+WARM_STRIDES = 6
+POSTERIORS = ("filtered", "smoothed")
+SCALES = ("burn", "raw")
+# Changes whenever the same input gets different labels, so label caches go stale.
+LABELLER_VERSION = "filtered-scaled-1"
+# The published pipeline: six-week burn-in, raw-unit matching and in-window smoothing.
+# For leakage audits and reproductions only.
+LEGACY_V1 = {"burn": 252, "posterior": "smoothed", "scale": "raw", "warm": 0}
+LEGACY_V2 = {"burn": 252, "scale": "raw", "warm": 0}
 
 
 def enforce_dwell(labels, min_dwell: int = MIN_DWELL, prev: str | None = None) -> list[str]:
@@ -148,13 +165,70 @@ def update_templates(template_mu, template_sd, mu, sd, proba, assign, eta: float
     return template_mu, template_sd
 
 
-def decode(model: RegimeModel, X: np.ndarray, prev: str | None = None) -> tuple[list[str], np.ndarray]:
+def feature_scale(X: np.ndarray) -> np.ndarray:
+    """Per-feature standard deviation of the burn-in rows, with a floor for flat columns."""
+    sd = np.asarray(X, dtype=float).std(axis=0)
+    return np.where(sd < 1e-12, 1.0, sd)
+
+
+def _units(X: np.ndarray, burn: int, scale: str) -> np.ndarray:
+    """Units for W2. ``burn`` divides by the burn-in std so returns are not drowned by trend."""
+    if scale == "burn":
+        return feature_scale(X[:burn])
+    if scale == "raw":
+        return np.ones(np.asarray(X).shape[1])
+    raise ValueError(f"unknown scale {scale}, expected one of {SCALES}")
+
+
+def _component_units(model: RegimeModel, units: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    mu, sd = component_params(model)
+    return mu / units, sd / units
+
+
+def _warm_rows(warm: int | None, stride: int) -> int:
+    return WARM_STRIDES * int(stride) if warm is None else max(int(warm), 0)
+
+
+def _history(X: np.ndarray, start: int, rows: int, posterior: str) -> np.ndarray | None:
+    if posterior != "filtered" or rows <= 0 or start <= 0:
+        return None
+    return X[max(0, start - rows) : start]
+
+
+def _posterior_states(
+    model: RegimeModel, X: np.ndarray, posterior: str = "filtered", history: np.ndarray | None = None
+) -> tuple[np.ndarray, np.ndarray]:
+    """Most likely state and state probabilities for each row of X.
+
+    ``filtered`` uses rows up to t; ``history`` rows run through the filter first and
+    are dropped. ``smoothed`` is Viterbi and forward-backward over all of X, so bar t
+    depends on later rows. Only audits ask for it.
+    """
     X = np.asarray(X, dtype=float)
-    xs = (X - model.mu) / model.sd
-    raw = model.hmm.predict(xs)
-    proba = model.hmm.predict_proba(xs)
-    names = [model.mapping[int(state)] for state in raw]
-    sticky = enforce_dwell(names, prev=prev)
+    if posterior == "smoothed":
+        xs = (X - model.mu) / model.sd
+        return model.hmm.predict(xs), model.hmm.predict_proba(xs)
+    if posterior != "filtered":
+        raise ValueError(f"unknown posterior {posterior}, expected one of {POSTERIORS}")
+    lead = 0 if history is None else len(history)
+    rows = X if lead == 0 else np.vstack([np.asarray(history, dtype=float), X])
+    proba = forward_filter(model, rows)[lead:]
+    return proba.argmax(axis=1), proba
+
+
+def _sticky(names: list[str], posterior: str, dwell: int, prev: str | None) -> list[str]:
+    # The post-hoc merge needs a run's end, which lies in the future. Filtered labels use the online rule.
+    if posterior == "smoothed":
+        return enforce_dwell(names, min_dwell=dwell, prev=prev)
+    return enforce_dwell_online(names, min_dwell=dwell, prev=prev)
+
+
+def decode(
+    model: RegimeModel, X: np.ndarray, prev: str | None = None, posterior: str = "filtered"
+) -> tuple[list[str], np.ndarray]:
+    states, proba = _posterior_states(model, X, posterior)
+    names = [model.mapping[int(state)] for state in states]
+    sticky = _sticky(names, posterior, MIN_DWELL, prev)
     ordered = np.column_stack([proba[:, _state_index(model.mapping, name)] for name in REGIMES])
     return sticky, ordered
 
@@ -182,13 +256,19 @@ def _aggregate(proba: np.ndarray, assign: np.ndarray) -> np.ndarray:
     return ordered
 
 
-def _window_labels(model: RegimeModel, X: np.ndarray, assign: np.ndarray, prev: str | None, dwell: int = MIN_DWELL):
-    xs = (np.asarray(X, dtype=float) - model.mu) / model.sd
-    raw = model.hmm.predict(xs)
-    proba = model.hmm.predict_proba(xs)
-    names = [REGIMES[int(assign[int(state)])] for state in raw]
+def _window_labels(
+    model: RegimeModel,
+    X: np.ndarray,
+    assign: np.ndarray,
+    prev: str | None,
+    dwell: int = MIN_DWELL,
+    posterior: str = "filtered",
+    history: np.ndarray | None = None,
+):
+    states, proba = _posterior_states(model, X, posterior, history)
+    names = [REGIMES[int(assign[int(state)])] for state in states]
     # Closed here. A later window must not relabel bars already issued.
-    sticky = enforce_dwell(names, min_dwell=dwell, prev=prev)
+    sticky = _sticky(names, posterior, dwell, prev)
     return sticky, _aggregate(proba, assign), proba
 
 
@@ -200,21 +280,31 @@ def track(
     seed: int = 42,
     dwell: int = MIN_DWELL,
     diagnostics: dict | None = None,
+    posterior: str = "filtered",
+    scale: str = "burn",
+    warm: int | None = None,
 ) -> tuple[list[str], np.ndarray]:
-    """One causal pass. The burn-in is named by moments; every later window matches templates by W2."""
+    """One causal pass. The burn-in is named by moments; every later window matches templates by W2.
+
+    ``LEGACY_V1`` reproduces the published run, whose smoothed probabilities look ahead.
+    """
     X = np.asarray(X, dtype=float)
     n = len(X)
     if n < N_STATES * 5:
         raise ValueError(f"need at least {N_STATES * 5} rows to track, got {n}")
     burn = int(min(max(burn, N_STATES * 5), n))
     stride = int(max(stride, 1))
+    units = _units(X, burn, scale)
+    warm_rows = _warm_rows(warm, stride)
     labels: list[str] = []
     probs = np.zeros((n, len(REGIMES)))
+    if diagnostics is not None:
+        diagnostics["units"] = units
 
     fitted = _fit_hmm(X[:burn], seed)
-    mu, sd = component_params(fitted)
+    mu, sd = _component_units(fitted, units)
     template_mu, template_sd, assign = _templates_from_lock(mu, sd)
-    window_labels, window_probs, _proba = _window_labels(fitted, X[:burn], assign, None, dwell)
+    window_labels, window_probs, _proba = _window_labels(fitted, X[:burn], assign, None, dwell, posterior)
     labels.extend(window_labels)
     probs[:burn] = window_probs
 
@@ -222,9 +312,11 @@ def track(
     while t < n:
         end = min(t + stride, n)
         fitted = _fit_hmm(X[:t], seed)
-        mu, sd = component_params(fitted)
+        mu, sd = _component_units(fitted, units)
         assign = assign_templates(mu, sd, template_mu, template_sd)
-        window_labels, window_probs, proba = _window_labels(fitted, X[t:end], assign, labels[-1], dwell)
+        window_labels, window_probs, proba = _window_labels(
+            fitted, X[t:end], assign, labels[-1], dwell, posterior, _history(X, t, warm_rows, posterior)
+        )
         labels.extend(window_labels)
         probs[t:end] = window_probs
         if diagnostics is not None:
@@ -244,8 +336,17 @@ def track(
     return labels, probs
 
 
-def label_span(X, start: int, end: int, prev: str | None = None, seed: int = 42):
-    """Label rows [start, end) from a fit on the rows before start. Later rows are not used."""
+def label_span(
+    X,
+    start: int,
+    end: int,
+    prev: str | None = None,
+    seed: int = 42,
+    posterior: str = "filtered",
+    warm: int | None = None,
+    dwell: int = MIN_DWELL,
+):
+    """Label rows [start, end) from a fit on the rows before start. Bar t uses rows up to t only."""
     X = np.asarray(X, dtype=float)
     start = int(start)
     end = int(end)
@@ -255,7 +356,8 @@ def label_span(X, start: int, end: int, prev: str | None = None, seed: int = 42)
     fitted = _fit_hmm(X[:fit_end], seed)
     mu, sd = component_params(fitted)
     _template_mu, _template_sd, assign = _templates_from_lock(mu, sd)
-    labels, probs, _proba = _window_labels(fitted, X[start:end], assign, prev)
+    history = _history(X, start, _warm_rows(warm, STRIDE), posterior)
+    labels, probs, _proba = _window_labels(fitted, X[start:end], assign, prev, dwell, posterior, history)
     return labels, probs
 
 
@@ -460,11 +562,15 @@ def apply_birth_death(
     return template_mu, template_sd, empty_run, reborn
 
 
-def _window_labels_v2(model: RegimeModel, X: np.ndarray, assign: np.ndarray, prev: str | None, dwell: int):
-    proba = forward_filter(model, X)
-    names = [REGIMES[int(assign[int(np.argmax(proba[t]))])] for t in range(len(X))]
-    sticky = enforce_dwell_online(names, min_dwell=dwell, prev=prev)
-    return sticky, _aggregate(proba, assign), proba
+def _window_labels_v2(
+    model: RegimeModel,
+    X: np.ndarray,
+    assign: np.ndarray,
+    prev: str | None,
+    dwell: int,
+    history: np.ndarray | None = None,
+):
+    return _window_labels(model, X, assign, prev, dwell, "filtered", history)
 
 
 def track_v2(
@@ -479,11 +585,15 @@ def track_v2(
     cost_quantile: float = 0.95,
     timestamps=None,
     diagnostics: dict | None = None,
+    scale: str = "burn",
+    warm: int | None = None,
 ) -> tuple[list[str], np.ndarray]:
     """Causal tracker with template birth, optional Hungarian matching, and filtered posteriors.
 
     A template update still uses only the fit on rows before the window and the
     filtered responsibilities of that window. Closed windows are not rewritten.
+    W2 compares components in units of the burn-in std (``scale="burn"``), and each
+    window's filter is warmed on earlier rows. ``LEGACY_V2`` reproduces the published v2.
     """
     X = np.asarray(X, dtype=float)
     n = len(X)
@@ -491,10 +601,13 @@ def track_v2(
         raise ValueError(f"need at least {N_STATES * 5} rows to track, got {n}")
     burn = int(min(max(burn, N_STATES * 5), n))
     stride = int(max(stride, 1))
+    units = _units(X, burn, scale)
+    warm_rows = _warm_rows(warm, stride)
     labels: list[str] = []
     probs = np.zeros((n, len(REGIMES)))
     events: list = []
     if diagnostics is not None:
+        diagnostics["units"] = units
         diagnostics.setdefault("events", events)
         diagnostics.setdefault("matched_costs", [])
         diagnostics.setdefault("template_mu", [])
@@ -506,7 +619,7 @@ def track_v2(
         events = diagnostics["events"]
 
     fitted = _fit_hmm(X[:burn], seed)
-    mu, sd = component_params(fitted)
+    mu, sd = _component_units(fitted, units)
     template_mu, template_sd, assign = _templates_from_lock(mu, sd)
     window_labels, window_probs, _proba = _window_labels_v2(fitted, X[:burn], assign, None, dwell)
     labels.extend(window_labels)
@@ -519,7 +632,7 @@ def track_v2(
     while t < n:
         end = min(t + stride, n)
         fitted = _fit_hmm(X[:t], seed)
-        mu, sd = component_params(fitted)
+        mu, sd = _component_units(fitted, units)
         date = None
         if timestamps is not None:
             date = str(timestamps[min(t, len(timestamps) - 1)])
@@ -530,7 +643,9 @@ def track_v2(
         assign = assign_matching(
             mu, sd, template_mu, template_sd, matching, historical, cost_quantile
         )
-        window_labels, window_probs, proba = _window_labels_v2(fitted, X[t:end], assign, labels[-1], dwell)
+        window_labels, window_probs, proba = _window_labels_v2(
+            fitted, X[t:end], assign, labels[-1], dwell, _history(X, t, warm_rows, "filtered")
+        )
         labels.extend(window_labels)
         probs[t:end] = window_probs
         if diagnostics is not None:
@@ -561,15 +676,5 @@ def track_v2(
 
 
 def label_span_v2(X, start: int, end: int, prev: str | None = None, seed: int = 42, dwell: int = MIN_DWELL):
-    """Like ``label_span``, but the probabilities are the forward filter and the dwell is online."""
-    X = np.asarray(X, dtype=float)
-    start = int(start)
-    end = int(end)
-    if start < 0 or end > len(X) or start >= end:
-        raise IndexError(f"bad span {start}:{end} for {len(X)} rows")
-    fit_end = start if start >= N_STATES * 5 else min(len(X), N_STATES * 5)
-    fitted = _fit_hmm(X[:fit_end], seed)
-    mu, sd = component_params(fitted)
-    _template_mu, _template_sd, assign = _templates_from_lock(mu, sd)
-    labels, probs, _proba = _window_labels_v2(fitted, X[start:end], assign, prev, dwell)
-    return labels, probs
+    """Same as ``label_span``, which is now filtered as well. Kept for existing callers."""
+    return label_span(X, start, end, prev=prev, seed=seed, posterior="filtered", dwell=dwell)

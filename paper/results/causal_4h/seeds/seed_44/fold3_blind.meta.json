@@ -1,0 +1,22 @@
+{
+  "reward_mode": "raw",
+  "reward_scale": 1.0,
+  "prob_temperature": 1.0,
+  "prob_floor": 0.0,
+  "tracker": "v1",
+  "faithfulness_regularizer": false,
+  "window_sampling": "uniform",
+  "ent_coef": 0.0,
+  "ent_coef_start": null,
+  "regime_perturb_prob": 0.0,
+  "sign_flip_prob": 0.0,
+  "action_mode": "gaussian_clip",
+  "risk_aversion": 0.0,
+  "labelling": "causal_v2",
+  "seed": 44,
+  "fold": 3,
+  "twin": "blind",
+  "timesteps": 96510,
+  "n_train": 9651,
+  "recipe": "4h_walkforward"
+}
