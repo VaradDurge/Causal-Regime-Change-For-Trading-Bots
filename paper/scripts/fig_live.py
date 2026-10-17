@@ -44,11 +44,14 @@ def _panels(subs: dict, path: Path, shape: tuple, width: float, height: float, l
         ts = pd.DatetimeIndex(pd.to_datetime(sub["timestamp"], utc=True)).tz_convert("Asia/Kolkata")
         _shade(ax, ts, sub["regime"].to_numpy())
         seen |= set(sub["regime"])
-        ax.plot(ts, sub["equity_bh"], color=style.SYSTEM_COLORS["buy_hold"], lw=0.8, label="buy and hold")
         ax.plot(ts, sub["equity_conditioned"], color=style.SYSTEM_COLORS["conditioned"], lw=0.9, label="conditioned")
         ax.plot(ts, sub["equity_blind"], color=style.SYSTEM_COLORS["blind"], lw=0.9, label="blind")
+        # Drawn last and dashed: a twin that holds +1 would otherwise hide it.
+        ax.plot(ts, sub["equity_bh"], color=style.SYSTEM_COLORS["buy_hold"], lw=0.7, ls=(0, (3, 1.5)),
+                label="buy and hold")
         ax.axhline(1.0, color="0.6", lw=0.5, ls=":")
-        ax.text(0.01, 0.94, f"{name} ({len(sub):,} bars)", transform=ax.transAxes, va="top", fontsize=7)
+        ax.text(0.01, 0.94, f"{name} ({len(sub):,} bars)", transform=ax.transAxes, va="top", fontsize=7,
+                bbox={"facecolor": "white", "alpha": 0.85, "edgecolor": "none", "pad": 1.2})
     for ax in axes[:: shape[1]]:
         ax.set_ylabel("wealth")
     for ax in axes[-shape[1]:]:
