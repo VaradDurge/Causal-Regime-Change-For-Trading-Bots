@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 import time
@@ -55,7 +56,14 @@ from crta.regime import (  # noqa: E402
     update_templates,
 )
 from crta.report import label_statistics  # noqa: E402
-from crta.verify import audit_many, audit_many_v2, empirical_banks, verifier_report  # noqa: E402
+from crta.verify import (  # noqa: E402
+    audit_many,
+    audit_many_v2,
+    audit_many_v3,
+    empirical_banks,
+    regime_order,
+    verifier_report,
+)
 
 # Reproduces the published five-seed rerun, smoothed v1 probabilities included.
 # New results come from causal_4h.py.
@@ -343,7 +351,8 @@ def _predict_fn(model, feats, pos):
     return predict
 
 
-def _audit_fold(model, sub, banks) -> tuple[dict, dict]:
+def _audit_fold(model, sub, banks, order=None, baseline=None) -> tuple[dict, dict, dict | None]:
+    """Legacy and v2 verdicts, plus v3 when the training fold's order and baseline are given."""
     feats = sub[list(FEATURE_COLS)].to_numpy(dtype=float)
     pos = sub["position_before"].to_numpy(dtype=float)
     probs = sub[list(REGIMES)].to_numpy(dtype=float)
@@ -351,7 +360,11 @@ def _audit_fold(model, sub, banks) -> tuple[dict, dict]:
     legacy = audit_many(predict, probs)
     v2 = audit_many_v2(predict, probs, banks)
     likely = sub["regime"].to_numpy()
-    return verifier_report(legacy, regimes=likely), verifier_report(v2, regimes=likely)
+    v3 = None
+    if order is not None and baseline is not None:
+        v3 = verifier_report(audit_many_v3(predict, probs, banks, order, baseline), regimes=likely)
+        v3["order"] = order["ranked"]
+    return verifier_report(legacy, regimes=likely), verifier_report(v2, regimes=likely), v3
 
 
 def _concat_reports(parts: list[dict]) -> dict:
@@ -434,6 +447,8 @@ def walk_forward_seed(
                     reward_scale=1.0,
                     ent_coef=0.0,
                     threads=THREADS,
+                    # CPU is about twice as fast as an RTX 4060 for this 64x64 policy.
+                    device=os.environ.get("CRTA_DEVICE", "cpu"),
                     reward_mode="raw",
                     window_sampling="uniform",
                 )
@@ -465,9 +480,22 @@ def walk_forward_seed(
         test["n_train"] = train_end
         test["timesteps"] = steps
         pieces.append(test)
-        banks = empirical_banks(train[list(REGIMES)].to_numpy(dtype=float))
+        train_probs = train[list(REGIMES)].to_numpy(dtype=float)
+        banks = empirical_banks(train_probs)
+        # Verifier v3 fixes its risk order and ablation baseline from this training fold only.
+        order = regime_order(train_probs, train["next_ret"].to_numpy(dtype=float))
         # position_before is filled after concat; audit this fold after that.
-        fold_rows.append({"fold": fold, "train_end": train_end, "test_end": test_end, "banks": banks, "model": models["conditioned"]})
+        fold_rows.append(
+            {
+                "fold": fold,
+                "train_end": train_end,
+                "test_end": test_end,
+                "banks": banks,
+                "order": order,
+                "baseline": train_probs.mean(axis=0),
+                "model": models["conditioned"],
+            }
+        )
 
     out = pd.concat(pieces, ignore_index=True)
     out["position_before"] = np.concatenate([[0.0], out["action_conditioned"].to_numpy()[:-1]])
@@ -478,15 +506,17 @@ def walk_forward_seed(
 
     legacy_parts = []
     v2_parts = []
+    v3_parts = []
     legacy_pass = []
     v2_pass = []
     legacy_ab = []
     v2_ab = []
     for spec in fold_rows:
         sub = out.loc[out["fold"] == spec["fold"]]
-        legacy, v2 = _audit_fold(spec["model"], sub, spec["banks"])
+        legacy, v2, v3 = _audit_fold(spec["model"], sub, spec["banks"], spec["order"], spec["baseline"])
         legacy_parts.append(legacy)
         v2_parts.append(v2)
+        v3_parts.append(v3)
         # Keep bar-level pass arrays by re-auditing is wasteful. Reconstruct from rates
         # only for the pooled rate via weights. Bar-level flags are needed for the
         # pooled rate, which _concat_reports weights by n. Fold n is exact.
@@ -496,6 +526,8 @@ def walk_forward_seed(
         v2_ab.append(v2["ablation"])
         del spec["model"]
         del spec["banks"]
+        del spec["order"]
+        del spec["baseline"]
 
     def pooled(parts):
         n = sum(part["n"] for part in parts)
@@ -551,8 +583,8 @@ def walk_forward_seed(
         "timesteps_override": timesteps_override,
         "systems": systems,
         "folds": fold_metrics,
-        "verifiers": {"legacy": pooled(legacy_parts), "v2": pooled(v2_parts)},
-        "verifier_detail": {"legacy": legacy_parts, "v2": v2_parts},
+        "verifiers": {"legacy": pooled(legacy_parts), "v2": pooled(v2_parts), "v3": pooled(v3_parts)},
+        "verifier_detail": {"legacy": legacy_parts, "v2": v2_parts, "v3": v3_parts},
         "regimes": regimes,
     }
     if timesteps_override is None:

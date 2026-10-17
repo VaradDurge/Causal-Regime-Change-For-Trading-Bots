@@ -28,12 +28,39 @@ def faithfulness_hinge(action, action_crisis, action_bull):
     return np.sum(terms, axis=0)
 
 
+def hinge_position(raw_mean: th.Tensor, action_mode: str) -> th.Tensor:
+    """Position the hinge compares, taken before any clamp so it keeps a gradient at the rails.
+
+    ``gaussian_clip`` uses the raw Gaussian mean: clamping first made a mean of 5 and a
+    mean of 6 both read as 1, so a violation beyond the limit cost nothing. ``tanh_env``
+    uses tanh of the mean, the executed position, which is smooth everywhere.
+    """
+    if action_mode == "gaussian_clip":
+        return raw_mean
+    if action_mode == "tanh_env":
+        return th.tanh(raw_mean)
+    raise ValueError(f"the faithfulness hinge does not support action_mode {action_mode}")
+
+
+def faith_hinge_loss(actual: th.Tensor, crisis, bull, action_mode: str) -> th.Tensor:
+    """Mean hinge on raw means: a crisis shift that raises the position, a bull shift that lowers it."""
+    base = hinge_position(actual, action_mode)
+    parts = []
+    if crisis is not None:
+        parts.append(th.relu(hinge_position(crisis, action_mode) - base))
+    if bull is not None:
+        parts.append(th.relu(base - hinge_position(bull, action_mode)))
+    if not parts:
+        return actual.new_zeros(())
+    return th.stack(parts, dim=0).mean()
+
+
 class FaithfulPPO(PPO):
     """Conditioned PPO. ``crta_crisis_bank`` and ``crta_bull_bank`` are training-set rows."""
 
     def _position_mean(self, obs: th.Tensor) -> th.Tensor:
-        mean = self.policy.get_distribution(obs).distribution.mean
-        return mean.squeeze(-1).clamp(-1.0, 1.0)
+        """Raw policy mean. ``hinge_position`` decides what the hinge compares."""
+        return self.policy.get_distribution(obs).distribution.mean.squeeze(-1)
 
     def _nearest(self, probs: th.Tensor, bank: np.ndarray) -> th.Tensor:
         table = th.as_tensor(bank, device=probs.device, dtype=probs.dtype)
@@ -46,20 +73,19 @@ class FaithfulPPO(PPO):
             return obs.new_zeros(())
         probs = obs[:, -4:]
         action = self._position_mean(obs)
-        parts = []
         crisis = getattr(self, "crta_crisis_bank", None)
         bull = getattr(self, "crta_bull_bank", None)
+        crisis_mean = bull_mean = None
         if crisis is not None and len(crisis):
             shifted = obs.clone()
             shifted[:, -4:] = self._nearest(probs, crisis)
-            parts.append(th.relu(self._position_mean(shifted) - action))
+            crisis_mean = self._position_mean(shifted)
         if bull is not None and len(bull):
             shifted = obs.clone()
             shifted[:, -4:] = self._nearest(probs, bull)
-            parts.append(th.relu(action - self._position_mean(shifted)))
-        if not parts:
-            return obs.new_zeros(())
-        return coef * th.stack(parts, dim=0).mean()
+            bull_mean = self._position_mean(shifted)
+        mode = str(getattr(self, "crta_action_mode", "gaussian_clip"))
+        return coef * faith_hinge_loss(action, crisis_mean, bull_mean, mode)
 
     def train(self) -> None:
         self.policy.set_training_mode(True)

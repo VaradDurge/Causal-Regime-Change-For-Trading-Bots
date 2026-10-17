@@ -69,9 +69,9 @@
       "features": "agent_regime",
       "model": "ols",
       "n_test": 11430,
-      "r2_vs_train_mean": -0.016236464410858797,
-      "r2_vs_zero": -0.016479317274553207,
-      "hit_rate": 0.5035870516185477,
+      "r2_vs_train_mean": -0.042117429522126715,
+      "r2_vs_zero": -0.04236646723227433,
+      "hit_rate": 0.5038495188101487,
       "up_share": 0.5093613298337708
     },
     {
@@ -79,9 +79,9 @@
       "features": "agent_regime",
       "model": "gbt",
       "n_test": 11430,
-      "r2_vs_train_mean": -0.1065099675382537,
-      "r2_vs_zero": -0.10677439331289751,
-      "hit_rate": 0.5004374453193351,
+      "r2_vs_train_mean": -0.16551485986139625,
+      "r2_vs_zero": -0.16579338619981088,
+      "hit_rate": 0.5032370953630796,
       "up_share": 0.5093613298337708
     },
     {
@@ -121,7 +121,7 @@
       "features": "agent_regime",
       "model": "ols",
       "n_test": 11430,
-      "r2_vs_train_mean": 0.14335870614478385,
+      "r2_vs_train_mean": 0.0944756446048658,
       "r2_vs_zero": null
     },
     {
@@ -129,7 +129,7 @@
       "features": "agent_regime",
       "model": "gbt",
       "n_test": 11430,
-      "r2_vs_train_mean": 0.08944555124470333,
+      "r2_vs_train_mean": -0.10976973483506569,
       "r2_vs_zero": null
     },
     {
@@ -177,9 +177,9 @@
       "features": "agent_regime",
       "model": "ols",
       "n_test": 11425,
-      "r2_vs_train_mean": -0.033041279911665944,
-      "r2_vs_zero": -0.034509735155871635,
-      "hit_rate": 0.4937417943107221,
+      "r2_vs_train_mean": -0.10568855422488355,
+      "r2_vs_zero": -0.10726027665987536,
+      "hit_rate": 0.5159737417943108,
       "up_share": 0.5116849015317286
     },
     {
@@ -187,9 +187,9 @@
       "features": "agent_regime",
       "model": "gbt",
       "n_test": 11425,
-      "r2_vs_train_mean": -0.20268026736972433,
-      "r2_vs_zero": -0.20438986231047362,
-      "hit_rate": 0.4958424507658643,
+      "r2_vs_train_mean": -0.28015516276838137,
+      "r2_vs_zero": -0.2819748873028407,
+      "hit_rate": 0.5006564551422319,
       "up_share": 0.5116849015317286
     }
   ]

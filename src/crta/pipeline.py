@@ -10,7 +10,7 @@ import pandas as pd
 
 from crta.agent import TIMESTEPS, observation, rollout, train_ppo
 from crta.baselines import baseline_positions
-from crta.data import FEATURE_COLS, HMM_COLS, RAW_PATH, ROOT, fetch_ohlcv, model_frame, synthetic_ohlcv
+from crta.data import FEATURE_COLS, HMM_COLS_DD, RAW_PATH, ROOT, fetch_ohlcv, model_frame, synthetic_ohlcv
 from crta.eval import (
     SEED,
     by_regime,
@@ -110,7 +110,8 @@ def build(mode: str = "trained", timesteps: int = TIMESTEPS, synthetic: bool = F
     carry_b = 0.0
     # One causal pass with filtered probabilities. Folds slice it; a test bar is never fit
     # on rows after its window. Fold 0's training rows are the burn-in, so no test bar is spent.
-    labels, label_probs = track_v2(frame[list(HMM_COLS)].to_numpy(), burn=min_train)
+    # The labeller (semantic guard plus the drawdown input) was chosen on fold 1's training span.
+    labels, label_probs = track_v2(frame[list(HMM_COLS_DD)].to_numpy(), burn=min_train)
     for fold, (train_end, test_end) in enumerate(bounds):
         # Features at t do not include the next close. The last train reward does.
         train = frame.iloc[:train_end].reset_index(drop=True)

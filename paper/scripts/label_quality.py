@@ -30,19 +30,20 @@ sys.path.insert(0, str(ROOT / "src"))
 from crta.data import HMM_COLS  # noqa: E402
 from crta.dating import hindsight_phases, label_quality  # noqa: E402
 from crta.eval import PERIODS  # noqa: E402
-from crta.regime import LEGACY_V1, LEGACY_V2, REGIMES, track, track_v2  # noqa: E402
+from crta.regime import LEGACY_V1, LEGACY_V2, REGIMES, TIER1_V2, track, track_v2  # noqa: E402
 from crta.report import label_statistics  # noqa: E402
 
 FRAME = ROOT / "paper" / "results" / "4h_rerun" / "frame.parquet"
 OUT = ROOT / "paper" / "results" / "causal" / "label_quality"
 SCORED_FROM = 1080
 
+# Tier 1 comparison, before the semantic guard. label_selection.py covers the guard.
 LABELLERS = {
     "v1_published": (track, dict(LEGACY_V1)),
     "v2_published": (track_v2, dict(LEGACY_V2)),
-    "v2_scaled": (track_v2, {"burn": 252, "scale": "burn", "warm": 0}),
-    "v2_burn1080": (track_v2, {"burn": 1080, "scale": "raw", "warm": 0}),
-    "v2_fixed": (track_v2, {"burn": 1080}),
+    "v2_scaled": (track_v2, {"burn": 252, "scale": "burn", "warm": 0, "semantic_guard": False}),
+    "v2_burn1080": (track_v2, {"burn": 1080, "scale": "raw", "warm": 0, "semantic_guard": False}),
+    "v2_fixed": (track_v2, dict(TIER1_V2)),
 }
 
 

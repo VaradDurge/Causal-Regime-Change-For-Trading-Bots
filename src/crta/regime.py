@@ -28,11 +28,13 @@ WARM_STRIDES = 6
 POSTERIORS = ("filtered", "smoothed")
 SCALES = ("burn", "raw")
 # Changes whenever the same input gets different labels, so label caches go stale.
-LABELLER_VERSION = "filtered-scaled-1"
+LABELLER_VERSION = "filtered-scaled-guard-1"
 # The published pipeline: six-week burn-in, raw-unit matching and in-window smoothing.
 # For leakage audits and reproductions only.
 LEGACY_V1 = {"burn": 252, "posterior": "smoothed", "scale": "raw", "warm": 0}
-LEGACY_V2 = {"burn": 252, "scale": "raw", "warm": 0}
+LEGACY_V2 = {"burn": 252, "scale": "raw", "warm": 0, "semantic_guard": False}
+# The Tier 1 labeller, before the semantic guard.
+TIER1_V2 = {"burn": 1080, "semantic_guard": False}
 
 
 def enforce_dwell(labels, min_dwell: int = MIN_DWELL, prev: str | None = None) -> list[str]:
@@ -516,6 +518,30 @@ def rebirth_source(mu, sd, template_mu, template_sd, dead: int) -> tuple[np.ndar
     return mu[best_k].copy(), sd[best_k].copy(), "farthest", int(best_k)
 
 
+def rename_by_moments(template_mu, template_sd) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Re-name templates by the burn-in rule applied to their own moments.
+
+    Templates drift under the update, and nothing else stops the crisis template from
+    ending up calmer than calm. Returns the re-ordered arrays and ``perm`` with
+    ``new = old[perm]``. Templates move slowly, so names swap only when two cross.
+    """
+    template_mu = np.asarray(template_mu, dtype=float)
+    template_sd = np.asarray(template_sd, dtype=float)
+    perm = np.empty(len(REGIMES), dtype=int)
+    for idx, name in lock_states(template_mu).items():
+        perm[REGIMES.index(name)] = int(idx)
+    return template_mu[perm].copy(), template_sd[perm].copy(), perm
+
+
+def _moment_source(mu, sd, dead: int) -> tuple[np.ndarray, np.ndarray, str, int]:
+    """The component this fit's moments give the dead template's name."""
+    name = REGIMES[dead]
+    for comp, label in lock_states(np.asarray(mu, dtype=float)).items():
+        if label == name:
+            return np.asarray(mu)[int(comp)].copy(), np.asarray(sd)[int(comp)].copy(), "moment", int(comp)
+    raise KeyError(name)
+
+
 def apply_birth_death(
     template_mu,
     template_sd,
@@ -528,8 +554,13 @@ def apply_birth_death(
     refit_index: int,
     bar: int,
     date: str | None = None,
+    source: str = "farthest",
 ):
-    """Re-seed a template that has had no member for `death_after` refits. One pass, then the caller re-matches."""
+    """Re-seed a template that has had no member for `death_after` refits. One pass, then the caller re-matches.
+
+    ``farthest`` takes the component farthest from the other templates. ``moment`` takes
+    the component that moment sorting names after the dead template.
+    """
     template_mu = np.array(template_mu, dtype=float, copy=True)
     template_sd = np.array(template_sd, dtype=float, copy=True)
     empty_run = np.array(empty_run, dtype=int, copy=True)
@@ -543,7 +574,12 @@ def apply_birth_death(
     for g in range(len(template_mu)):
         if empty_run[g] < death_after:
             continue
-        src_mu, src_sd, how, comp = rebirth_source(mu, sd, template_mu, template_sd, g)
+        if source == "moment":
+            src_mu, src_sd, how, comp = _moment_source(mu, sd, g)
+        elif source == "farthest":
+            src_mu, src_sd, how, comp = rebirth_source(mu, sd, template_mu, template_sd, g)
+        else:
+            raise ValueError(f"unknown rebirth source {source}")
         template_mu[g] = src_mu
         template_sd[g] = src_sd
         empty_run[g] = 0
@@ -587,6 +623,7 @@ def track_v2(
     diagnostics: dict | None = None,
     scale: str = "burn",
     warm: int | None = None,
+    semantic_guard: bool = True,
 ) -> tuple[list[str], np.ndarray]:
     """Causal tracker with template birth, optional Hungarian matching, and filtered posteriors.
 
@@ -594,6 +631,9 @@ def track_v2(
     filtered responsibilities of that window. Closed windows are not rewritten.
     W2 compares components in units of the burn-in std (``scale="burn"``), and each
     window's filter is warmed on earlier rows. ``LEGACY_V2`` reproduces the published v2.
+    ``semantic_guard`` re-names templates by their moments after every rebirth and
+    update, and rebirths take the component the moments name, so "crisis" stays the
+    low-return, high-volatility template.
     """
     X = np.asarray(X, dtype=float)
     n = len(X)
@@ -638,8 +678,22 @@ def track_v2(
             date = str(timestamps[min(t, len(timestamps) - 1)])
         assign = assign_matching(mu, sd, template_mu, template_sd, matching)
         template_mu, template_sd, empty_run, reborn = apply_birth_death(
-            template_mu, template_sd, mu, sd, assign, empty_run, death_after, events, refit, t, date
+            template_mu,
+            template_sd,
+            mu,
+            sd,
+            assign,
+            empty_run,
+            death_after,
+            events,
+            refit,
+            t,
+            date,
+            source="moment" if semantic_guard else "farthest",
         )
+        if semantic_guard:
+            template_mu, template_sd, perm = rename_by_moments(template_mu, template_sd)
+            empty_run = empty_run[perm]
         assign = assign_matching(
             mu, sd, template_mu, template_sd, matching, historical, cost_quantile
         )
@@ -670,6 +724,9 @@ def track_v2(
         template_mu, template_sd = update_templates(
             template_mu, template_sd, mu, sd, proba, assign, eta
         )
+        if semantic_guard:
+            template_mu, template_sd, perm = rename_by_moments(template_mu, template_sd)
+            empty_run = empty_run[perm]
         t = end
         refit += 1
     return labels, probs

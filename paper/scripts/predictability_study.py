@@ -3,7 +3,8 @@
 Targets, all measured from bar t: the next bar's log return (what the reward pays),
 its absolute value (a risk target), and the next day's log return (6 bars). Feature
 sets: the agent's five features, those plus 2/4/8-week momentum, and those plus the
-filtered regime probabilities. Models: least squares and gradient-boosted trees.
+filtered regime probabilities of the pipeline's labeller (semantic guard plus the
+drawdown input). Models: least squares and gradient-boosted trees.
 Each fold fits on rows before its test block (the 4h study's four folds) and scores
 out-of-sample R^2 against the training mean, plus the sign hit rate for returns.
 
@@ -27,7 +28,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "src"))
 
 from crta.baselines import BARS_PER_WEEK, MOMENTUM_WEEKS  # noqa: E402
-from crta.data import FEATURE_COLS, HMM_COLS  # noqa: E402
+from crta.data import FEATURE_COLS, HMM_COLS_DD, drawdown  # noqa: E402
 from crta.eval import walk_forward_bounds  # noqa: E402
 from crta.predictability import hit_rate, momentum_features, oos_r2, walk_forward_forecasts  # noqa: E402
 from crta.regime import REGIMES, track_v2  # noqa: E402
@@ -86,7 +87,8 @@ def main() -> int:
     frame = pd.read_parquet(FRAME)
     bounds = walk_forward_bounds(len(frame), min_train=MIN_TRAIN)
     print("filtered regime probabilities", flush=True)
-    _labels, probs = track_v2(frame[list(HMM_COLS)].to_numpy(dtype=float), burn=MIN_TRAIN)
+    frame["drawdown"] = drawdown(frame["close"])
+    _labels, probs = track_v2(frame[list(HMM_COLS_DD)].to_numpy(dtype=float), burn=MIN_TRAIN)
     targets = _targets(frame)
     sets = _feature_sets(frame, probs)
     rows = []

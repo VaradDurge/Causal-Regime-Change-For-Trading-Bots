@@ -1,0 +1,509 @@
+{
+  "decision": {
+    "chosen": "guard_dd",
+    "passing": [
+      "guard_dd"
+    ],
+    "scores": {
+      "guard_dd": 0.3125865303134585
+    },
+    "fallback": false
+  },
+  "candidates": {
+    "fixed": {
+      "settings": {
+        "cols": [
+          "log_ret",
+          "vol_20",
+          "trend"
+        ],
+        "semantic_guard": false
+      },
+      "rebirths": [
+        {
+          "kind": "death_birth",
+          "refit_index": 55,
+          "bar": 3390,
+          "date": null,
+          "template": "bull",
+          "source": "farthest",
+          "component": 2
+        }
+      ],
+      "selection": {
+        "bars": [
+          1080,
+          3937
+        ],
+        "quality": {
+          "n": 2857,
+          "bull_bars": 1256,
+          "bear_bars": 1601,
+          "label_share": {
+            "bull": 0.0808540427021351,
+            "bear": 0.8515925796289815,
+            "calm": 0.05740287014350717,
+            "crisis": 0.010150507525376268
+          },
+          "bull_labelled_bull": 0.01910828025477707,
+          "bull_labelled_calm": 0.0963375796178344,
+          "bear_labelled_bear_or_crisis": 0.8438475952529669,
+          "bear_labelled_calm": 0.026858213616489695,
+          "bear_labelled_bull": 0.1292941911305434,
+          "confusion": {
+            "bull": {
+              "bull": 24,
+              "bear": 1111,
+              "calm": 121,
+              "crisis": 0
+            },
+            "bear": {
+              "bull": 207,
+              "bear": 1322,
+              "calm": 43,
+              "crisis": 29
+            }
+          }
+        },
+        "mean_vol": {
+          "bull": 0.008561918750723192,
+          "bear": 0.013457536403625727,
+          "calm": 0.01557189974901653,
+          "crisis": null
+        },
+        "mean_return": {
+          "bull": 1.7507531097372247e-05,
+          "bear": -0.0002523107152774838,
+          "calm": 0.00030841280813692775,
+          "crisis": null
+        },
+        "semantic_ok": false,
+        "balanced_recall": 0.431477937753872
+      },
+      "evaluation": {
+        "bars": [
+          3937,
+          12510
+        ],
+        "quality": {
+          "n": 8573,
+          "bull_bars": 5875,
+          "bear_bars": 2698,
+          "label_share": {
+            "bull": 0.8961856992884638,
+            "bear": 0.06998716901901318,
+            "calm": 0.019946343170418757,
+            "crisis": 0.013880788522104281
+          },
+          "bull_labelled_bull": 0.9487659574468085,
+          "bull_labelled_calm": 0.0013617021276595745,
+          "bear_labelled_bear_or_crisis": 0.15789473684210525,
+          "bear_labelled_calm": 0.06041512231282432,
+          "bear_labelled_bull": 0.7816901408450704,
+          "confusion": {
+            "bull": {
+              "bull": 5574,
+              "bear": 224,
+              "calm": 8,
+              "crisis": 69
+            },
+            "bear": {
+              "bull": 2109,
+              "bear": 376,
+              "calm": 163,
+              "crisis": 50
+            }
+          }
+        },
+        "mean_vol": {
+          "bull": 0.008677055176603114,
+          "bear": 0.009608222245114909,
+          "calm": 0.011103767483711812,
+          "crisis": 0.00876496054277542
+        },
+        "mean_return": {
+          "bull": 0.0001963631784687362,
+          "bear": 7.863762982004788e-05,
+          "calm": -0.00046792349773901897,
+          "crisis": 0.00015259745917206767
+        },
+        "semantic_ok": false,
+        "balanced_recall": 0.5533303471444568
+      }
+    },
+    "guard": {
+      "settings": {
+        "cols": [
+          "log_ret",
+          "vol_20",
+          "trend"
+        ],
+        "semantic_guard": true
+      },
+      "rebirths": [
+        {
+          "kind": "death_birth",
+          "refit_index": 55,
+          "bar": 3390,
+          "date": null,
+          "template": "bull",
+          "source": "moment",
+          "component": 1
+        },
+        {
+          "kind": "death_birth",
+          "refit_index": 77,
+          "bar": 4314,
+          "date": null,
+          "template": "bull",
+          "source": "moment",
+          "component": 0
+        }
+      ],
+      "selection": {
+        "bars": [
+          1080,
+          3937
+        ],
+        "quality": {
+          "n": 2857,
+          "bull_bars": 1256,
+          "bear_bars": 1601,
+          "label_share": {
+            "bull": 0.0,
+            "bear": 0.9324466223311165,
+            "calm": 0.05740287014350717,
+            "crisis": 0.010150507525376268
+          },
+          "bull_labelled_bull": 0.0,
+          "bull_labelled_calm": 0.0963375796178344,
+          "bear_labelled_bear_or_crisis": 0.9731417863835103,
+          "bear_labelled_calm": 0.026858213616489695,
+          "bear_labelled_bull": 0.0,
+          "confusion": {
+            "bull": {
+              "bull": 0,
+              "bear": 1135,
+              "calm": 121,
+              "crisis": 0
+            },
+            "bear": {
+              "bull": 0,
+              "bear": 1529,
+              "calm": 43,
+              "crisis": 29
+            }
+          }
+        },
+        "mean_vol": {
+          "bull": null,
+          "bear": 0.013033029017056474,
+          "calm": 0.01557189974901653,
+          "crisis": null
+        },
+        "mean_return": {
+          "bull": null,
+          "bear": -0.00022891431328326767,
+          "calm": 0.00030841280813692775,
+          "crisis": null
+        },
+        "semantic_ok": false,
+        "balanced_recall": 0.48657089319175517
+      },
+      "evaluation": {
+        "bars": [
+          3937,
+          12510
+        ],
+        "quality": {
+          "n": 8573,
+          "bull_bars": 5875,
+          "bear_bars": 2698,
+          "label_share": {
+            "bull": 0.0,
+            "bear": 0.5968739064504841,
+            "calm": 0.3477195847427971,
+            "crisis": 0.05540650880671877
+          },
+          "bull_labelled_bull": 0.0,
+          "bull_labelled_calm": 0.34161702127659577,
+          "bear_labelled_bear_or_crisis": 0.6389918458117124,
+          "bear_labelled_calm": 0.36100815418828763,
+          "bear_labelled_bull": 0.0,
+          "confusion": {
+            "bull": {
+              "bull": 0,
+              "bear": 3804,
+              "calm": 2007,
+              "crisis": 64
+            },
+            "bear": {
+              "bull": 0,
+              "bear": 1313,
+              "calm": 974,
+              "crisis": 411
+            }
+          }
+        },
+        "mean_vol": {
+          "bull": null,
+          "bear": 0.007935381097427469,
+          "calm": 0.01009392677034421,
+          "crisis": 0.009846699021648846
+        },
+        "mean_return": {
+          "bull": null,
+          "bear": 0.00011960773764431272,
+          "calm": 0.00032243550225172555,
+          "crisis": -0.0001667957224061249
+        },
+        "semantic_ok": false,
+        "balanced_recall": 0.3194959229058562
+      }
+    },
+    "dd": {
+      "settings": {
+        "cols": [
+          "log_ret",
+          "vol_20",
+          "trend",
+          "drawdown"
+        ],
+        "semantic_guard": false
+      },
+      "rebirths": [
+        {
+          "kind": "death_birth",
+          "refit_index": 118,
+          "bar": 6036,
+          "date": null,
+          "template": "crisis",
+          "source": "farthest",
+          "component": 3
+        }
+      ],
+      "selection": {
+        "bars": [
+          1080,
+          3937
+        ],
+        "quality": {
+          "n": 2857,
+          "bull_bars": 1256,
+          "bear_bars": 1601,
+          "label_share": {
+            "bull": 0.05880294014700735,
+            "bear": 0.5302765138256913,
+            "calm": 0.35001750087504374,
+            "crisis": 0.06090304515225761
+          },
+          "bull_labelled_bull": 0.13136942675159236,
+          "bull_labelled_calm": 0.23805732484076433,
+          "bear_labelled_bear_or_crisis": 0.5602748282323547,
+          "bear_labelled_calm": 0.43785134291068084,
+          "bear_labelled_bull": 0.0018738288569643974,
+          "confusion": {
+            "bull": {
+              "bull": 165,
+              "bear": 618,
+              "calm": 299,
+              "crisis": 174
+            },
+            "bear": {
+              "bull": 3,
+              "bear": 897,
+              "calm": 701,
+              "crisis": 0
+            }
+          }
+        },
+        "mean_vol": {
+          "bull": 0.016302378359121763,
+          "bear": 0.012823031649000118,
+          "calm": 0.012825537433180583,
+          "crisis": 0.015417357648444511
+        },
+        "mean_return": {
+          "bull": 0.00038522833253960104,
+          "bear": -0.00019783107348034937,
+          "calm": -0.0007461132124172743,
+          "crisis": 0.002490573874260994
+        },
+        "semantic_ok": false,
+        "balanced_recall": 0.34582212749197355
+      },
+      "evaluation": {
+        "bars": [
+          3937,
+          12510
+        ],
+        "quality": {
+          "n": 8573,
+          "bull_bars": 5875,
+          "bear_bars": 2698,
+          "label_share": {
+            "bull": 0.019946343170418757,
+            "bear": 0.1613204245888254,
+            "calm": 0.528869707220343,
+            "crisis": 0.2898635250204129
+          },
+          "bull_labelled_bull": 0.014808510638297872,
+          "bull_labelled_calm": 0.49770212765957444,
+          "bear_labelled_bear_or_crisis": 0.37212750185322463,
+          "bear_labelled_calm": 0.5967383246849518,
+          "bear_labelled_bull": 0.031134173461823574,
+          "confusion": {
+            "bull": {
+              "bull": 87,
+              "bear": 958,
+              "calm": 2924,
+              "crisis": 1906
+            },
+            "bear": {
+              "bull": 84,
+              "bear": 425,
+              "calm": 1610,
+              "crisis": 579
+            }
+          }
+        },
+        "mean_vol": {
+          "bull": 0.012656691127435372,
+          "bear": 0.008728069604901132,
+          "calm": 0.008153881398195662,
+          "crisis": 0.009725396421499723
+        },
+        "mean_return": {
+          "bull": -0.00011915399085301222,
+          "bear": 0.0004618269167549786,
+          "calm": 0.00013426771924258463,
+          "crisis": 0.00010739795779206589
+        },
+        "semantic_ok": false,
+        "balanced_recall": 0.19346800624576124
+      }
+    },
+    "guard_dd": {
+      "settings": {
+        "cols": [
+          "log_ret",
+          "vol_20",
+          "trend",
+          "drawdown"
+        ],
+        "semantic_guard": true
+      },
+      "rebirths": [
+        {
+          "kind": "death_birth",
+          "refit_index": 118,
+          "bar": 6036,
+          "date": null,
+          "template": "bull",
+          "source": "moment",
+          "component": 3
+        }
+      ],
+      "selection": {
+        "bars": [
+          1080,
+          3937
+        ],
+        "quality": {
+          "n": 2857,
+          "bull_bars": 1256,
+          "bear_bars": 1601,
+          "label_share": {
+            "bull": 0.14700735036751839,
+            "bear": 0.42737136856842844,
+            "calm": 0.35001750087504374,
+            "crisis": 0.07560378018900946
+          },
+          "bull_labelled_bull": 0.1823248407643312,
+          "bull_labelled_calm": 0.23805732484076433,
+          "bear_labelled_bear_or_crisis": 0.4428482198625859,
+          "bear_labelled_calm": 0.43785134291068084,
+          "bear_labelled_bull": 0.1193004372267333,
+          "confusion": {
+            "bull": {
+              "bull": 229,
+              "bear": 515,
+              "calm": 299,
+              "crisis": 213
+            },
+            "bear": {
+              "bull": 191,
+              "bear": 706,
+              "calm": 701,
+              "crisis": 3
+            }
+          }
+        },
+        "mean_vol": {
+          "bull": 0.013754542037664843,
+          "bear": 0.012807674330999086,
+          "calm": 0.012825537433180583,
+          "crisis": 0.015894605228832674
+        },
+        "mean_return": {
+          "bull": 0.0004434471320626291,
+          "bear": -8.977553304884276e-05,
+          "calm": -0.0007461132124172743,
+          "crisis": 0.0005635753150540254
+        },
+        "semantic_ok": true,
+        "balanced_recall": 0.3125865303134585
+      },
+      "evaluation": {
+        "bars": [
+          3937,
+          12510
+        ],
+        "quality": {
+          "n": 8573,
+          "bull_bars": 5875,
+          "bear_bars": 2698,
+          "label_share": {
+            "bull": 0.2653680158637583,
+            "bear": 0.2555698122010965,
+            "calm": 0.45421672693339554,
+            "crisis": 0.024845445001749678
+          },
+          "bull_labelled_bull": 0.3007659574468085,
+          "bull_labelled_calm": 0.4444255319148936,
+          "bear_labelled_bear_or_crisis": 0.3361749444032617,
+          "bear_labelled_calm": 0.47553743513713864,
+          "bear_labelled_bull": 0.1882876204595997,
+          "confusion": {
+            "bull": {
+              "bull": 1767,
+              "bear": 1410,
+              "calm": 2611,
+              "crisis": 87
+            },
+            "bear": {
+              "bull": 508,
+              "bear": 781,
+              "calm": 1283,
+              "crisis": 126
+            }
+          }
+        },
+        "mean_vol": {
+          "bull": 0.009686967764499878,
+          "bear": 0.008679674219699519,
+          "calm": 0.008178014510466255,
+          "crisis": 0.011607119389019663
+        },
+        "mean_return": {
+          "bull": 9.504516259821382e-05,
+          "bear": 0.00024177076404289678,
+          "calm": 0.0001760998784768476,
+          "crisis": 0.0002925100557636851
+        },
+        "semantic_ok": false,
+        "balanced_recall": 0.3184704509250351
+      }
+    }
+  }
+}
